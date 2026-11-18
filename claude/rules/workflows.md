@@ -19,4 +19,4 @@ paths:
 - **Pass a reusable workflow its secrets by name**, never with
   `secrets: inherit`, so it receives only what it declares under
   `workflow_call.secrets`
-- **zizmor audits the workflows** in `./s/lint` and in `workflow-security.yml`. Its version is set once, in that workflow, and `s/lint` reads it from there
+- **zizmor audits the workflows** as a pre-commit hook, which `./s/lint` runs, and online in `workflow-security.yml`. Its version is set once, as the hook's `rev` in `.pre-commit-config.yaml`, where Dependabot updates it. The workflow reads it from there with `s/checks/hook-version`, so never write a version in the workflow
