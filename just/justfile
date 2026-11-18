@@ -345,13 +345,13 @@ stack-help:
         aliases+=("${alias_name}")
         [ "${#signature}" -gt "${widest}" ] && widest="${#signature}"
     done < <(
-        just --list 2>/dev/null \
+        just -g --list 2>/dev/null \
             | grep -E '^\s+stack(-[a-z-]+)?( |$)' \
             | sed -E 's/^[[:space:]]+//'
     )
 
     echo ""
-    echo "  Prefix any of these with 'just' to run it:"
+    echo "  Prefix any of these with 't' (just -g) to run it:"
     echo ""
 
     for index in "${!signatures[@]}"; do
@@ -454,7 +454,7 @@ alias stn := stack-new
 stack-new name message:
     #!/usr/bin/env bash
     set -euo pipefail
-    branch="$(just _stack-branch-name '{{name}}')"
+    branch="$(just -g _stack-branch-name '{{name}}')"
 
     # init adopts the branch it creates as the bottom of a new stack, based
     # on the default branch. No guard here: there is no stack to span a
@@ -518,7 +518,7 @@ alias strd := stack-ready
 stack-ready:
     #!/usr/bin/env bash
     set -euo pipefail
-    just _stack-guard
+    just -g _stack-guard
 
     # Bottom to top, the order `gh stack view` lists them, so the branch
     # nearest main is ready first. Merged branches and branches with no pull
@@ -550,7 +550,7 @@ alias str := stack-rebase
 stack-rebase:
     #!/usr/bin/env bash
     set -euo pipefail
-    just _stack-guard
+    just -g _stack-guard
     gh stack rebase
 
     # gh stack rebase exits 0 even when it skipped a branch, so the result is
@@ -1262,7 +1262,7 @@ stack-watch:
         # done does not stop the watcher. stack-watch-outcome.sh decides,
         # and says why.
         recipe_status=0
-        recipe_output=$(just "${recipe[@]}" 2>&1) || recipe_status=$?
+        recipe_output=$(just -g "${recipe[@]}" 2>&1) || recipe_status=$?
         if ! printf '%s\n' "${recipe_output}" \
             | bash "{{stack_scripts}}"/stack-watch-outcome.sh "${recipe_status}"; then
             recipe_status=1
