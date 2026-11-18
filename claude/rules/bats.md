@@ -94,6 +94,19 @@ that reader.
   that records its arguments and answers from a variable, then assert on
   what the script asked for. A test must never reach Docker, the network or
   a real account.
+- **End every heredoc with `EOF`**, such as when writing a stub. It is the
+  marker everyone recognises. Quote it, as `<<'EOF'`, so the text is
+  written exactly as it stands and the stub reads its variables when it
+  runs; leave it unquoted only when a value must be filled in as the file
+  is written, and then escape the rest, such as `\$*`.
+
+  ```bash
+  cat >"${bin}/curl" <<'EOF'
+  #!/usr/bin/env bash
+  echo "$*" >>"${BATS_TEST_TMPDIR}/curl.log"
+  EOF
+  ```
+
 - **Assert a negative with `run !`, never a bare `!`.** A bare `!` only fails
   the test when it is the last command in the `@test` block. Anywhere else
   `set -e` ignores it, and the assertion passes whether or not it holds.
