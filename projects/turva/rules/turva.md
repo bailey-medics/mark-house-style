@@ -2,7 +2,7 @@
 
 This adds Mark's Turva-only rules to his general working instructions. Each
 Turva worktree has a read-only copy in `.claude/rules/`, with no `paths:`,
-so it always loads there. `jg turva-link` makes the copy, and a
+so it always loads there. `t turva-link` makes the copy, and a
 session-start hook refreshes it. Change this file, never the copy.
 
 `AGENTS.md` is the authority on Turva: what it is, its safety invariants,

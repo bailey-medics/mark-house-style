@@ -1,7 +1,7 @@
 set shell := ["bash", "-c"]
 
 # Mark's personal recipes, for every repository. This file is linked from
-# ~/.config/just/justfile, so run them with `just -g <recipe>`, or `jg <recipe>`
+# ~/.config/just/justfile, so run them with `just -g <recipe>`, or `t <recipe>`
 # with the shell alias. Every recipe is [no-cd]: it runs in the repository it
 # is called from, not beside this file.
 #
@@ -10,7 +10,7 @@ set shell := ["bash", "-c"]
 house := home_directory() / "github" / "mark-house-style"
 
 
-alias cl := claude-session
+alias c := claude-session
 # Go to this checkout's Claude session in tmux, starting it or Claude again if needed
 [no-cd]
 claude-session:

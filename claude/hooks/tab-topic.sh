@@ -20,7 +20,7 @@
 # the tab.
 #
 # Works only in Turva's `claude-turva` and `claude-turva-<number>` sessions
-# (the ones `just -g cl` makes), in
+# (the ones `t c` makes), in
 # Quill Medical's `q` sessions (`q1` to `q99`) and in Owl's `owl` session. Owl's alerts arrive as `/clear` then `/alert`,
 # and a slash command is skipped, so during an alert the tab shows Claude
 # Code's own title instead. A plain shell, Owl's `towl` and a web session

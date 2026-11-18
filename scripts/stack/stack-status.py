@@ -944,7 +944,7 @@ def draw_no_stack(palette: Palette) -> None:
         # a different amount.
         padding = " " * (widest - len(command))
         print(
-            f"    {palette.bold(command)}{padding}   {palette.dim('jg ' + alias)}   {description}",
+            f"    {palette.bold(command)}{padding}   {palette.dim('t ' + alias)}   {description}",
             file=sys.stderr,
         )
     print(file=sys.stderr)

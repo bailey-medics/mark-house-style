@@ -1,6 +1,6 @@
 # Terminal tab titles from tmux
 
-`just -g cl` and `just -g tw` name their tmux sessions after the Turva
+`t c` and `t tw` name their tmux sessions after the Turva
 folder they are run from:
 
 - **`claude-turva`, `claude-turva-2`** - the Claude session for the main

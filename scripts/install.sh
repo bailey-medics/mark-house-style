@@ -60,10 +60,18 @@ ignore="${XDG_CONFIG_HOME:-${HOME}/.config}/git/ignore"
 mkdir -p "$(dirname "${ignore}")"
 grep -qxF 'CLAUDE.local.md' "${ignore}" 2>/dev/null || { echo 'CLAUDE.local.md' >> "${ignore}"; echo "${ignore}: CLAUDE.local.md added"; }
 
-# `jg` runs the global recipes. `j` is left alone: it is plain `just`.
+# `t` runs the global recipes. `j` is left alone: it is plain `just`.
+# `jg` was the earlier name, so it is taken out.
 for rc in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     [ -f "${rc}" ] || continue
-    grep -qxF "alias jg='just -g'" "${rc}" || { echo "alias jg='just -g'" >> "${rc}"; echo "${rc}: alias jg added"; }
+    if grep -qxF "alias jg='just -g'" "${rc}"; then
+        sed -i "\\|^alias jg='just -g'\$|d" "${rc}"
+        echo "${rc}: alias jg removed"
+    fi
+    grep -qxF "alias t='just -g'" "${rc}" || { echo "alias t='just -g'" >> "${rc}"; echo "${rc}: alias t added"; }
 done
 
-echo "✓ Installed. Open a new terminal for the jg alias."
+echo "✓ Installed."
+echo "  A shell reads its aliases only when it starts, so terminals and tmux"
+echo "  shells already open will not know t. Open a new one, or run:"
+echo "    source ~/.bashrc"

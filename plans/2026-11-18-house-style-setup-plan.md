@@ -38,8 +38,10 @@ the Turva-specific part.
 - [x] **Does this repository take direct commits to `main`?** - Yes. It
       has one author, and its code does not need to be guarded closely for
       now. Answered 18 November 2026.
-- [ ] **Is GPL-3.0 the right licence?** The repository was created with it.
-      It matters only if the repository is ever made public.
+- [x] **Is GPL-3.0 the right licence?** - Yes, it stays. It combines with
+      Turva's and Quill's AGPL-3.0, so files can move between them, and it
+      matters only if the repository is ever made public. Answered 18
+      November 2026.
 
 ## Before running /f
 
@@ -47,9 +49,10 @@ the Turva-specific part.
       `bailey-medics` fine-grained token access to it. Done 18 November 2026;
       the clone at `~/github/mark-house-style` uses
       `~/.config/git/bailey-credentials`, as the Quill clones do.
-- [ ] Marcus rebases the Turva Storybook stack (#83 onwards) onto `main`, so
+- [x] Marcus rebases the Turva Storybook stack (#83 onwards) onto `main`, so
       nothing in it depends on the Claude stack. Phase 6 cannot close #82
-      until then: GitHub would close #83 with it.
+      until then: GitHub would close #83 with it. Done 18 November 2026:
+      #83's base is `main`.
 
 ## Phase 1: Lay out the repository
 
@@ -154,24 +157,24 @@ the Turva-specific part.
       `bats scripts/stack/tests`, `bats scripts/notification/tests` and
       `bats claude/hooks/tab-topic.bats` pass: 60 tests. Done 18 November 2026.
 - [x] Link `~/.config/just/justfile` to `just/justfile`, so `just -g <recipe>`
-      works from any worktree. The shell alias is `jg`, not `j`: `.bashrc`
+      works from any worktree. The shell alias is `t`, not `j`: `.bashrc`
       and `.zshrc` already make `j` plain `just`, which Turva's own recipes
-      use. Done 18 November 2026.
+      use. It was `jg` at first, renamed `t` the same day. Done 18 November 2026.
 - [x] Bring `cl` and `tw` across too, from Turva's `justfile`, where #68
       merged them. They name sessions after the folder, so they work from any
       Turva worktree with `[no-cd]`. Bring the tab-topic hook's tmux title
       rules with them, as a documented snippet for `~/.tmux.conf`, in
-      `scripts/tmux/README.md`. Outside a Turva folder both refuse. Done 18 November 2026.
+      `scripts/tmux/README.md`. Outside a Turva folder both refuse. `cl` was renamed `c` the same day, so it runs as `t c`. Done 18 November 2026.
 
 ## Phase 5: Drop it into each Turva worktree
 
 - [x] Add `CLAUDE.local.md` to `~/.config/git/ignore`, so it is ignored in
       every repository without changing Turva's `.gitignore`. Done 18 November 2026.
-- [ ] In `~/github/turva`, `turva-2` and `turva-3`, remove the `.claude/`
+- [x] In `~/github/turva`, `turva-2` and `turva-3`, remove the `.claude/`
       links to `.claude-personal/mark/` (`CLAUDE.md`, `skills`, `rules`),
-      so nothing loads twice. `jg turva-link` does it. Done in `turva` and
-      `turva-3` on 18 November 2026; `turva-2` is left until its own session
-      is finished with.
+      so nothing loads twice. `t turva-link` does it. Done in `turva` and
+      `turva-3` on 18 November 2026, and in `turva-2` once Marcus had moved
+      its stack onto `main`, the same day.
 - [x] Load the Turva part. The plan was a one-line `CLAUDE.local.md`
       importing `projects/turva.md`, but Claude Code only loads an import
       from outside the project after an approval, asked once per worktree
@@ -190,11 +193,16 @@ the Turva-specific part.
 
 ## Phase 6: Retire the Turva tooling pull requests
 
-- [ ] Once Marcus has moved the Storybook stack onto `main`, close #82, #81,
+- [x] Once Marcus has moved the Storybook stack onto `main`, close #82, #81,
       #79, #78, #75 and #69, top first, with a comment on each saying the set-up
       now lives in a personal repository. Close #98 too: its rules and step
-      49 came here in Phase 1.
-- [ ] Open a new Turva pull request from `main` carrying #81's change, to be
+      49 came here in Phase 1. Done 18 November 2026, with their branches
+      deleted on GitHub and locally, and stack #80 removed from the local
+      `gh stack` record. #98's local branch is left until `turva-2`'s
+      session is finished, since it is checked out there, and so is the
+      Storybook stack's local record, which still names the deleted #82
+      branch as its base.
+- [x] Open a new Turva pull request from `main` carrying #81's change, to be
       edited there rather than kept as it is. Close #81 with the rest of the
       stack. Its change, as it stood when closed:
 
@@ -216,14 +224,21 @@ the Turva-specific part.
 
   #81's other changes, to `.claude-personal/` and the port plan, belong to
   the tooling stack and come here instead.
-- [ ] Open a Turva pull request deleting what #68 added to `main`: the
+
+  Done 18 November 2026: #102, the bottom of Turva stack #104.
+- [x] Open a Turva pull request deleting what #68 added to `main`: the
       `claude-session` and `tmux-window` recipes and their aliases in the
       `justfile`, their lines in `.gitignore`, and the terminal tab settings
       in `.vscode/settings.json`. Only once Phase 5 shows `just -g cl` and
-      `just -g tw` working from a Turva worktree.
+      `just -g tw` working from a Turva worktree. Done 18 November 2026:
+      #103, on #102. The terminal tab settings in `.vscode/settings.json`
+      were kept after all: putting back the old values would override
+      the personal VS Code settings that let tmux name the tabs.
 - [ ] Remove `.claude-personal/` from the Turva checkouts, and the two
       exclude lines for `components.md` and `pages.md` from Turva's
-      `.git/info/exclude`.
+      `.git/info/exclude`. Done in `turva` and `turva-3`, and the two lines
+      are gone, 18 November 2026. Left: `turva-2`, once it leaves #98's
+      branch, and then the `reference-CLAUDE.md` exclude line.
 
 ## Decisions
 

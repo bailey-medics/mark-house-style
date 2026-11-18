@@ -21,13 +21,14 @@ The install script links:
 - **`~/.config/just/justfile`** to `just/justfile`, the personal recipes.
 
 It also adds a session-start hook that pulls this repository, ignores
-`CLAUDE.local.md` everywhere, and adds the `jg` alias for `just -g`. It is
+`CLAUDE.local.md` everywhere, and adds the `t` alias for `just -g`. Open a new terminal, or run
+`source ~/.bashrc`, before using it. It is
 safe to run again.
 
 ## In a Turva checkout or worktree
 
 ```bash
-jg turva-link
+t turva-link
 ```
 
 That copies the Turva rules in `projects/turva/rules/` into `.claude/rules`,
