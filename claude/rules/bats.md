@@ -107,6 +107,22 @@ that reader.
   EOF
   ```
 
+- **Write multi-line text with a heredoc, not a one-line `printf` full of
+  `\n`.** Whether it is a stub, a config file or Terraform for a test, a
+  heredoc shows the text exactly as it will be written.
+  `printf 'resource "x" {\n  name = "%s"\n}\n'` hides the shape, and its
+  brackets inside quotes confuse editors' bracket matching, so a correct
+  closing `}` further down shows as an error. Use unquoted `<<EOF` when a
+  value must be filled in. A one-line `printf` is still fine for one line.
+
+  ```bash
+  cat >>"${repo}/rulesets.tf" <<EOF
+  resource "github_repository_ruleset" "${name}" {
+    name = "${name}"
+  }
+  EOF
+  ```
+
 - **Assert a negative with `run !`, never a bare `!`.** A bare `!` only fails
   the test when it is the last command in the `@test` block. Anywhere else
   `set -e` ignores it, and the assertion passes whether or not it holds.
