@@ -14,11 +14,19 @@ that reader.
 
 ## Spacing: one idea per line, one step per block
 
-- **Separate the steps with blank lines.** Group the lines that do one
-  thing, then leave a blank line before the next thing. A function that
-  reads as three or four blocks is far easier to check than fifteen
-  unbroken lines, even when the code is identical. Declarations, then the
-  work, then the result:
+- **Space a function as paragraphs: set up, do the work, hand back the
+  result.** A function that reads as three or four blocks is far easier to
+  check than fifteen unbroken lines, even when the code is identical. The
+  blank lines go in exactly these places:
+
+  - **Between the declarations and the `for` or `if` that follows them.**
+  - **Between blocks doing different jobs.** Two steps that answer
+    different questions do not share a paragraph.
+  - **Before the final `return`, or the `echo` that hands back the result.**
+  - **Inside a loop or an `if` body the rule is looser.** The body is one
+    piece of work, so a value worked out on one line and tested on the next
+    stays together. Add a gap there only when the body itself holds
+    separate steps.
 
   ```bash
   hours_since() {
@@ -30,6 +38,24 @@ that reader.
   	now="$(date -u +%s)"
 
   	echo $(((now - opened) / 3600))
+  }
+  ```
+
+  And with a loop, where the body stays together:
+
+  ```bash
+  unknown_names() {
+  	local wanted="$1"
+  	local known
+  	local name
+
+  	known="$(list_names)"
+
+  	for name in ${wanted}; do
+  		if ! grep -qxF "${name}" <<<"${known}"; then
+  			echo "${name}"
+  		fi
+  	done
   }
   ```
 
@@ -58,6 +84,43 @@ that reader.
   a comment saying what it does, that is usually a function wanting a name.
 - **Space new and changed code this way, and leave untouched code alone.** A
   diff full of blank lines buries the change that matters.
+
+## The shape of a script
+
+- **Every script opens the same way.** The `#!` line, then a comment block
+  in this order: one line saying what the script does, a `Usage:` line, and
+  any notes that matter, such as whether it is safe to run twice. Then
+  `set -euo pipefail`:
+
+  ```bash
+  #!/usr/bin/env bash
+  # Copies the release notes into the docs site.
+  #
+  # Usage: copy-notes.sh <version>
+  #
+  # Safe to run twice: it overwrites the page it wrote before.
+  set -euo pipefail
+
+  main() {
+  	local version="${1:-}"
+
+  	if [ -z "${version}" ]; then
+  		echo "No version given. Usage: copy-notes.sh <version>" >&2
+  		exit 1
+  	fi
+
+  	echo "Copying the notes for ${version}"
+  }
+
+  if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  	main "$@"
+  fi
+  ```
+
+- **`set -euo pipefail` in every script.** Stop on an error, treat an unset
+  variable as an error, and let a failure inside a pipe count.
+- **Errors go to standard error.** Use the repository's own logging helper
+  where it has one; otherwise `echo ... >&2`.
 
 ## Writing a script that tests can reach
 
