@@ -1,0 +1,117 @@
+---
+paths:
+  - "**/*.bats"
+  - "**/*.sh"
+  - "s/**"
+  - "scripts/**"
+---
+
+# Shell scripts and their bats tests
+
+Shell scripts are read far more often than they are written, usually by
+someone checking whether a change is safe. Write them, and their tests, for
+that reader.
+
+## Spacing: one idea per line, one step per block
+
+- **Separate the steps with blank lines.** Group the lines that do one
+  thing, then leave a blank line before the next thing. A function that
+  reads as three or four blocks is far easier to check than fifteen
+  unbroken lines, even when the code is identical. Declarations, then the
+  work, then the result:
+
+  ```bash
+  hours_since() {
+  	local timestamp="$1"
+  	local opened
+  	local now
+
+  	opened="$(to_epoch "$timestamp")"
+  	now="$(date -u +%s)"
+
+  	echo $(((now - opened) / 3600))
+  }
+  ```
+
+- **Lay out every bats test the same way: setup, then the `run`, then the
+  assertions**, each block separated by a blank line. A test is then quick
+  to scan: what was set up, what ran, what was checked.
+
+  ```bash
+  @test "plan refuses without a token" {
+  	unset GITHUB_TOKEN
+
+  	run "${script}" plan
+
+  	[ "$status" -eq 1 ]
+  	[[ "$output" == *"GITHUB_TOKEN is not set"* ]]
+  }
+  ```
+
+  A test with no setup starts with the `run`. Keep the blank line before
+  the assertions even when there is only one.
+
+- **Declare one variable per line.** `local hours="$1" policy="$2"` packs
+  two ideas into one line and hides the second from anyone scanning the left
+  margin. Write each on its own line.
+- **Prefer several small named functions to one long one.** If a block needs
+  a comment saying what it does, that is usually a function wanting a name.
+- **Space new and changed code this way, and leave untouched code alone.** A
+  diff full of blank lines buries the change that matters.
+
+## Writing a script that tests can reach
+
+- **Put the work in a `main()` function, called behind a source guard**,
+  bash's equivalent of Python's `if __name__ == "__main__"`:
+
+  ```bash
+  if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  	main "$@"
+  fi
+  ```
+
+  Sourcing a file runs it top to bottom. With a bare `main "$@"` at the end,
+  a test that sources the script to reach one function would run the whole
+  script, with bats' arguments. The guard makes sourcing define the
+  functions and stop. Add it even when the tests run the script end to end;
+  it costs nothing. A library that is only ever sourced needs no `main()`.
+- **Validate required arguments at the top of `main()`**, before any work,
+  as `local` positional parameters rather than bare upper-case globals.
+- **Declare every variable `local`**, loop variables included, so nothing
+  leaks into a shell that sources the script.
+- **Split `local` from a command substitution.** `local x=$(cmd)` swallows
+  `cmd`'s exit status, so a failure slips past `set -e`. Write `local x`,
+  then `x=$(cmd)` on the next line.
+- **Find files beside the script with `${BASH_SOURCE[0]}`, not `$0`.** When
+  bats sources a script, `$0` is bats, so a path built from it points into
+  bats' own folder.
+
+## Testing with bats
+
+- **Give every script a bats test**, beside it or in the repository's
+  `tests/` folder for scripts, whichever the repository already does.
+- **Stub outside commands rather than running them.** Put a fake on `PATH`
+  that records its arguments and answers from a variable, then assert on
+  what the script asked for. A test must never reach Docker, the network or
+  a real account.
+- **Assert a negative with `run !`, never a bare `!`.** A bare `!` only fails
+  the test when it is the last command in the `@test` block. Anywhere else
+  `set -e` ignores it, and the assertion passes whether or not it holds.
+- **Declare `bats_require_minimum_version 1.5.0`** at the top of any file
+  that puts flags on `run`, such as `run !`, `run -1` or
+  `run --separate-stderr`. Without it bats runs in a compatibility mode
+  where the flags are ignored, so `run !` passes vacuously.
+- **Treat bats warnings as failures.** bats reports both mistakes above as
+  `BW01` or `BW02` and still exits 0, so a vacuous assertion shows green.
+  Where the repository's test runner does not fail on them, say so rather
+  than relying on it, and never add a way to tolerate one.
+- **Prove an assertion can fail.** After writing a test that checks
+  something does not happen, break the script on purpose and watch the test
+  go red. A negative assertion that cannot fail is the most common way a
+  green suite hides a regression.
+- **Do not trust a bats run on macOS for a script that runs on Linux.** The
+  Mac's bash is 3.2 by default, its core tools differ, and its `sha256sum`
+  is not GNU's. Use the repository's container or CI to decide; a local Mac
+  run is only for iterating.
+
+<!-- cspell:words vacuously -->
