@@ -92,6 +92,9 @@ TL;DR.
   voice, no double negatives, bold as the only emphasis. Spell out an
   abbreviation the first time, unless it is an identifier the code uses.
 - **British English**, in prose, comments, docs and identifiers.
+- **Put new spelling words in the repository's cspell config**, in its
+  words list, in alphabetical order. Never add an inline `cspell:words` or
+  `cspell:ignore` comment to a file where a config exists.
 - **Never write an em dash or an en dash**, in code, comments, docs, UI text,
   commit messages or pull requests. Neither is on a UK keyboard, so a file
   that uses one ends up mixed. Use a comma, colon, full stop or brackets, or
