@@ -44,6 +44,22 @@ disagree, `AGENTS.md` wins, except where these rules are stricter.
 - **Use the `./s/` scripts and the `just` recipes.** Each knows which
   container to run in and what it needs.
 
+## Quill Medical stays out of what Turva publishes
+
+- **Never name Quill Medical, or cite it as evidence, in anything that
+  lands in Turva**: code, comments, config, scripts, tests, docs, plans,
+  commit messages and pull request descriptions. Give the reason in
+  Turva's own terms: "a config with no rules passes every commit", not
+  "Quill's config passed every commit".
+- **Describe ported work by what it does, not where it came from.** Not
+  "ported from Quill's `check-home-details.sh`", and not "as Quill does".
+- **Leave what Turva already says about Quill alone**:
+  `specifications/quill-port.md`, the ADRs and `SAFETY.md` that link to
+  it, and the attribution the port decisions require. They record the
+  port itself, which is a different thing from citing Quill as proof.
+- **Talking with Mark about Quill is fine.** The rule covers only what
+  lands in the repository or on its pull requests.
+
 ## Local-only material
 
 - **`.private/` is git-ignored and holds local-only work**: decks, reports,
