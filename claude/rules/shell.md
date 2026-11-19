@@ -138,8 +138,22 @@ that reader.
   script, with bats' arguments. The guard makes sourcing define the
   functions and stop. Add it even when the tests run the script end to end;
   it costs nothing. A library that is only ever sourced needs no `main()`.
+- **Name every argument before using it.** The first lines of each
+  function give each argument a name, and the body uses only those names,
+  never `$1` or `$*`. A reader then sees what the function takes without
+  reading its body. Passing the rest on unchanged with `"$@"`, after a
+  `shift`, is the one exception.
+
+  ```bash
+  log() {
+  	local message="$*"
+
+  	echo "[${name}] ${message}"
+  }
+  ```
+
 - **Validate required arguments at the top of `main()`**, before any work,
-  as `local` positional parameters rather than bare upper-case globals.
+  once they are named, rather than reading bare upper-case globals.
 - **Declare every variable `local`**, loop variables included, so nothing
   leaks into a shell that sources the script.
 - **Split `local` from a command substitution.** `local x=$(cmd)` swallows
