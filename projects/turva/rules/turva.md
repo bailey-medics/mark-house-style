@@ -23,6 +23,20 @@ disagree, `AGENTS.md` wins, except where these rules are stricter.
   where `specifications/nightly-triage.md` asks for the model to be named in
   the pull request.
 
+## Issues
+
+- **Every new issue goes on the turva-uk project board, in the `Triage`
+  column.** A person decides priority, owner and timing there, so never put
+  a new issue straight into a working column or set its priority.
+- **Write an issue so someone who missed the conversation can pick it
+  up**: the problem, why it matters, links to the code and specs, and a
+  checklist of what done looks like. Link code with permalinks pinned to a
+  commit, so the line numbers stay right.
+- **Use sub-issues for the parts of a larger issue**, not just a mention
+  in the text.
+- **Assign an issue only to someone the person names**, and confirm their
+  GitHub login rather than guessing it from a name.
+
 ## Tests
 
 - **`./s/test` runs the Django suite in the `web` container**, so start the
