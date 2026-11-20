@@ -179,16 +179,16 @@ prompt() {
     [ -z "$(pending)" ]
 }
 
-@test "Turva's claude-turva session is named like a q session" {
-    export SESSION="claude-turva"
+@test "Turva's turva session is named like a q session" {
+    export SESSION="turva"
     answer "Tab topic for Turva"
 
     prompt "can the Claude tab show a summary"
     [ "$(topic)" = "Tab topic for Turva" ]
 }
 
-@test "a worktree's claude-turva-2 session is named too" {
-    export SESSION="claude-turva-2"
+@test "a worktree's turva-2 session is named too" {
+    export SESSION="turva-2"
     answer "Worktree topic"
 
     prompt "start the worktree work"
@@ -197,6 +197,16 @@ prompt() {
 
 @test "a turva shell session is left alone" {
     export SESSION="tmux-turva-1-2"
+    answer "Should not be used"
+
+    run prompt "first"
+    [ "$status" -eq 0 ]
+    [ -z "$(topic)" ]
+    [ ! -e "${ASKED}" ]
+}
+
+@test "a renamed turva session is left alone" {
+    export SESSION="turva-old"
     answer "Should not be used"
 
     run prompt "first"

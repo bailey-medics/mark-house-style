@@ -18,8 +18,8 @@ claude-session:
     # Opens this checkout's Claude session in this terminal, and makes sure
     # Claude is running in it.
     #
-    # The session is claude-turva for the main checkout, and claude-turva-2
-    # for the worktree in turva-2.
+    # The session is turva for the main checkout, and turva-2 for the
+    # worktree in turva-2.
     #
     # - If there is no claude tmux session, it starts one with Claude in it.
     # - If Claude has stopped but the tmux session exists, it starts Claude
@@ -50,7 +50,7 @@ claude-session:
             ;;
     esac
 
-    name="claude-turva${worktree:+-${worktree}}"
+    name="turva${worktree:+-${worktree}}"
     start_claude="claude --continue --ide --remote-control ${name} || claude --ide --remote-control ${name}"
 
     if ! tmux has-session -t "=${name}" 2> /dev/null; then
