@@ -18,8 +18,8 @@ claude-session:
     # Opens this checkout's Claude session in this terminal, and makes sure
     # Claude is running in it.
     #
-    # The session is turva for the main checkout, and turva-2 for the
-    # worktree in turva-2.
+    # The session is named after the folder: turva or bode for a main
+    # checkout, and turva-2 or bode-2 for the worktree in that folder.
     #
     # - If there is no claude tmux session, it starts one with Claude in it.
     # - If Claude has stopped but the tmux session exists, it starts Claude
@@ -39,18 +39,25 @@ claude-session:
     top="$(git rev-parse --show-toplevel)"
     folder="$(basename "${top}")"
 
-    # The main checkout is turva, and a worktree is turva-2, turva-3 and so
-    # on. The number keeps each one's sessions apart.
+    # A main checkout is named after its project, turva or bode, and a
+    # worktree adds a number: turva-2, bode-3. The number keeps each one's
+    # sessions apart.
     case "${folder}" in
-        turva) worktree="" ;;
-        turva-[2-9] | turva-[1-9][0-9]) worktree="${folder#turva-}" ;;
+        turva | bode)
+            project="${folder}"
+            worktree=""
+            ;;
+        turva-[2-9] | turva-[1-9][0-9] | bode-[2-9] | bode-[1-9][0-9])
+            project="${folder%-*}"
+            worktree="${folder##*-}"
+            ;;
         *)
-            echo "✗ This folder is ${folder}. Sessions are named after turva or turva-<number>, so rename the folder to one of those." >&2
+            echo "✗ This folder is ${folder}. Sessions are named after turva, bode, or either with -<number>, so rename the folder to one of those." >&2
             exit 1
             ;;
     esac
 
-    name="turva${worktree:+-${worktree}}"
+    name="${project}${worktree:+-${worktree}}"
     start_claude="claude --continue --ide --remote-control ${name} || claude --ide --remote-control ${name}"
 
     if ! tmux has-session -t "=${name}" 2> /dev/null; then
@@ -94,8 +101,8 @@ tmux-window NUMBER="":
     # Opens a plain shell in tmux for this checkout, so a command run there
     # keeps going after this terminal closes.
     #
-    # The session is tmux-turva-1 for the main checkout, and tmux-turva-2
-    # for the worktree in turva-2. A number gives another shell beside the
+    # The session is tmux-turva-1 or tmux-bode-1 for a main checkout, and
+    # tmux-turva-2 for the worktree in turva-2. A number gives another shell beside the
     # first: `just -g tw 2` is tmux-turva-1-2 in the main checkout, and running
     # it again comes back to it.
     #
@@ -123,13 +130,20 @@ tmux-window NUMBER="":
     top="$(git rev-parse --show-toplevel)"
     folder="$(basename "${top}")"
 
-    # The main checkout is turva, and a worktree is turva-2, turva-3 and so
-    # on. The number keeps each one's sessions apart.
+    # A main checkout is named after its project, turva or bode, and a
+    # worktree adds a number: turva-2, bode-3. The number keeps each one's
+    # sessions apart.
     case "${folder}" in
-        turva) worktree="" ;;
-        turva-[2-9] | turva-[1-9][0-9]) worktree="${folder#turva-}" ;;
+        turva | bode)
+            project="${folder}"
+            worktree=""
+            ;;
+        turva-[2-9] | turva-[1-9][0-9] | bode-[2-9] | bode-[1-9][0-9])
+            project="${folder%-*}"
+            worktree="${folder##*-}"
+            ;;
         *)
-            echo "✗ This folder is ${folder}. Sessions are named after turva or turva-<number>, so rename the folder to one of those." >&2
+            echo "✗ This folder is ${folder}. Sessions are named after turva, bode, or either with -<number>, so rename the folder to one of those." >&2
             exit 1
             ;;
     esac
@@ -137,7 +151,7 @@ tmux-window NUMBER="":
     # The main checkout counts as 1 here, so its second shell,
     # tmux-turva-1-2, cannot be mistaken for the first shell of turva-2,
     # which is tmux-turva-2.
-    name="tmux-turva-${worktree:-1}${number:+-${number}}"
+    name="tmux-${project}-${worktree:-1}${number:+-${number}}"
 
     if ! tmux has-session -t "=${name}" 2> /dev/null; then
         tmux new-session -d -s "${name}" -c "${top}" "bash -l"

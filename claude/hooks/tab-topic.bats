@@ -215,6 +215,32 @@ prompt() {
     [ ! -e "${ASKED}" ]
 }
 
+@test "Bode's bode session is named like a q session" {
+    export SESSION="bode"
+    answer "Tab topic for Bode"
+
+    prompt "start the Bode work"
+    [ "$(topic)" = "Tab topic for Bode" ]
+}
+
+@test "a worktree's bode-2 session is named too" {
+    export SESSION="bode-2"
+    answer "Bode worktree topic"
+
+    prompt "start the worktree work"
+    [ "$(topic)" = "Bode worktree topic" ]
+}
+
+@test "a bode shell session is left alone" {
+    export SESSION="tmux-bode-1"
+    answer "Should not be used"
+
+    run prompt "first"
+    [ "$status" -eq 0 ]
+    [ -z "$(topic)" ]
+    [ ! -e "${ASKED}" ]
+}
+
 @test "Owl's session is named like a q session" {
     export SESSION="owl"
     answer "Cloud Run errors"
