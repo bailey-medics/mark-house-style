@@ -40,24 +40,28 @@ SPEAK="${TURVA_NOTIFY_SPEAK:-1}"
 BANNER="${TURVA_NOTIFY_BANNER:-1}"
 CHIME="${TURVA_NOTIFY_CHIME:-0}"
 
-# A branded notifier, if one has been built. TURVA_NOTIFY_APP points
-# somewhere else; otherwise it is looked for in ~/Applications.
-NOTIFIER_APP="${TURVA_NOTIFY_APP:-$HOME/Applications/turva-notifier.app}"
+# A branded notifier gives the banner its project's icon. Each is a copy of
+# terminal-notifier that build-notifier-app.sh makes from icons/<name>.png
+# into ~/Applications, or TURVA_NOTIFY_APP_DIR. The folder the banner came
+# from picks it: Quill Medical's, Turva's and Juttu's folders have one each,
+# Juttu's folders carrying its repository's full name, juttu-messaging. Any
+# other folder has none yet, so its banner keeps the plain icon. An app
+# named in TURVA_NOTIFY_APP is used for every banner instead.
+NOTIFIER_DIR="${TURVA_NOTIFY_APP_DIR:-$HOME/Applications}"
 
-# A banner from a Quill Medical folder carries the Quill icon, through the
-# app build-notifier-app.sh makes from icons/quill.png. Every other folder
-# keeps the default above until it has an icon of its own. An app named in
-# TURVA_NOTIFY_APP always wins. TURVA_NOTIFY_APP_DIR is where the built apps
-# are, ~/Applications unless set.
-if [ -z "${TURVA_NOTIFY_APP:-}" ]; then
+if [ -n "${TURVA_NOTIFY_APP:-}" ]; then
+    NOTIFIER_APP="$TURVA_NOTIFY_APP"
+else
     folder="$(basename "${cwd:-$title}")"
 
     case "$folder" in
-        quillmedical | quillmedical-*)
-            NOTIFIER_APP="${TURVA_NOTIFY_APP_DIR:-$HOME/Applications}/quill-notifier.app"
-            ;;
+        quillmedical | quillmedical-*) NOTIFIER_APP="$NOTIFIER_DIR/quill-notifier.app" ;;
+        turva | turva-*) NOTIFIER_APP="$NOTIFIER_DIR/turva-notifier.app" ;;
+        juttu-messaging | juttu-messaging-*) NOTIFIER_APP="$NOTIFIER_DIR/juttu-notifier.app" ;;
+        *) NOTIFIER_APP="" ;;
     esac
 fi
+
 NOTIFIER_BIN="$NOTIFIER_APP/Contents/MacOS/terminal-notifier"
 
 # A banner and speech answer different questions: the banner says which

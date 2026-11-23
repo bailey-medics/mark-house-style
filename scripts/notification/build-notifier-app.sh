@@ -18,8 +18,11 @@ set -euo pipefail
 TERMINAL_NOTIFIER_VERSION="3.1.0"
 NAME_PATTERN='^[a-z][a-z0-9-]{0,30}$'
 
-# Flatten the artwork onto white and inset it, because macOS rounds a
-# notification icon's corners and would clip artwork that runs to the edge.
+# A logo with a solid background, such as Turva's or Juttu's, is already a
+# finished square icon, so it is used whole. One with a see-through
+# background, such as Quill's, is set on white and inset, because macOS
+# rounds a notification icon's corners and would clip artwork that runs to
+# the edge.
 prepare_icon() {
     local logo="$1"
     local out="$2"
@@ -30,9 +33,14 @@ from PIL import Image
 
 src, out = sys.argv[1], sys.argv[2]
 im = Image.open(src).convert("RGBA")
+size = 1024
+
+if im.getchannel("A").getextrema()[0] == 255:
+    im.convert("RGB").resize((size, size), Image.LANCZOS).save(out)
+    sys.exit(0)
 
 ink = im.crop(im.getbbox())
-size, margin = 1024, 0.16
+margin = 0.16
 target = int(size * (1 - 2 * margin))
 scale = min(target / ink.width, target / ink.height)
 ink = ink.resize(

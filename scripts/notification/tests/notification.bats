@@ -459,16 +459,18 @@ listen_as() {
     [ "$(cat "${BATS_TEST_TMPDIR}/code-args")" = $'--folder-uri\nvscode-remote://tunnel+devbox-tunnel/home/mark/github/turva-5' ]
 }
 
-# Branded notifier apps for the icon choice: each records that it was used.
-# HOME is the test's folder, so the default apps are looked for there too.
+# Branded notifier apps for the icon choice: each records that it was used,
+# and so does osascript, the plain banner. HOME is the test's folder, so the
+# apps are looked for there.
 stub_branded_apps() {
     local name
+    local bin="${BATS_TEST_TMPDIR}/plain-bin"
 
     export HOME="${BATS_TEST_TMPDIR}/home"
     export TURVA_NOTIFY_SPEAK=0
     unset TURVA_NOTIFY_APP
 
-    for name in quill turva; do
+    for name in quill turva juttu; do
         mkdir -p "${HOME}/Applications/${name}-notifier.app/Contents/MacOS"
         cat >"${HOME}/Applications/${name}-notifier.app/Contents/MacOS/terminal-notifier" <<EOF
 #!/bin/bash
@@ -476,36 +478,80 @@ echo "${name}" >>"${BATS_TEST_TMPDIR}/apps-used"
 EOF
         chmod +x "${HOME}/Applications/${name}-notifier.app/Contents/MacOS/terminal-notifier"
     done
+
+    mkdir -p "${bin}"
+    cat >"${bin}/osascript" <<EOF
+#!/bin/bash
+echo "plain" >>"${BATS_TEST_TMPDIR}/apps-used"
+EOF
+    chmod +x "${bin}/osascript"
+    export PATH="${bin}:${PATH}"
 }
 
-@test "a banner from a Quill folder is posted through the Quill app, for its icon" {
+# The icon a banner from this folder is posted with.
+icon_for() {
+    local folder="$1"
+
+    "${BATS_TEST_DIRNAME}/../notification-show.sh" "${folder}" "Done" "grp" "s" "/home/mark/github/${folder}"
+    cat "${BATS_TEST_TMPDIR}/apps-used"
+}
+
+@test "Quill Medical's folders get the Quill icon" {
     stub_branded_apps
 
-    run "${BATS_TEST_DIRNAME}/../notification-show.sh" "quillmedical-6" "Done" "grp" "s" /home/mark/github/quillmedical-6
+    run icon_for quillmedical-6
 
     [ "$status" -eq 0 ]
-    [ "$(cat "${BATS_TEST_TMPDIR}/apps-used")" = "quill" ]
+    [ "$output" = "quill" ]
 }
 
-@test "a banner from any other folder keeps the default app, not the Quill one" {
+@test "Turva's folders get the Turva icon" {
     stub_branded_apps
 
-    run "${BATS_TEST_DIRNAME}/../notification-show.sh" "turva-4" "Done" "grp" "s" /home/mark/github/turva-4
+    run icon_for turva-2
 
     [ "$status" -eq 0 ]
-    [ "$(cat "${BATS_TEST_TMPDIR}/apps-used")" = "turva" ]
+    [ "$output" = "turva" ]
 }
 
-@test "a folder that only starts with the word quill is not a Quill Medical one" {
+@test "Juttu's folders, named after its repository, get the Juttu icon" {
     stub_branded_apps
 
-    run "${BATS_TEST_DIRNAME}/../notification-show.sh" "quilltest" "Done" "grp" "s" /home/mark/github/quilltest
+    run icon_for juttu-messaging-2
 
     [ "$status" -eq 0 ]
-    [ "$(cat "${BATS_TEST_TMPDIR}/apps-used")" = "turva" ]
+    [ "$output" = "juttu" ]
 }
 
-@test "an app named in TURVA_NOTIFY_APP wins, even for a Quill folder" {
+@test "any other folder keeps the plain icon, even with the apps built" {
+    stub_branded_apps
+
+    run icon_for mark-house-style
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "plain" ]
+}
+
+@test "a folder that only starts with a project's word is not that project's" {
+    stub_branded_apps
+
+    run icon_for quilltest
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "plain" ]
+}
+
+@test "a project whose app is not built yet falls back to the plain icon" {
+    stub_branded_apps
+    rm -rf "${HOME}/Applications/juttu-notifier.app"
+
+    run icon_for juttu-messaging
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "plain" ]
+}
+
+@test "an app named in TURVA_NOTIFY_APP wins for every folder" {
     stub_branded_apps
     stub_notifier
 

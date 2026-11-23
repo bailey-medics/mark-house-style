@@ -66,15 +66,22 @@ tests with `just -g notify-relay-test` (`t nrt`).
 A banner's icon comes from the app that posts it, so each icon is its own
 copy of terminal-notifier. `build-notifier-app.sh <name>` makes
 `~/Applications/<name>-notifier.app` from `icons/<name>.png`; run it on the
-Mac with **`just -g notifier-app quill`** (`t nap`), then allow the new app
-once in System Settings, Notifications.
+Mac with **`just -g notifier-app <name>`** (`t nap quill`, `t nap turva`,
+`t nap juttu`), then allow the new app once in System Settings,
+Notifications. A logo with a solid background is used as the whole icon;
+one with a see-through background is set on white, inset so the rounded
+corners do not clip it.
 
-- **Quill Medical's folders** (`quillmedical` and `quillmedical-<anything>`)
-  post through `quill-notifier.app`, so their banners carry the Quill icon.
-- **Every other folder** uses `turva-notifier.app` when one is built, and
-  the plain banner icon until then. To give another project an icon, add
-  its picture to `icons/` and a line for its folders in
-  `notification-show.sh`.
+The folder a banner came from picks its icon:
+
+- **`quillmedical` and `quillmedical-<anything>`** - Quill.
+- **`turva` and `turva-<anything>`** - Turva.
+- **`juttu-messaging` and `juttu-messaging-<anything>`** - Juttu.
+- **Every other folder** - the plain banner icon, as is a project whose app
+  has not been built yet.
+
+To give another project an icon, add its picture to `icons/`, a line for its
+folders in `notification-show.sh`, and a test.
 
 ## Settings
 

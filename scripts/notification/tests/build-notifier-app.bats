@@ -57,9 +57,14 @@ EOF
     [ ! -e "$CALLS" ]
 }
 
-@test "the Quill icon is in the repository" {
-    run file "${BATS_TEST_DIRNAME}/../icons/quill.png"
+@test "each project's icon is a square PNG in the repository" {
+    local name
 
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"PNG image data"* ]]
+    for name in quill turva juttu; do
+        run file "${BATS_TEST_DIRNAME}/../icons/${name}.png"
+
+        [ "$status" -eq 0 ]
+        [[ "$output" =~ PNG\ image\ data,\ ([0-9]+)\ x\ ([0-9]+) ]]
+        [ "${BASH_REMATCH[1]}" = "${BASH_REMATCH[2]}" ]
+    done
 }
