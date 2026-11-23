@@ -1,0 +1,16 @@
+# Hosts the Microsoft dev tunnel that carries RDP, for remote-desktop's
+# "windows" mode. Installed as a user service by install.sh. The tunnel's
+# name comes from ~/.config/remote-desktop/config, outside the repository.
+[Unit]
+Description=Microsoft dev tunnel host for RDP, behind the owner's sign-in
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/remote-desktop/config
+ExecStart=%h/.local/bin/devtunnel host ${DEVTUNNEL_NAME}
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,9 @@
+# Settings for scripts/remote-desktop, kept outside the repository at
+# ~/.config/remote-desktop/config. install.sh copies this file there if it
+# is missing; fill it in before using "windows".
+
+# The dev tunnel that carries RDP. Make it once, signed in with
+# `devtunnel user login --github`:
+#   devtunnel create <name>
+#   devtunnel port create <name> -p 3389
+DEVTUNNEL_NAME=<your tunnel name>

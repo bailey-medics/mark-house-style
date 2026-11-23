@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Switch a Linux dev box's desktop between Chrome Remote Desktop ("google")
+# and RDP carried by a Microsoft dev tunnel ("windows"). Only one can run at
+# a time: both start XFCE for the same user on the same D-Bus session bus, so
+# the second desktop quits as soon as it starts.
+#
+#   sudo remote-desktop google    end any RDP desktop, start Chrome Remote Desktop
+#   sudo remote-desktop windows   end the Chrome Remote Desktop desktop, ready RDP
+#   sudo remote-desktop status    show which is running
+#
+# The chosen desktop also starts at boot. Switching ends the other desktop,
+# so anything unsaved in it is lost.
+#
+# This runs as root through a password-free sudo rule, so it runs nothing
+# from a settings file. It reads the tunnel's name from the caller's
+# ~/.config/remote-desktop/config only to print the Mac's command, and only
+# if the name is plain letters, digits, dots, dashes and underscores.
+set -euo pipefail
+
+tunnel_service=devtunnel-desktop.service
+rdp_xorg='^/usr/lib/xorg/Xorg :1[0-9] .*xrdp/xorg\.conf'
+
+usage() {
+    echo "usage: remote-desktop google|windows|status" >&2
+}
+
+mode="${1:-status}"
+
+case "$mode" in
+    google | windows | status) ;;
+    *)
+        usage
+        exit 2
+        ;;
+esac
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Run with sudo: sudo remote-desktop ${mode}" >&2
+    exit 1
+fi
+
+user="${SUDO_USER:-}"
+
+if ! [[ "$user" =~ ^[a-z_][a-z0-9_-]*$ ]] || [ "$user" = root ] || ! id "$user" >/dev/null 2>&1; then
+    echo "Run this through sudo from your own account, not as root." >&2
+    exit 1
+fi
+
+crd="chrome-remote-desktop@${user}"
+
+# The tunnel's name from the caller's settings, for printing only.
+tunnel_name() {
+    local home config name
+
+    home="$(getent passwd "$user" | cut -d: -f6)"
+    config="${home}/.config/remote-desktop/config"
+    name="$(sed -n 's/^DEVTUNNEL_NAME=//p' "$config" 2>/dev/null | head -n 1)"
+
+    if [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]]; then
+        echo "$name"
+    else
+        echo "<tunnel>"
+    fi
+}
+
+rdp_desktop() {
+    if pgrep -u "$user" -f "$rdp_xorg" >/dev/null; then
+        echo running
+    else
+        echo none
+    fi
+}
+
+status() {
+    echo "Chrome Remote Desktop : $(systemctl is-active "$crd" || true) ($(systemctl is-enabled "$crd" 2>/dev/null || true) at boot)"
+    echo "RDP server            : $(systemctl is-active xrdp || true)"
+    echo "RDP desktop           : $(rdp_desktop)"
+    echo "Dev tunnel host       : $(systemctl --user -M "${user}@" is-active "$tunnel_service" 2>/dev/null || true)"
+}
+
+case "$mode" in
+    google)
+        pkill -u "$user" -f "$rdp_xorg" || true
+        sleep 2
+        systemctl enable --now "$crd"
+        echo "Google: connect at remotedesktop.google.com/access"
+        ;;
+    windows)
+        systemctl disable --now "$crd"
+        systemctl start xrdp-sesman xrdp
+        systemctl --user -M "${user}@" start "$tunnel_service"
+        echo "Windows: on the Mac, run this and leave it open:"
+        echo "    ~/bin/devtunnel connect $(tunnel_name)"
+        echo "then connect Windows App to localhost:3389."
+        ;;
+esac
+
+status
