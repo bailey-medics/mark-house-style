@@ -219,6 +219,13 @@ notifier-app name="quill":
     "{{house}}"/scripts/notification/build-notifier-app.sh "{{name}}"
 
 
+alias rfb := refresh-banners
+# Rebuild every banner icon and refresh the Mac's banner scripts, after pulling a banner change (macOS only)
+[no-cd]
+refresh-banners:
+    "{{house}}"/scripts/notification/refresh-banners.sh
+
+
 # Stacked pull requests
 #
 # Recipes over the `gh stack` extension, for building a piece of work as a

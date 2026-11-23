@@ -11,12 +11,57 @@
 # own entry in System Settings, Notifications, which must be allowed once.
 #
 # macOS only. Safe to run twice: it rebuilds the app from scratch. The app
-# is a signed binary, so it is built here, never committed. Needs Pillow for
-# python3, to prepare the icon.
+# is a signed binary, so it is built here, never committed. It needs Pillow
+# to prepare the icon, and sets it up once in ~/.venvs/notifier when the
+# Mac's python3 lacks it, since Homebrew's Python refuses pip installs.
 set -euo pipefail
 
 TERMINAL_NOTIFIER_VERSION="3.1.0"
 NAME_PATTERN='^[a-z][a-z0-9-]{0,30}$'
+PILLOW_VENV="${TURVA_NOTIFY_VENV:-${HOME}/.venvs/notifier}"
+
+# The download folder, global so the clean-up on exit can still see it after
+# main() returns.
+WORK=""
+
+cleanup() {
+    if [ -n "${WORK}" ]; then
+        rm -rf "${WORK}"
+    fi
+}
+
+# A python3 that has Pillow: the Mac's own when it has it, otherwise a
+# private environment, made the first time it is needed.
+pillow_python() {
+    local venv="${PILLOW_VENV}"
+
+    if python3 -c 'import PIL' >/dev/null 2>&1; then
+        echo python3
+        return
+    fi
+
+    if ! "${venv}/bin/python" -c 'import PIL' >/dev/null 2>&1; then
+        echo "Setting up Pillow in ${venv}, once..." >&2
+        python3 -m venv "${venv}" >&2
+        "${venv}/bin/pip" install --quiet Pillow >&2
+    fi
+
+    echo "${venv}/bin/python"
+}
+
+# The app's identifier carries a checksum of its picture. macOS keeps a
+# notification app's icon under its identifier and will not let it go, so
+# a new picture needs a new identifier, which macOS may ask to allow once.
+# The same picture keeps the same identifier.
+icon_identifier() {
+    local name="$1"
+    local logo="$2"
+    local sum
+
+    sum="$(cksum <"${logo}" | cut -d ' ' -f 1)"
+
+    echo "fr.julienxx.oss.terminal-notifier.${name}.${sum}"
+}
 
 # A logo with a solid background, such as Turva's or Juttu's, is already a
 # finished square icon, so it is used whole. One with a see-through
@@ -26,8 +71,9 @@ NAME_PATTERN='^[a-z][a-z0-9-]{0,30}$'
 prepare_icon() {
     local logo="$1"
     local out="$2"
+    local python="$3"
 
-    python3 - "$logo" "$out" <<'EOF_PY'
+    "${python}" - "$logo" "$out" <<'EOF_PY'
 import sys
 from PIL import Image
 
@@ -77,6 +123,7 @@ assemble_app() {
     local name="$3"
     local display="$4"
     local dest="$5"
+    local identifier="$6"
     local plist="${dest}/Contents/Info.plist"
     local buddy=/usr/libexec/PlistBuddy
 
@@ -86,7 +133,7 @@ assemble_app() {
     cp "${icns}" "${dest}/Contents/Resources/${display}.icns"
     rm -f "${dest}/Contents/Resources/Terminal.icns"
 
-    "${buddy}" -c "Set :CFBundleIdentifier fr.julienxx.oss.terminal-notifier.${name}" "${plist}"
+    "${buddy}" -c "Set :CFBundleIdentifier ${identifier}" "${plist}"
     "${buddy}" -c "Set :CFBundleIconFile ${display}" "${plist}" 2>/dev/null \
         || "${buddy}" -c "Add :CFBundleIconFile string ${display}" "${plist}"
     "${buddy}" -c "Set :CFBundleName ${display}" "${plist}" 2>/dev/null || true
@@ -105,7 +152,8 @@ main() {
     local logo
     local dest
     local display
-    local work
+    local python
+    local identifier
     local url
 
     if [ -z "${name}" ] || ! [[ "${name}" =~ ${NAME_PATTERN} ]]; then
@@ -129,30 +177,33 @@ main() {
         exit 1
     fi
 
-    work="$(mktemp -d)"
-    trap 'rm -rf "${work}"' EXIT
+    python="$(pillow_python)"
+    identifier="$(icon_identifier "${name}" "${logo}")"
+
+    WORK="$(mktemp -d)"
+    trap cleanup EXIT
 
     # The upstream release is a signed, prebuilt binary, which needs no Xcode.
     echo "Fetching terminal-notifier ${TERMINAL_NOTIFIER_VERSION}..."
-    curl -fsSL -o "${work}/tn.zip" "${url}"
-    unzip -q "${work}/tn.zip" -d "${work}"
+    curl -fsSL -o "${WORK}/tn.zip" "${url}"
+    unzip -q "${WORK}/tn.zip" -d "${WORK}"
 
-    if [ ! -d "${work}/terminal-notifier.app" ]; then
+    if [ ! -d "${WORK}/terminal-notifier.app" ]; then
         echo "The terminal-notifier download was not laid out as expected." >&2
         exit 1
     fi
 
     echo "Preparing the icon..."
-    prepare_icon "${logo}" "${work}/icon.png"
-    make_icns "${work}/icon.png" "${work}/${display}.icns" "${work}/${display}.iconset"
+    prepare_icon "${logo}" "${WORK}/icon.png" "${python}"
+    make_icns "${WORK}/icon.png" "${WORK}/${display}.icns" "${WORK}/${display}.iconset"
 
     echo "Assembling ${dest}..."
-    assemble_app "${work}/terminal-notifier.app" "${work}/${display}.icns" "${name}" "${display}" "${dest}"
+    assemble_app "${WORK}/terminal-notifier.app" "${WORK}/${display}.icns" "${name}" "${display}" "${dest}" "${identifier}"
 
     /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "${dest}" || true
 
     echo "Built ${dest}"
-    echo "Allow it once in System Settings, Notifications, ${display}; then send a test banner:"
+    echo "Built as ${identifier}. If macOS asks, allow ${display} to send notifications."
     "${dest}/Contents/MacOS/terminal-notifier" -title "${display}" \
         -message "Notifier installed. Banners will look like this." >/dev/null 2>&1 || true
 }

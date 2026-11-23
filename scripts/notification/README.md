@@ -65,12 +65,24 @@ tests with `just -g notify-relay-test` (`t nrt`).
 
 A banner's icon comes from the app that posts it, so each icon is its own
 copy of terminal-notifier. `build-notifier-app.sh <name>` makes
-`~/Applications/<name>-notifier.app` from `icons/<name>.png`; run it on the
-Mac with **`just -g notifier-app <name>`** (`t nap quill`, `t nap turva`,
-`t nap juttu`), then allow the new app once in System Settings,
-Notifications. A logo with a solid background is used as the whole icon;
-one with a see-through background is set on white, inset so the rounded
-corners do not clip it.
+`~/Applications/<name>-notifier.app` from `icons/<name>.png`. A logo with a
+solid background is used as the whole icon; one with a see-through
+background is set on white, inset so the rounded corners do not clip it.
+
+**After pulling any banner change, run `just -g refresh-banners` (`t rfb`)
+on the Mac.** It rebuilds every icon's app, copies the current banner
+scripts into the relay's and the listener's installed folders, and restarts
+macOS's notification services. `t nap <name>` rebuilds one app on its own.
+
+- **Pillow is set up for you.** The builder needs it to prepare an icon.
+  When the Mac's `python3` lacks it, the builder makes a private
+  environment in `~/.venvs/notifier` once and uses that, since Homebrew's
+  Python refuses `pip` installs. `TURVA_NOTIFY_VENV` puts it elsewhere.
+- **A changed picture gets a new app identifier.** macOS keeps a
+  notification app's icon under its identifier and keeps showing the old
+  one even after a rebuild and a restart. So the identifier ends in a
+  checksum of the picture: a new picture is a new app to macOS, which may
+  ask once to allow it. The same picture keeps the same identifier.
 
 The folder a banner came from picks its icon:
 
