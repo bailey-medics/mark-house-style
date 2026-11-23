@@ -413,3 +413,48 @@ STUB
     [ "$status" -eq 0 ]
     [ "$(cat "${BATS_TEST_TMPDIR}/code-args")" = $'--folder-uri\nvscode-remote://ssh-remote+devbox/home/mark/github/turva-5' ]
 }
+
+# The banner relay, a VS Code extension, reaches the box over VS Code's own
+# connection, which may be a tunnel. It names such a box "tunnel+<name>".
+listen_as() {
+    python3 "${BATS_TEST_DIRNAME}/../notification-queue.py" show \
+        --show-script "$SHOW_STUB" --box "$1" \
+        --state "${BATS_TEST_TMPDIR}/last-shown"
+}
+
+@test "the Mac accepts a tunnel box from the relay and passes it on" {
+    stub_show
+    now="$(date +%s)"
+
+    banner_line "$now" "turva-4" "Did the thing" | listen_as "tunnel+devbox-tunnel"
+
+    [ "$(tail -n 2 "$SHOWN" | head -n 1)" = "tunnel+devbox-tunnel" ]
+}
+
+@test "the Mac refuses a tunnel box whose name starts with a dash" {
+    stub_show
+    now="$(date +%s)"
+
+    banner_line "$now" "turva-4" "Did the thing" | listen_as "tunnel+-oProxyCommand=x"
+
+    [ ! -e "$SHOWN" ]
+}
+
+@test "for a tunnel, the click looks for the window titled with [Tunnel: devbox-tunnel]" {
+    stub_focus_tools
+    FOCUS="${BATS_TEST_DIRNAME}/../notification-focus.sh"
+
+    OSASCRIPT_STATUS=0 run "$FOCUS" /home/mark/github/turva-5 tunnel+devbox-tunnel
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/osascript-name")" = "turva-5 [Tunnel: devbox-tunnel]" ]
+    [ ! -e "${BATS_TEST_TMPDIR}/code-args" ]
+}
+
+@test "for a tunnel, with no window in view, the click opens the folder over the tunnel" {
+    stub_focus_tools
+    FOCUS="${BATS_TEST_DIRNAME}/../notification-focus.sh"
+
+    run "$FOCUS" /home/mark/github/turva-5 tunnel+devbox-tunnel
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/code-args")" = $'--folder-uri\nvscode-remote://tunnel+devbox-tunnel/home/mark/github/turva-5' ]
+}

@@ -45,8 +45,20 @@ target="${1:-}"
 remote="${2:-}"
 [ -n "$target" ] || exit 0
 
+# A box over Remote-SSH titles its windows "[SSH: devbox]". One reached by
+# a VS Code tunnel comes as "tunnel+<name>", from the banner relay, and
+# titles them "[Tunnel: <name>]".
 name="$(basename "$target")"
-[ -n "$remote" ] && name="$name [SSH: $remote]"
+case "$remote" in
+    "") ;;
+    tunnel+*) name="$name [Tunnel: ${remote#tunnel+}]" ;;
+    *) name="$name [SSH: $remote]" ;;
+esac
+
+case "$remote" in
+    tunnel+*) authority="$remote" ;;
+    *) authority="ssh-remote+$remote" ;;
+esac
 
 # 1. Raise an existing window by title.
 if osascript - "$name" >/dev/null 2>&1 <<'OSA'
@@ -77,10 +89,10 @@ if [ -n "$remote" ]; then
     code="${TURVA_NOTIFY_CODE:-/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code}"
 
     if [ -x "$code" ]; then
-        "$code" --folder-uri "vscode-remote://ssh-remote+${remote}${target}" \
+        "$code" --folder-uri "vscode-remote://${authority}${target}" \
             >/dev/null 2>&1
     else
-        open "vscode://vscode-remote/ssh-remote+${remote}${target}" \
+        open "vscode://vscode-remote/${authority}${target}" \
             >/dev/null 2>&1
     fi
 

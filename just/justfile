@@ -197,6 +197,21 @@ notify-listen-install:
     "{{house}}"/scripts/notification/notification-listen-install.sh
 
 
+alias nri := notify-relay-install
+# Build the banner relay and install it in the Mac's VS Code, for banners where SSH to the box is blocked (macOS only)
+[no-cd]
+notify-relay-install:
+    "{{house}}"/scripts/notification/notification-relay-install.sh
+
+
+alias nrt := notify-relay-test
+# Run the banner relay's tests and type check, and the banner scripts' tests
+[no-cd]
+notify-relay-test:
+    cd "{{house}}/scripts/notification/vscode-relay" && npm ci --no-audit --no-fund --loglevel=error && npm test && npm run typecheck
+    bats "{{house}}/scripts/notification/tests"
+
+
 # Stacked pull requests
 #
 # Recipes over the `gh stack` extension, for building a piece of work as a

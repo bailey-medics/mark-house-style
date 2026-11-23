@@ -1,0 +1,58 @@
+{
+  "name": "banner-relay",
+  "displayName": "Banner relay",
+  "description": "Shows the dev box's finished-response banners on the Mac, through VS Code's own connection to the box",
+  "version": "0.1.0",
+  "publisher": "mark-house-style",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "engines": {
+    "vscode": "^1.146.0"
+  },
+  "extensionKind": [
+    "ui"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "Banner relay",
+      "properties": {
+        "bannerRelay.box": {
+          "type": "string",
+          "default": "",
+          "description": "The box's name for a banner's click. Empty to take it from the window's connection."
+        },
+        "bannerRelay.queuePath": {
+          "type": "string",
+          "default": "",
+          "description": "The banner queue's path on the box. Empty to find it from the open folder's home."
+        },
+        "bannerRelay.scriptsDir": {
+          "type": "string",
+          "default": "",
+          "description": "Where the Mac's banner scripts are. Empty for the folder `t nli` installs them to."
+        },
+        "bannerRelay.intervalSeconds": {
+          "type": "number",
+          "default": 3,
+          "description": "How often to look for new banners, in seconds."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --test test/",
+    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository --skip-license -o banner-relay.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/vscode": "1.146.0",
+    "@vscode/vsce": "4.1.1",
+    "typescript": "5.9.3"
+  }
+}

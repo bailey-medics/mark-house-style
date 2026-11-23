@@ -52,7 +52,9 @@ FIELD_LIMITS = {"title": 100, "body": 300, "spoken": 100}
 # would read as an option.
 GROUP_PATTERN = re.compile(r"^[A-Za-z0-9._][A-Za-z0-9._-]{0,99}$")
 PATH_PATTERN = re.compile(r"^/[A-Za-z0-9._/-]{0,300}$")
-BOX_PATTERN = re.compile(r"^[A-Za-z0-9._][A-Za-z0-9._-]{0,99}$")
+# A box is an SSH host as VS Code knows it, or a VS Code tunnel, which the
+# banner relay names "tunnel+<name>" so a click looks for a tunnel window.
+BOX_PATTERN = re.compile(r"^(tunnel\+)?[A-Za-z0-9._][A-Za-z0-9._-]{0,99}$")
 CONTROL_CHARACTERS = re.compile(r"[\x00-\x1f\x7f]")
 
 Banner = dict[str, str | float]

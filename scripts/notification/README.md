@@ -33,6 +33,32 @@ On the Mac, once:
 
 The queue is shared with Quill Medical on purpose, so one listener on the Mac shows both repositories' banners. If Quill Medical's listener is already installed, the install stops and says so, because two listeners would show every banner twice.
 
+## When the Mac cannot reach the box by SSH
+
+The listener needs `ssh devbox` to work, which on some networks it cannot,
+such as hospital wifi that blocks Tailscale. VS Code can still reach the box
+there, through a VS Code tunnel, so the banner relay brings the banners over
+that connection instead.
+
+- **`vscode-relay/`** - a small VS Code extension that runs on the Mac side
+  of a window connected to the box. Every few seconds it reads the last lines
+  of the queue through VS Code's own connection, and hands them to the Mac's
+  `notification-queue.py`, which checks them and shows each banner once.
+  It shares that script's record of what was shown with the listener, so a
+  banner never shows twice when both work. The box still never connects to
+  the Mac.
+- It only runs while a VS Code window on the Mac is connected to the box,
+  with a folder on the box open. With several such windows, one relays.
+- A click on a relayed banner finds the window titled `[Tunnel: <name>]`,
+  or opens the folder over the tunnel.
+
+On the Mac, run **`just -g notify-relay-install`** (`t nri`). It runs
+`notify-listen-install` first, for the scripts the relay calls, then builds
+the extension and installs it in VS Code. Reload the windows connected to
+the box to start it. Its settings, under "Banner relay" in VS Code, are
+needed only when it cannot work out the box or the queue itself. Run its
+tests with `just -g notify-relay-test` (`t nrt`).
+
 ## Settings
 
 These are read from the environment, on the Mac unless it says otherwise:
