@@ -146,6 +146,17 @@ assemble_app() {
     codesign --force --deep -s - "${dest}" >/dev/null 2>&1
 }
 
+# Show what the new app's banners look like. In the background, because
+# macOS can hold the first banner from a new app while it asks whether to
+# allow it, and a build must never wait on that answer.
+send_test_banner() {
+    local app="$1"
+    local display="$2"
+
+    "${app}/Contents/MacOS/terminal-notifier" -title "${display}" \
+        -message "Notifier installed. Banners will look like this." >/dev/null 2>&1 &
+}
+
 main() {
     local name="${1:-}"
     local here
@@ -204,8 +215,7 @@ main() {
 
     echo "Built ${dest}"
     echo "Built as ${identifier}. If macOS asks, allow ${display} to send notifications."
-    "${dest}/Contents/MacOS/terminal-notifier" -title "${display}" \
-        -message "Notifier installed. Banners will look like this." >/dev/null 2>&1 || true
+    send_test_banner "${dest}" "${display}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

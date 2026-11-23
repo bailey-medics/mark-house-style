@@ -152,3 +152,24 @@ EOF
     [[ "$output" != *"unbound variable"* ]]
     [ -z "$(ls -A "${TMPDIR}")" ]
 }
+
+@test "the test banner never holds up a build, even when macOS keeps it waiting" {
+    local app="${BATS_TEST_TMPDIR}/slow-notifier.app"
+
+    mkdir -p "${app}/Contents/MacOS"
+    cat >"${app}/Contents/MacOS/terminal-notifier" <<'EOF'
+#!/bin/bash
+echo "posted" >>"$CALLS"
+sleep 30
+EOF
+    chmod +x "${app}/Contents/MacOS/terminal-notifier"
+    source "$SCRIPT"
+    SECONDS=0
+
+    send_test_banner "${app}" "Slow"
+
+    [ "${SECONDS}" -lt 5 ]
+    sleep 1
+    grep -qx "posted" "$CALLS"
+    pkill -f "${app}/Contents/MacOS/terminal-notifier" || true
+}
