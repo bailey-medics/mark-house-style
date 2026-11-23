@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Opens the 10 minute test window: starts the bridge on loopback with a
-# fresh secret path, and the named Cloudflare tunnel in front of it, then
-# prints the address to add in claude.ai as a custom connector. Both stop
-# after 10 minutes, or on Ctrl+C. No login: this is for the Phase 3 test
-# only. See the voice bridge build plan.
+# Opens a 10 minute test window: starts the bridge on loopback, and the
+# named Cloudflare tunnel in front of it, then prints the address to add
+# in claude.ai as a custom connector. Both stop after 10 minutes, or on
+# Ctrl+C. The bridge needs the login that scripts/voice-init.ts makes, and
+# will not start without one. See the voice bridge build plan.
 #
 # The tunnel's host name is read from a file outside the repository, so
 # it is never in a commit. The name stays in DNS when the window closes,
@@ -45,7 +45,6 @@ if ! command -v cloudflared >/dev/null 2>&1; then
 fi
 
 work="$(mktemp -d "${XDG_RUNTIME_DIR}/voice-window.XXXXXX")"
-secret="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(16).toString("hex"))')"
 bridge_pid=""
 tunnel_pid=""
 
@@ -57,11 +56,33 @@ stop() {
     echo "Window closed: the tunnel and the bridge have stopped."
 }
 trap stop EXIT
-trap 'exit 130' INT TERM
+trap 'exit 130' INT TERM HUP QUIT
 
-VOICE_BRIDGE_PATH_SECRET="${secret}" VOICE_BRIDGE_PORT="${PORT}" \
-    node "${HERE}/src/bridge-main.ts" 2> >(tee "${work}/bridge.log" >&2) &
+# The bridge runs under timeout as well as the tunnel, a minute longer, so
+# neither can outlive the window even if this script is killed outright.
+VOICE_BRIDGE_PORT="${PORT}" timeout "$((WINDOW_SECONDS + 60))" node "${HERE}/src/bridge-main.ts" \
+    2> >(tee "${work}/bridge.log" >&2) &
 bridge_pid=$!
+
+# The bridge stops at once when there is no usable login, and says why.
+# The tunnel must not open in front of nothing.
+listening=""
+for _ in $(seq 1 20); do
+    if grep -q "bridge listening" "${work}/bridge.log" 2>/dev/null; then
+        listening="yes"
+        break
+    fi
+
+    if ! kill -0 "${bridge_pid}" 2>/dev/null; then
+        break
+    fi
+    sleep 0.5
+done
+
+if [ -z "${listening}" ]; then
+    echo "The bridge did not start, so the window stays shut." >&2
+    exit 1
+fi
 
 timeout "${WINDOW_SECONDS}" cloudflared tunnel --no-autoupdate run --url "http://127.0.0.1:${PORT}" "${TUNNEL_NAME}" \
     > "${work}/tunnel.log" 2>&1 &
@@ -79,6 +100,11 @@ for _ in $(seq 1 60); do
         cat "${work}/tunnel.log" >&2
         exit 1
     fi
+
+    if ! kill -0 "${bridge_pid}" 2>/dev/null; then
+        echo "The bridge stopped, so the window is closing." >&2
+        exit 1
+    fi
     sleep 1
 done
 
@@ -90,9 +116,10 @@ fi
 echo ""
 echo "Connector address, open for $((WINDOW_SECONDS / 60)) minutes:"
 echo ""
-echo "    https://${host}/${secret}/mcp"
+echo "    https://${host}/mcp"
 echo ""
-echo "Add it in claude.ai as a custom connector with no sign in. Ctrl+C closes the window early."
+echo "Add it in claude.ai as a custom connector: choose No sign-in, and give it the"
+echo "request header that voice-init printed. Ctrl+C closes the window early."
 echo ""
 
 wait "${tunnel_pid}" || true

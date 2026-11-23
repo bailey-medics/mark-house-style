@@ -39,6 +39,9 @@ test("parseIPv4 and inRange read addresses correctly", () => {
     assert.equal(parseIPv4("0.0.0.1"), 1);
     assert.equal(parseIPv4("1.2.3"), null);
     assert.equal(parseIPv4("01x.2.3.4"), null);
+    assert.equal(parseIPv4("160.079.104.001"), null);
+    assert.equal(parseIPv4("160.79.104.01"), null);
+    assert.equal(parseIPv4("160.79.104.0"), 160 * 256 ** 3 + 79 * 256 ** 2 + 104 * 256);
     assert.equal(inRange("10.0.0.1", "10.0.0.0/8"), true);
     assert.equal(inRange("11.0.0.1", "10.0.0.0/8"), false);
     assert.equal(inRange("10.0.0.1", "10.0.0.0/33"), false);

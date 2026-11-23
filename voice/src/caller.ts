@@ -24,7 +24,8 @@ export function parseIPv4(address: string): number | null {
     let value = 0;
 
     for (const part of parts) {
-        if (!/^\d{1,3}$/.test(part)) {
+        // No leading zeros: 010 could be read as ten or as eight.
+        if (!/^(0|[1-9]\d{0,2})$/.test(part)) {
             return null;
         }
 

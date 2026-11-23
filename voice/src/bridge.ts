@@ -1,7 +1,8 @@
 // The bridge: an MCP server over Streamable HTTP, for claude.ai's custom
 // connector. It listens on loopback only, and cloudflared is the door to
 // it. Every request must come through the tunnel from Anthropic's ranges,
-// and to a secret path; anything else gets nothing.
+// to the one path, and carry the login's token; anything else gets
+// nothing. There is no way to switch the login off.
 
 import { createServer, type IncomingMessage, type Server as HttpServer, type ServerResponse } from "node:http";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -15,6 +16,11 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { CALLER_HEADER, checkCaller } from "./caller.ts";
 import { MAX_TEXT_LENGTH } from "./limits.ts";
+import { checkToken, loadLogin, LoginError } from "./login.ts";
+import { createWrongTokenAlarm, WRONG_TOKEN_ALARM_COUNT } from "./alarm.ts";
+
+// The one path the bridge serves.
+export const MCP_PATH = "/mcp";
 
 // The longest ping delay, for measuring how long voice mode will wait.
 export const MAX_PING_SECONDS = 600;
@@ -23,29 +29,39 @@ export const MAX_PING_SECONDS = 600;
 // message is a few kilobytes at most.
 export const MAX_BODY_BYTES = 64 * 1024;
 
+// How long a connection may take to send its headers, and its whole
+// request, before it is dropped, and how many connections may be open at
+// once. Without these, anything on the box could hold connections open
+// half-sent until the bridge ran out of memory, with no token needed. The
+// only real caller is cloudflared, which is quick. These time the request
+// coming in, not the answer going out, so a slow tool is not cut short.
+export const HEADERS_TIMEOUT_MS = 10_000;
+export const REQUEST_TIMEOUT_MS = 30_000;
+export const MAX_CONNECTIONS = 64;
+const CONNECTION_CHECK_MS = 5_000;
+
 export const STILL_WORKING =
     "Still working on that. Ask me to check for the reply in a little while.";
 
 export const NOTHING_WAITING = "There is no reply waiting.";
 
 export type BridgeOptions = {
-    // 32 lowercase hex characters; the bridge serves only /<secret>/mcp.
-    pathSecret: string;
+    // Where the login record is kept. It is read afresh for every request,
+    // so a new token, or deleting the file, takes effect at once.
+    loginPath: string;
     // Sends text to the voice session and resolves with its reply.
     ask: (text: string) => Promise<string>;
     // How long ask waits before saying it is still working.
     askWaitMs: number;
     log?: (line: string) => void;
+    // The clock, so that tests can move it.
+    now?: () => Date;
 };
 
 type BridgeState = {
     lateReplies: string[];
     pending: number;
 };
-
-export function isPathSecret(value: string | undefined): value is string {
-    return value !== undefined && /^[0-9a-f]{32}$/.test(value);
-}
 
 function toolResult(text: string, isError = false): CallToolResult {
     return { content: [{ type: "text", text }], isError };
@@ -202,18 +218,66 @@ function buildMcpServer(options: BridgeOptions, state: BridgeState): Server {
     return server;
 }
 
-function refuse(res: ServerResponse, status: 403 | 404): void {
-    res.writeHead(status, { "content-type": "text/plain" }).end(status === 403 ? "Forbidden\n" : "Not found\n");
+type Refusal = 401 | 403 | 404;
+
+const REFUSALS: Record<Refusal, string> = {
+    401: "Unauthorised\n",
+    403: "Forbidden\n",
+    404: "Not found\n",
+};
+
+// The path of a request, or null when its target cannot be read as one.
+function pathOf(target: string | undefined): string | null {
+    try {
+        return new URL(target ?? "/", "http://localhost").pathname;
+    } catch {
+        return null;
+    }
+}
+
+function refuse(res: ServerResponse, status: Refusal): void {
+    const headers: Record<string, string> = { "content-type": "text/plain" };
+    if (status === 401) {
+        headers["www-authenticate"] = 'Bearer realm="voice"';
+    }
+
+    res.writeHead(status, headers).end(REFUSALS[status]);
+}
+
+type LoginCheck = { ok: true } | { ok: false; reason: string; wrongToken: boolean };
+
+// Checks the request's token against the login on disk. Anything that
+// stops the login being read is a refusal, never a pass. The reason goes
+// to the log only, and the header itself is never logged.
+function checkLogin(loginPath: string, header: string | undefined, now: Date): LoginCheck {
+    let record;
+    try {
+        record = loadLogin(loginPath);
+    } catch (error) {
+        if (error instanceof LoginError) {
+            return { ok: false, reason: `no usable login: ${error.message}`, wrongToken: false };
+        }
+
+        throw error;
+    }
+
+    const verdict = checkToken(record, header, now);
+    if (verdict.ok) {
+        return { ok: true };
+    }
+
+    return { ok: false, reason: `${verdict.reason} token`, wrongToken: verdict.reason === "wrong" };
 }
 
 export function createBridge(options: BridgeOptions): HttpServer {
-    if (!isPathSecret(options.pathSecret)) {
-        throw new Error("The path secret must be 32 lowercase hex characters.");
-    }
-
     const state: BridgeState = { lateReplies: [], pending: 0 };
-    const mcpPath = `/${options.pathSecret}/mcp`;
+    const alarm = createWrongTokenAlarm();
+    const now = options.now ?? ((): Date => new Date());
 
+    // The checks run in this order, and each one answers before the body
+    // is read: the caller's address, the path, the token. A wrong token is
+    // refused and counted for the alarm, and nothing is ever locked: the
+    // right token always works.
     const handle = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
         const verdict = checkCaller(req.socket.remoteAddress, req.headers[CALLER_HEADER]);
         if (!verdict.allowed) {
@@ -222,10 +286,20 @@ export function createBridge(options: BridgeOptions): HttpServer {
             return;
         }
 
-        const path = new URL(req.url ?? "/", "http://localhost").pathname;
-        if (path !== mcpPath) {
+        if (pathOf(req.url) !== MCP_PATH) {
             options.log?.(`refused ${req.method} from ${verdict.caller} (wrong path)`);
             refuse(res, 404);
+            return;
+        }
+
+        const login = checkLogin(options.loginPath, req.headers.authorization, now());
+        if (!login.ok) {
+            options.log?.(`refused ${req.method} from ${verdict.caller} (${login.reason})`);
+            if (login.wrongToken && alarm.wrong(now())) {
+                options.log?.(`alarm: ${WRONG_TOKEN_ALARM_COUNT} wrong tokens within the hour. Somebody may be trying the bridge.`);
+            }
+
+            refuse(res, 401);
             return;
         }
 
@@ -268,7 +342,9 @@ export function createBridge(options: BridgeOptions): HttpServer {
             const methods = (Array.isArray(parsed) ? parsed : [parsed])
                 .map((message: unknown) =>
                     typeof message === "object" && message !== null && "method" in message
-                        ? String(message.method)
+                        ? typeof message.method === "string"
+                            ? message.method
+                            : "unreadable"
                         : "response",
                 )
                 .join(", ");
@@ -279,12 +355,22 @@ export function createBridge(options: BridgeOptions): HttpServer {
         await transport.handleRequest(req, res, parsed);
     };
 
-    return createServer((req, res) => {
-        handle(req, res).catch((error: unknown) => {
-            options.log?.(`error: ${error instanceof Error ? error.message : String(error)}`);
-            if (!res.headersSent) {
-                res.writeHead(500, { "content-type": "text/plain" }).end("Internal error\n");
-            }
-        });
-    });
+    const server = createServer(
+        {
+            headersTimeout: HEADERS_TIMEOUT_MS,
+            requestTimeout: REQUEST_TIMEOUT_MS,
+            connectionsCheckingInterval: CONNECTION_CHECK_MS,
+        },
+        (req, res) => {
+            handle(req, res).catch((error: unknown) => {
+                options.log?.(`error: ${error instanceof Error ? error.message : String(error)}`);
+                if (!res.headersSent) {
+                    res.writeHead(500, { "content-type": "text/plain" }).end("Internal error\n");
+                }
+            });
+        },
+    );
+    server.maxConnections = MAX_CONNECTIONS;
+
+    return server;
 }
