@@ -89,6 +89,63 @@ group_of() {
     [[ "$output" == *"spoken=Turva one"* ]]
 }
 
+# A Juttu checkout and two worktrees, named as on the box: the folders
+# carry the repository's full name, juttu-messaging.
+make_juttu() {
+    JUTTU="${BATS_TEST_TMPDIR}/juttu-messaging"
+
+    git init -q "$JUTTU"
+    git -C "$JUTTU" -c user.name=t -c user.email=t@example.com \
+        commit -q --allow-empty -m "start"
+    git -C "$JUTTU" worktree add -q "${JUTTU}-2" -b second
+    git -C "$JUTTU" worktree add -q "${JUTTU}-3" -b third
+}
+
+@test "a Juttu banner is titled with the short session name, not the folder" {
+    make_juttu
+
+    run shown_for "$JUTTU"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"title=juttu"$'\n'* ]]
+
+    run shown_for "${JUTTU}-2"
+    [[ "$output" == *"title=juttu-2"$'\n'* ]]
+
+    run shown_for "${JUTTU}-3" needs-input
+    [[ "$output" == *"title=juttu-3"$'\n'* ]]
+}
+
+@test "a Juttu worktree is spoken as Juttu and its number, never as Turva" {
+    make_juttu
+
+    run shown_for "$JUTTU"
+    [[ "$output" == *"spoken=Juttu one"* ]]
+
+    run shown_for "${JUTTU}-2"
+    [[ "$output" == *"spoken=Juttu 2"* ]]
+    [[ "$output" != *"Turva"* ]]
+}
+
+@test "each Juttu worktree keeps a banner group of its own" {
+    make_juttu
+
+    run shown_for "$JUTTU"
+    [ "$(group_of "$output")" = "turva-claude-juttu" ]
+
+    run shown_for "${JUTTU}-2"
+    [ "$(group_of "$output")" = "turva-claude-juttu-2" ]
+}
+
+@test "another numbered folder is spoken by its own name, not as Turva" {
+    other="${BATS_TEST_TMPDIR}/digest-2"
+    mkdir -p "$other"
+
+    run shown_for "$other"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"spoken=digest 2"* ]]
+}
+
 @test "the banner carries the bold lead of the closing TL;DR" {
     payload='{"cwd": "'"$OTHER"'", "last_assistant_message": "Done.\n\n## TL;DR\n\n- **Moved the scripts.** Details follow."}'
 

@@ -52,6 +52,16 @@ root="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null || true)"
 worktree="$(basename "$cwd")"
 branch="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 
+# The banner names the session the way tmux and `t c` do. Juttu's folders
+# carry the repository's full name, juttu-messaging, but its sessions are
+# juttu, juttu-2 and so on, so the banner says that too. Every other folder
+# is named as it is.
+case "$worktree" in
+    juttu-messaging) name="juttu" ;;
+    juttu-messaging-[1-9]*) name="juttu-${worktree##*-}" ;;
+    *) name="$worktree" ;;
+esac
+
 # What the turn actually did, taken from `last_assistant_message` in the
 # payload. The first bullet of the closing TL;DR is written to carry the
 # result on its own, so its bold lead makes a better banner line than the
@@ -72,10 +82,10 @@ if [ -n "$payload" ] && command -v python3 >/dev/null 2>&1; then
 fi
 
 if [ "$MODE" = "needs-input" ]; then
-    title="$worktree"
+    title="$name"
     body="${summary:-Claude is waiting for your reply}"
 else
-    title="$worktree"
+    title="$name"
     if [ -n "$summary" ]; then
         body="$summary"
     elif [ -n "$branch" ]; then
@@ -91,15 +101,19 @@ fi
 # worktree finishing twice leaves one. A question shares the group with a
 # finished turn. Mark asked for that on 27 October 2026, after the two kinds
 # had been kept apart and piled up for the same worktree.
-group="turva-claude-$worktree"
+group="turva-claude-$name"
 
-# Spoken phrase. Directory names like "turva-4" read poorly aloud, so speak
-# the trailing number on its own ("Turva 4"); the main checkout has no suffix
-# and becomes "Turva one".
-case "$worktree" in
-    *-[0-9]*) spoken="Turva ${worktree##*-}" ;;
+# Spoken phrase. Names like "turva-4" read poorly aloud, so speak the
+# project and then the trailing number on its own ("Turva 4", "Juttu 2");
+# a main checkout has no suffix and becomes "Turva one" or "Juttu one".
+# Any other numbered folder is spoken by its own name and number.
+case "$name" in
     turva) spoken="Turva one" ;;
-    *) spoken="$worktree" ;;
+    juttu) spoken="Juttu one" ;;
+    turva-[0-9]*) spoken="Turva ${name##*-}" ;;
+    juttu-[0-9]*) spoken="Juttu ${name##*-}" ;;
+    *-[0-9]*) spoken="${name%-*} ${name##*-}" ;;
+    *) spoken="$name" ;;
 esac
 
 # Set TURVA_NOTIFY_DEBUG=1 to print what would be shown and stop; used by

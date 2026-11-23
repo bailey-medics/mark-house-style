@@ -10,7 +10,7 @@
 #
 # The title is kept in the tmux session's `@topic` option, and the
 # `set-titles-string` in ~/.tmux.conf shows it after "Claude" for Turva's
-# `turva` sessions, after "Bode" for Bode's, and after "C<worktree number>"
+# `turva` sessions, after "Juttu" for Juttu's, and after "C<worktree number>"
 # for Quill Medical's.
 #
 # After each prompt a small model is shown the title, the person's
@@ -20,8 +20,8 @@
 # only when the next prompt agrees, so a one-message aside never renames
 # the tab.
 #
-# Works only in Turva's `turva` and `turva-<number>` sessions and Bode's
-# `bode` and `bode-<number>` (the ones `t c` makes), in
+# Works only in Turva's `turva` and `turva-<number>` sessions and Juttu's
+# `juttu` and `juttu-<number>` (the ones `t c` makes), in
 # Quill Medical's `q` sessions (`q1` to `q99`) and in Owl's `owl` session. Owl's alerts arrive as `/clear` then `/alert`,
 # and a slash command is skipped, so during an alert the tab shows Claude
 # Code's own title instead. A plain shell, Owl's `towl` and a web session
@@ -29,7 +29,7 @@
 # exits 2 blocks the prompt, and one that prints adds to the context.
 set -uo pipefail
 
-readonly SESSION_PATTERN='^((turva|bode)(-[0-9]+)?|q[0-9]+|owl)$'
+readonly SESSION_PATTERN='^((turva|juttu)(-[0-9]+)?|q[0-9]+|owl)$'
 readonly RECENT_MESSAGES=2
 readonly MESSAGE_CHARACTERS=400
 readonly TITLE_CHARACTERS=60

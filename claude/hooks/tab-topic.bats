@@ -215,24 +215,24 @@ prompt() {
     [ ! -e "${ASKED}" ]
 }
 
-@test "Bode's bode session is named like a q session" {
-    export SESSION="bode"
-    answer "Tab topic for Bode"
+@test "Juttu's juttu session is named like a q session" {
+    export SESSION="juttu"
+    answer "Tab topic for Juttu"
 
-    prompt "start the Bode work"
-    [ "$(topic)" = "Tab topic for Bode" ]
+    prompt "start the Juttu work"
+    [ "$(topic)" = "Tab topic for Juttu" ]
 }
 
-@test "a worktree's bode-2 session is named too" {
-    export SESSION="bode-2"
-    answer "Bode worktree topic"
+@test "a worktree's juttu-2 session is named too" {
+    export SESSION="juttu-2"
+    answer "Juttu worktree topic"
 
     prompt "start the worktree work"
-    [ "$(topic)" = "Bode worktree topic" ]
+    [ "$(topic)" = "Juttu worktree topic" ]
 }
 
-@test "a bode shell session is left alone" {
-    export SESSION="tmux-bode-1"
+@test "a juttu shell session is left alone" {
+    export SESSION="tmux-juttu-1"
     answer "Should not be used"
 
     run prompt "first"

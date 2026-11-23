@@ -18,8 +18,9 @@ claude-session:
     # Opens this checkout's Claude session in this terminal, and makes sure
     # Claude is running in it.
     #
-    # The session is named after the folder: turva or bode for a main
-    # checkout, and turva-2 or bode-2 for the worktree in that folder.
+    # The session is named after the folder: turva, or juttu for the
+    # juttu-messaging folder, for a main checkout, and turva-2 or juttu-2 for
+    # the worktree in turva-2 or juttu-messaging-2.
     #
     # - If there is no claude tmux session, it starts one with Claude in it.
     # - If Claude has stopped but the tmux session exists, it starts Claude
@@ -39,20 +40,29 @@ claude-session:
     top="$(git rev-parse --show-toplevel)"
     folder="$(basename "${top}")"
 
-    # A main checkout is named after its project, turva or bode, and a
-    # worktree adds a number: turva-2, bode-3. The number keeps each one's
-    # sessions apart.
+    # A main checkout's sessions are named after its project, turva or
+    # juttu, and a worktree adds a number: turva-2, juttu-3. The number keeps
+    # each one's sessions apart. Juttu's folder is juttu-messaging, after its
+    # GitHub repository, but its sessions keep the short name juttu.
     case "${folder}" in
-        turva | bode)
-            project="${folder}"
+        turva)
+            project="turva"
             worktree=""
             ;;
-        turva-[2-9] | turva-[1-9][0-9] | bode-[2-9] | bode-[1-9][0-9])
-            project="${folder%-*}"
+        juttu-messaging)
+            project="juttu"
+            worktree=""
+            ;;
+        turva-[2-9] | turva-[1-9][0-9])
+            project="turva"
+            worktree="${folder##*-}"
+            ;;
+        juttu-messaging-[2-9] | juttu-messaging-[1-9][0-9])
+            project="juttu"
             worktree="${folder##*-}"
             ;;
         *)
-            echo "✗ This folder is ${folder}. Sessions are named after turva, bode, or either with -<number>, so rename the folder to one of those." >&2
+            echo "✗ This folder is ${folder}. Sessions are named after turva, juttu-messaging, or either with -<number>, so rename the folder to one of those." >&2
             exit 1
             ;;
     esac
@@ -101,7 +111,7 @@ tmux-window NUMBER="":
     # Opens a plain shell in tmux for this checkout, so a command run there
     # keeps going after this terminal closes.
     #
-    # The session is tmux-turva-1 or tmux-bode-1 for a main checkout, and
+    # The session is tmux-turva-1 or tmux-juttu-1 for a main checkout, and
     # tmux-turva-2 for the worktree in turva-2. A number gives another shell beside the
     # first: `just -g tw 2` is tmux-turva-1-2 in the main checkout, and running
     # it again comes back to it.
@@ -130,20 +140,29 @@ tmux-window NUMBER="":
     top="$(git rev-parse --show-toplevel)"
     folder="$(basename "${top}")"
 
-    # A main checkout is named after its project, turva or bode, and a
-    # worktree adds a number: turva-2, bode-3. The number keeps each one's
-    # sessions apart.
+    # A main checkout's sessions are named after its project, turva or
+    # juttu, and a worktree adds a number: turva-2, juttu-3. The number keeps
+    # each one's sessions apart. Juttu's folder is juttu-messaging, after its
+    # GitHub repository, but its sessions keep the short name juttu.
     case "${folder}" in
-        turva | bode)
-            project="${folder}"
+        turva)
+            project="turva"
             worktree=""
             ;;
-        turva-[2-9] | turva-[1-9][0-9] | bode-[2-9] | bode-[1-9][0-9])
-            project="${folder%-*}"
+        juttu-messaging)
+            project="juttu"
+            worktree=""
+            ;;
+        turva-[2-9] | turva-[1-9][0-9])
+            project="turva"
+            worktree="${folder##*-}"
+            ;;
+        juttu-messaging-[2-9] | juttu-messaging-[1-9][0-9])
+            project="juttu"
             worktree="${folder##*-}"
             ;;
         *)
-            echo "✗ This folder is ${folder}. Sessions are named after turva, bode, or either with -<number>, so rename the folder to one of those." >&2
+            echo "✗ This folder is ${folder}. Sessions are named after turva, juttu-messaging, or either with -<number>, so rename the folder to one of those." >&2
             exit 1
             ;;
     esac
