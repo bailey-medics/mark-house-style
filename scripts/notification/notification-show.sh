@@ -43,6 +43,21 @@ CHIME="${TURVA_NOTIFY_CHIME:-0}"
 # A branded notifier, if one has been built. TURVA_NOTIFY_APP points
 # somewhere else; otherwise it is looked for in ~/Applications.
 NOTIFIER_APP="${TURVA_NOTIFY_APP:-$HOME/Applications/turva-notifier.app}"
+
+# A banner from a Quill Medical folder carries the Quill icon, through the
+# app build-notifier-app.sh makes from icons/quill.png. Every other folder
+# keeps the default above until it has an icon of its own. An app named in
+# TURVA_NOTIFY_APP always wins. TURVA_NOTIFY_APP_DIR is where the built apps
+# are, ~/Applications unless set.
+if [ -z "${TURVA_NOTIFY_APP:-}" ]; then
+    folder="$(basename "${cwd:-$title}")"
+
+    case "$folder" in
+        quillmedical | quillmedical-*)
+            NOTIFIER_APP="${TURVA_NOTIFY_APP_DIR:-$HOME/Applications}/quill-notifier.app"
+            ;;
+    esac
+fi
 NOTIFIER_BIN="$NOTIFIER_APP/Contents/MacOS/terminal-notifier"
 
 # A banner and speech answer different questions: the banner says which

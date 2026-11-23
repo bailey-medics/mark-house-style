@@ -458,3 +458,60 @@ listen_as() {
     [ "$status" -eq 0 ]
     [ "$(cat "${BATS_TEST_TMPDIR}/code-args")" = $'--folder-uri\nvscode-remote://tunnel+devbox-tunnel/home/mark/github/turva-5' ]
 }
+
+# Branded notifier apps for the icon choice: each records that it was used.
+# HOME is the test's folder, so the default apps are looked for there too.
+stub_branded_apps() {
+    local name
+
+    export HOME="${BATS_TEST_TMPDIR}/home"
+    export TURVA_NOTIFY_SPEAK=0
+    unset TURVA_NOTIFY_APP
+
+    for name in quill turva; do
+        mkdir -p "${HOME}/Applications/${name}-notifier.app/Contents/MacOS"
+        cat >"${HOME}/Applications/${name}-notifier.app/Contents/MacOS/terminal-notifier" <<EOF
+#!/bin/bash
+echo "${name}" >>"${BATS_TEST_TMPDIR}/apps-used"
+EOF
+        chmod +x "${HOME}/Applications/${name}-notifier.app/Contents/MacOS/terminal-notifier"
+    done
+}
+
+@test "a banner from a Quill folder is posted through the Quill app, for its icon" {
+    stub_branded_apps
+
+    run "${BATS_TEST_DIRNAME}/../notification-show.sh" "quillmedical-6" "Done" "grp" "s" /home/mark/github/quillmedical-6
+
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/apps-used")" = "quill" ]
+}
+
+@test "a banner from any other folder keeps the default app, not the Quill one" {
+    stub_branded_apps
+
+    run "${BATS_TEST_DIRNAME}/../notification-show.sh" "turva-4" "Done" "grp" "s" /home/mark/github/turva-4
+
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/apps-used")" = "turva" ]
+}
+
+@test "a folder that only starts with the word quill is not a Quill Medical one" {
+    stub_branded_apps
+
+    run "${BATS_TEST_DIRNAME}/../notification-show.sh" "quilltest" "Done" "grp" "s" /home/mark/github/quilltest
+
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/apps-used")" = "turva" ]
+}
+
+@test "an app named in TURVA_NOTIFY_APP wins, even for a Quill folder" {
+    stub_branded_apps
+    stub_notifier
+
+    run "${BATS_TEST_DIRNAME}/../notification-show.sh" "quillmedical-6" "Done" "grp" "s" /home/mark/github/quillmedical-6
+
+    [ "$status" -eq 0 ]
+    [ -e "${BATS_TEST_TMPDIR}/notifier-args" ]
+    [ ! -e "${BATS_TEST_TMPDIR}/apps-used" ]
+}

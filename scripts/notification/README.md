@@ -61,6 +61,21 @@ the box to start it. Its settings, under "Banner relay" in VS Code, are
 needed only when it cannot work out the box or the queue itself. Run its
 tests with `just -g notify-relay-test` (`t nrt`).
 
+## Icons
+
+A banner's icon comes from the app that posts it, so each icon is its own
+copy of terminal-notifier. `build-notifier-app.sh <name>` makes
+`~/Applications/<name>-notifier.app` from `icons/<name>.png`; run it on the
+Mac with **`just -g notifier-app quill`** (`t nap`), then allow the new app
+once in System Settings, Notifications.
+
+- **Quill Medical's folders** (`quillmedical` and `quillmedical-<anything>`)
+  post through `quill-notifier.app`, so their banners carry the Quill icon.
+- **Every other folder** uses `turva-notifier.app` when one is built, and
+  the plain banner icon until then. To give another project an icon, add
+  its picture to `icons/` and a line for its folders in
+  `notification-show.sh`.
+
 ## Settings
 
 These are read from the environment, on the Mac unless it says otherwise:

@@ -212,6 +212,13 @@ notify-relay-test:
     bats "{{house}}/scripts/notification/tests"
 
 
+alias nap := notifier-app
+# Build a branded banner notifier on the Mac from scripts/notification/icons/<name>.png, such as quill (macOS only)
+[no-cd]
+notifier-app name="quill":
+    "{{house}}"/scripts/notification/build-notifier-app.sh "{{name}}"
+
+
 # Stacked pull requests
 #
 # Recipes over the `gh stack` extension, for building a piece of work as a
