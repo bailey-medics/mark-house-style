@@ -79,3 +79,12 @@ export function mayRelay(lock: string | undefined, me: string, now: number, stal
 export function lockLine(me: string, now: number): string {
     return `${me} ${now}\n`;
 }
+
+// Where the Mac keeps its record of the banners already shown. The relay
+// shares it with the SSH listener, so a banner shows once even when both
+// work. Quill Medical's listener, when installed, keeps its own.
+export function stateFile(home: string, quillListenerInstalled: boolean): string {
+    const folder = quillListenerInstalled ? "quill-notifier" : "turva-notifier";
+
+    return `${home}/Library/Caches/${folder}/last-shown`;
+}

@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { boxFromAuthority, isBox, lastLines, lockLine, mayRelay, queueFromFolders } from "../src/relay.ts";
+import { boxFromAuthority, isBox, lastLines, lockLine, mayRelay, queueFromFolders, stateFile } from "../src/relay.ts";
 
 test("an SSH connection gives the host as the box", () => {
     assert.equal(boxFromAuthority("ssh-remote+devbox"), "devbox");
@@ -57,4 +57,12 @@ test("another window's fresh lock keeps this one out", () => {
 test("another window's stale or unreadable lock is taken over", () => {
     assert.equal(mayRelay(lockLine("other", 0), "me", 20_000, 15_000), true);
     assert.equal(mayRelay("rubbish", "me", 20_000, 15_000), true);
+});
+
+test("the shown record is shared with Quill Medical's listener when it is installed", () => {
+    assert.equal(stateFile("/Users/m", true), "/Users/m/Library/Caches/quill-notifier/last-shown");
+});
+
+test("otherwise the shown record is shared with this repository's listener", () => {
+    assert.equal(stateFile("/Users/m", false), "/Users/m/Library/Caches/turva-notifier/last-shown");
 });

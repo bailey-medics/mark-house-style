@@ -7,7 +7,7 @@
   "private": true,
   "license": "GPL-3.0-only",
   "engines": {
-    "vscode": "^1.146.0"
+    "vscode": "^1.90.0"
   },
   "extensionKind": [
     "ui"
@@ -33,7 +33,7 @@
         "bannerRelay.scriptsDir": {
           "type": "string",
           "default": "",
-          "description": "Where the Mac's banner scripts are. Empty for the folder `t nli` installs them to."
+          "description": "Where the relay's copy of the banner scripts is. Empty for the folder `t nri` installs them to."
         },
         "bannerRelay.intervalSeconds": {
           "type": "number",
@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@types/node": "26.6.6",
-    "@types/vscode": "1.146.0",
+    "@types/vscode": "1.90.0",
     "@vscode/vsce": "4.1.1",
     "typescript": "5.9.3"
   }

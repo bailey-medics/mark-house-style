@@ -42,19 +42,21 @@ that connection instead.
 
 - **`vscode-relay/`** - a small VS Code extension that runs on the Mac side
   of a window connected to the box. Every few seconds it reads the last lines
-  of the queue through VS Code's own connection, and hands them to the Mac's
-  `notification-queue.py`, which checks them and shows each banner once.
-  It shares that script's record of what was shown with the listener, so a
-  banner never shows twice when both work. The box still never connects to
-  the Mac.
+  of the queue through VS Code's own connection, and hands them to its own
+  copy of `notification-queue.py` on the Mac, which checks them and shows
+  each banner once. It shares the record of what was shown with whichever
+  listener the Mac has, this repository's or Quill Medical's, so a banner
+  never shows twice when both work. The box still never connects to the
+  Mac.
 - It only runs while a VS Code window on the Mac is connected to the box,
   with a folder on the box open. With several such windows, one relays.
 - A click on a relayed banner finds the window titled `[Tunnel: <name>]`,
   or opens the folder over the tunnel.
 
-On the Mac, run **`just -g notify-relay-install`** (`t nri`). It runs
-`notify-listen-install` first, for the scripts the relay calls, then builds
-the extension and installs it in VS Code. Reload the windows connected to
+On the Mac, run **`just -g notify-relay-install`** (`t nri`). It copies the
+banner scripts the relay calls into `~/Library/Application Support/banner-relay`,
+then builds the extension and installs it in VS Code, which must be 1.90 or
+newer. Reload the windows connected to
 the box to start it. Its settings, under "Banner relay" in VS Code, are
 needed only when it cannot work out the box or the queue itself. Run its
 tests with `just -g notify-relay-test` (`t nrt`).

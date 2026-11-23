@@ -19,7 +19,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import * as vscode from "vscode";
 
-import { boxFromAuthority, isBox, lastLines, lockLine, mayRelay, queueFromFolders } from "./relay.ts";
+import { boxFromAuthority, isBox, lastLines, lockLine, mayRelay, queueFromFolders, stateFile } from "./relay.ts";
 
 const LINES = 20;
 const STALE_MS = 15_000;
@@ -87,11 +87,13 @@ async function relay(output: vscode.OutputChannel): Promise<void> {
         return;
     }
 
-    const scripts = config.get<string>("scriptsDir") || join(homedir(), "Library", "Application Support", "turva-notify");
+    // Its own copy of the banner scripts, from `t nri`, so it never depends
+    // on which listener the Mac has, or on an older copy of them.
+    const scripts = config.get<string>("scriptsDir") || join(homedir(), "Library", "Application Support", "banner-relay");
     const queueScript = join(scripts, "notification-queue.py");
     const showScript = join(scripts, "notification-show.sh");
     if (!existsSync(queueScript) || !existsSync(showScript)) {
-        warnOnce(output, "scripts", `No banner scripts in ${scripts}; run \`t nli\` on the Mac first.`);
+        warnOnce(output, "scripts", `No banner scripts in ${scripts}; run \`t nri\` on the Mac again.`);
         return;
     }
 
@@ -120,7 +122,11 @@ async function relay(output: vscode.OutputChannel): Promise<void> {
 
     const lines = lastLines(text, LINES);
     if (lines.length > 0) {
-        await show(queueScript, showScript, box, lines);
+        const state = stateFile(
+            homedir(),
+            existsSync(join(homedir(), "Library", "Application Support", "quill-notify")),
+        );
+        await show(queueScript, showScript, box, state, lines);
     }
 }
 
@@ -152,9 +158,15 @@ function claimLock(): boolean {
 }
 
 // The lines go to notification-queue.py on stdin, never through a shell.
-function show(queueScript: string, showScript: string, box: string, lines: readonly string[]): Promise<void> {
+function show(
+    queueScript: string,
+    showScript: string,
+    box: string,
+    state: string,
+    lines: readonly string[],
+): Promise<void> {
     return new Promise((resolve) => {
-        const child = spawn("python3", [queueScript, "show", "--show-script", showScript, "--box", box], {
+        const child = spawn("python3", [queueScript, "show", "--show-script", showScript, "--box", box, "--state", state], {
             stdio: ["pipe", "ignore", "ignore"],
             env: { ...process.env, PATH: `/opt/homebrew/bin:/usr/local/bin:${process.env.PATH ?? "/usr/bin:/bin"}` },
         });

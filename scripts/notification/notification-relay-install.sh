@@ -4,9 +4,10 @@
 # The relay is a VS Code extension that brings the box's banners to the Mac
 # over VS Code's own connection, for when the Mac cannot reach the box by
 # SSH, such as on a network that blocks Tailscale. It hands each banner to
-# the scripts notification-listen-install.sh copies to the Mac, so that runs
-# first, which also picks up any change to them. Run this again after the
-# relay or the banner scripts change.
+# its own copy of the banner scripts, put in ~/Library/Application
+# Support/banner-relay here, so it never depends on which listener the Mac
+# has installed, this repository's or Quill Medical's, or on an older copy.
+# Run this again after the relay or the banner scripts change.
 #
 # The Mac's bash is 3.2, so nothing newer than that is used here.
 
@@ -19,6 +20,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RELAY="$SCRIPT_DIR/vscode-relay"
+DEST="$HOME/Library/Application Support/banner-relay"
 CODE="${TURVA_NOTIFY_CODE:-/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code}"
 
 if [ ! -x "$CODE" ]; then
@@ -30,7 +32,12 @@ if [ -z "$CODE" ]; then
     exit 1
 fi
 
-bash "$SCRIPT_DIR/notification-listen-install.sh"
+mkdir -p "$DEST"
+for file in notification-queue.py notification-show.sh notification-focus.sh \
+    level-completed.mp3; do
+    cp "$SCRIPT_DIR/$file" "$DEST/$file"
+done
+chmod +x "$DEST/notification-show.sh" "$DEST/notification-focus.sh"
 
 (cd "$RELAY" && npm ci --no-audit --no-fund --loglevel=error && npm run package)
 "$CODE" --install-extension "$RELAY/banner-relay.vsix" --force
