@@ -34,6 +34,14 @@ STUB
     export PATH="${STUBS}:${PATH}"
 }
 
+# Fails the test if any recorded call matches. A bare `! grep` would not:
+# bats only fails on a negated command when it is the test's last line.
+no_call() {
+    local pattern="$1"
+
+    ! grep -qE -- "$pattern" "$CALLS"
+}
+
 @test "an unknown mode prints the usage and changes nothing" {
     run "$SCRIPT" linux
 
@@ -62,7 +70,7 @@ STUB
     SUDO_USER='dev;reboot' run "$SCRIPT" google
 
     [ "$status" -eq 1 ]
-    ! grep -q "systemctl enable" "$CALLS"
+    no_call "systemctl enable"
 }
 
 @test "google stops the tunnel, ends the RDP desktop, then starts Chrome Remote Desktop" {
@@ -82,7 +90,7 @@ STUB
     grep -q "^systemctl disable --quiet --now chrome-remote-desktop@dev$" "$CALLS"
     grep -q "^systemctl start xrdp-sesman xrdp$" "$CALLS"
     grep -q "^systemctl --user -M dev@ start devtunnel-desktop.service$" "$CALLS"
-    ! grep -q "^pkill" "$CALLS"
+    no_call "^pkill"
 }
 
 @test "off stops the tunnel and Chrome Remote Desktop, and leaves the RDP desktop" {
@@ -91,8 +99,8 @@ STUB
     [ "$status" -eq 0 ]
     grep -q "^systemctl --user -M dev@ stop devtunnel-desktop.service$" "$CALLS"
     grep -q "^systemctl disable --quiet --now chrome-remote-desktop@dev$" "$CALLS"
-    ! grep -q "^pkill" "$CALLS"
-    ! grep -qE " start " "$CALLS"
+    no_call "^pkill"
+    no_call " start "
 }
 
 @test "no mode makes anything start at boot" {
@@ -101,7 +109,7 @@ STUB
         [ "$status" -eq 0 ]
     done
 
-    ! grep -qE "(^| )enable( |$)" "$CALLS"
+    no_call "(^| )enable( |$)"
 }
 
 @test "status only reads" {
@@ -110,7 +118,7 @@ STUB
     [ "$status" -eq 0 ]
     [[ "$output" == *"Chrome Remote Desktop :"* ]]
     [[ "$output" == *"Dev tunnel host       :"* ]]
-    ! grep -qE "enable --now|disable --now| start |^pkill" "$CALLS"
+    no_call "enable --now|disable --now| start |^pkill"
 }
 
 @test "windows prints the Mac's connect command with the tunnel's name" {
@@ -174,7 +182,7 @@ STUB
     run "$SCRIPT" windows
 
     [ "$status" -eq 0 ]
-    ! grep -q "^systemd-run" "$CALLS"
+    no_call "^systemd-run"
     [[ "$output" == *"Automatic off: never"* ]]
 }
 
@@ -187,7 +195,7 @@ STUB
 
         [ "$status" -eq 0 ]
         grep -q -- "--on-active=12h " "$CALLS"
-        ! grep -q "reboot" "$CALLS"
+        no_call "reboot"
     done
 }
 
@@ -196,7 +204,7 @@ STUB
 
     [ "$status" -eq 0 ]
     grep -q "^systemctl stop remote-desktop-auto-off.timer$" "$CALLS"
-    ! grep -q "^systemd-run" "$CALLS"
+    no_call "^systemd-run"
 }
 
 @test "kill stops the tunnel, both desktops and the RDP server, and cancels the automatic off" {
@@ -208,7 +216,7 @@ STUB
     grep -q "^systemctl disable --quiet --now chrome-remote-desktop@dev$" "$CALLS"
     grep -q "^pkill -u dev -f ^/usr/lib/xorg/Xorg :1\[0-9\] .*xrdp/xorg" "$CALLS"
     grep -q "^systemctl disable --quiet --now xrdp xrdp-sesman$" "$CALLS"
-    ! grep -q "^systemd-run" "$CALLS"
+    no_call "^systemd-run"
 }
 
 @test "kill ends the RDP desktop before stopping the RDP server" {
@@ -221,11 +229,11 @@ STUB
     run "$SCRIPT" kill
 
     [ "$status" -eq 0 ]
-    ! grep -qE "code-tunnel|tailscale|ssh" "$CALLS"
+    no_call "code-tunnel|tailscale|ssh"
 }
 
 @test "off still leaves the RDP server and its desktop running" {
     run "$SCRIPT" off
 
-    ! grep -qE "(stop|disable).*xrdp|^pkill" "$CALLS"
+    no_call "(stop|disable).*xrdp|^pkill"
 }
