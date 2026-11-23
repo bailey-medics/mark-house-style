@@ -1299,3 +1299,24 @@ alias tl := turva-link
 [no-cd]
 turva-link:
     @"{{house}}"/scripts/turva-link.sh
+
+
+# Voice bridge
+#
+# The channel that lets a voice chat on the phone talk to a Claude session
+# on the box. Its code is in mark-house-style/voice/; see the README there.
+voice := house / "voice"
+
+
+alias vt := voice-test
+# Run the voice channel's tests
+[no-cd]
+voice-test:
+    cd "{{voice}}" && npm test
+
+
+alias vtc := voice-typecheck
+# Type check the voice channel
+[no-cd]
+voice-typecheck:
+    cd "{{voice}}" && npm run typecheck
