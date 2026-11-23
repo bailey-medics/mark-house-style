@@ -83,6 +83,11 @@ The folder a banner came from picks its icon:
 To give another project an icon, add its picture to `icons/`, a line for its
 folders in `notification-show.sh`, and a test.
 
+`juttu.png` is rendered from `juttu.svg`, the original, at 1024 by 1024. The
+builder reads PNG, so after changing the SVG, render it again, for example
+with headless Chrome:
+`google-chrome --headless=new --window-size=512,512 --force-device-scale-factor=2 --screenshot=juttu.png juttu.svg`.
+
 ## Settings
 
 These are read from the environment, on the Mac unless it says otherwise:

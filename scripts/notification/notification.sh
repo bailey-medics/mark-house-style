@@ -49,6 +49,16 @@ fi
 root="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null || true)"
 [ -n "$root" ] && cwd="$root"
 
+# While Quill Medical moves to these banners, a checkout whose committed
+# settings still call its own scripts/notification.sh keeps its banners from
+# that, so a session never gets two. This hook, from each checkout's own
+# settings, takes over once the checkout has the change that removes the old
+# copy. Remove this once every Quill checkout has it.
+if [ -f "$cwd/scripts/notification.sh" ] \
+    && grep -qs 'scripts/notification.sh' "$cwd/.claude/settings.json"; then
+    exit 0
+fi
+
 worktree="$(basename "$cwd")"
 branch="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 
@@ -105,11 +115,15 @@ group="turva-claude-$name"
 
 # Spoken phrase. Names like "turva-4" read poorly aloud, so speak the
 # project and then the trailing number on its own ("Turva 4", "Juttu 2");
-# a main checkout has no suffix and becomes "Turva one" or "Juttu one".
-# Any other numbered folder is spoken by its own name and number.
+# a main checkout is the project's name alone ("Turva", "Juttu"). Quill
+# Medical's are "Quill", with Owl's worktree as "Quill Owl". Any other
+# numbered folder is spoken by its own name and number.
 case "$name" in
-    turva) spoken="Turva one" ;;
-    juttu) spoken="Juttu one" ;;
+    quillmedical) spoken="Quill" ;;
+    quillmedical-owl) spoken="Quill Owl" ;;
+    quillmedical-[0-9]*) spoken="Quill ${name##*-}" ;;
+    turva) spoken="Turva" ;;
+    juttu) spoken="Juttu" ;;
     turva-[0-9]*) spoken="Turva ${name##*-}" ;;
     juttu-[0-9]*) spoken="Juttu ${name##*-}" ;;
     *-[0-9]*) spoken="${name%-*} ${name##*-}" ;;

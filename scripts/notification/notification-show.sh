@@ -129,8 +129,59 @@ if [ "$BANNER" = "1" ]; then
     fi
 fi
 
-if [ "$SPEAK" = "1" ] && command -v say >/dev/null 2>&1; then
-    say -v "$VOICE" "$spoken" >/dev/null 2>&1 || true
+# The worktree spoken aloud. Turva and Juttu are Finnish words, so a Finnish
+# voice says them, Satu unless TURVA_NOTIFY_FINNISH_VOICE names another, and
+# the usual voice says the number after them. On a Mac without that voice,
+# English spellings the usual voice says close to the Finnish stand in.
+# notification.sh on the box works out the words; this only picks the voice.
+FINNISH_VOICE="${TURVA_NOTIFY_FINNISH_VOICE:-Satu}"
+
+has_voice() {
+    local name="$1"
+
+    say -v '?' 2>/dev/null | grep -q "^${name}[[:space:]]"
+}
+
+say_in() {
+    local voice="$1"
+    local text="$2"
+
+    say -v "$voice" "$text" >/dev/null 2>&1 || true
+}
+
+say_finnish() {
+    local word="$1"
+    local english="$2"
+    local rest="$3"
+
+    if has_voice "$FINNISH_VOICE"; then
+        say_in "$FINNISH_VOICE" "$word"
+        if [ -n "$rest" ]; then
+            say_in "$VOICE" "$rest"
+        fi
+    else
+        say_in "$VOICE" "${english}${rest:+ $rest}"
+    fi
+}
+
+speak() {
+    local text="$1"
+    local first="${text%% *}"
+    local rest=""
+
+    if [ "$first" != "$text" ]; then
+        rest="${text#* }"
+    fi
+
+    case "$first" in
+        Turva | turva) say_finnish "Turva" "Toor-vah" "$rest" ;;
+        Juttu | juttu) say_finnish "Juttu" "Yoot-too" "$rest" ;;
+        *) say_in "$VOICE" "$text" ;;
+    esac
+}
+
+if [ "$SPEAK" = "1" ] && [ -n "$spoken" ] && command -v say >/dev/null 2>&1; then
+    speak "$spoken"
 fi
 
 if [ "$CHIME" = "1" ] && [ -f "$AUDIO_FILE" ] \

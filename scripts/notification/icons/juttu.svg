@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="juttu-title">
+  <title id="juttu-title">Juttu</title>
+  <rect width="512" height="512" fill="#001a36"/>
+  <path fill="#C8963E" fill-rule="evenodd" d="M204 104H308A100 100 0 0 1 408 204V248A100 100 0 0 1 308 348H234Q200 390 142 408Q158 364 127.4 312.3A100 100 0 0 1 104 248V204A100 100 0 0 1 204 104ZM259 222A23 23 0 0 1 305 222V262A63 63 0 0 1 242 325H224A23 23 0 0 1 224 279H242A17 17 0 0 0 259 262ZM255 154A27 27 0 0 0 309 154A27 27 0 0 0 255 154Z"/>
+</svg>

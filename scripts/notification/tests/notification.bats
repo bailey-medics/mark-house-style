@@ -81,12 +81,43 @@ group_of() {
     [[ "$output" == *"title=turva-4"* ]]
 }
 
-@test "a numbered worktree is spoken by its number, and the main checkout as one" {
+@test "a numbered worktree is spoken by its number, and the main checkout by name alone" {
     run shown_for "$OTHER"
     [[ "$output" == *"spoken=Turva 4"* ]]
 
     run shown_for "$MAIN"
-    [[ "$output" == *"spoken=Turva one"* ]]
+    printf "%s\n" "$output" | grep -qx "spoken=Turva"
+}
+
+# Quill Medical's checkout, a numbered worktree and Owl's, named as on the box.
+make_quill() {
+    QUILL="${BATS_TEST_TMPDIR}/quillmedical"
+
+    git init -q "$QUILL"
+    git -C "$QUILL" -c user.name=t -c user.email=t@example.com \
+        commit -q --allow-empty -m "start"
+    git -C "$QUILL" worktree add -q "${QUILL}-6" -b sixth
+    git -C "$QUILL" worktree add -q "${QUILL}-owl" -b owl
+}
+
+@test "Quill Medical's worktrees are spoken as Quill, by number" {
+    make_quill
+
+    run shown_for "${QUILL}-6"
+
+    [[ "$output" == *"spoken=Quill 6"* ]]
+}
+
+@test "Quill Medical's main checkout is Quill alone, and Owl's Quill Owl" {
+    make_quill
+
+    run shown_for "$QUILL"
+
+    printf "%s\n" "$output" | grep -qx "spoken=Quill"
+
+    run shown_for "${QUILL}-owl"
+
+    [[ "$output" == *"spoken=Quill Owl"* ]]
 }
 
 # A Juttu checkout and two worktrees, named as on the box: the folders
@@ -119,7 +150,7 @@ make_juttu() {
     make_juttu
 
     run shown_for "$JUTTU"
-    [[ "$output" == *"spoken=Juttu one"* ]]
+    printf "%s\n" "$output" | grep -qx "spoken=Juttu"
 
     run shown_for "${JUTTU}-2"
     [[ "$output" == *"spoken=Juttu 2"* ]]
@@ -560,4 +591,109 @@ icon_for() {
     [ "$status" -eq 0 ]
     [ -e "${BATS_TEST_TMPDIR}/notifier-args" ]
     [ ! -e "${BATS_TEST_TMPDIR}/apps-used" ]
+}
+
+# A stand-in for say: it lists the voices in FAKE_VOICES when asked, laid
+# out as the real one lays them out, and
+# records each thing spoken as "<voice>|<text>", one a line.
+stub_say() {
+    local bin="${BATS_TEST_TMPDIR}/say-bin"
+
+    mkdir -p "${bin}"
+    cat >"${bin}/say" <<'EOF'
+#!/bin/bash
+if [ "$1" = "-v" ] && [ "$2" = "?" ]; then
+    for voice in ${FAKE_VOICES:-}; do
+        printf '%-20s xx_XX    # Hello, my name is %s.\n' "$voice" "$voice"
+    done
+    exit 0
+fi
+echo "$2|$3" >>"${BATS_TEST_TMPDIR}/spoken"
+EOF
+    chmod +x "${bin}/say"
+
+    export PATH="${bin}:${PATH}"
+    export TURVA_NOTIFY_SPEAK=1
+    export TURVA_NOTIFY_BANNER=0
+}
+
+# What was spoken for a banner with this spoken name.
+spoken_for() {
+    local name="$1"
+
+    "${BATS_TEST_DIRNAME}/../notification-show.sh" "t" "b" "g" "${name}"
+    cat "${BATS_TEST_TMPDIR}/spoken"
+}
+
+@test "with a Finnish voice, Juttu is said by it and the number by the usual voice" {
+    stub_say
+    export FAKE_VOICES="Karen Satu"
+
+    run spoken_for "Juttu 2"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = $'Satu|Juttu\nKaren|2' ]
+}
+
+@test "with a Finnish voice, Turva's main checkout is said as Turva alone" {
+    stub_say
+    export FAKE_VOICES="Karen Satu"
+
+    run spoken_for "Turva"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "Satu|Turva" ]
+}
+
+@test "without a Finnish voice, an English spelling close to the Finnish stands in" {
+    stub_say
+    export FAKE_VOICES="Karen"
+
+    run spoken_for "Juttu 2"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "Karen|Yoot-too 2" ]
+}
+
+@test "another Finnish voice can be chosen" {
+    stub_say
+    export FAKE_VOICES="Karen Onni"
+    export TURVA_NOTIFY_FINNISH_VOICE=Onni
+
+    run spoken_for "Turva 3"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = $'Onni|Turva\nKaren|3' ]
+}
+
+@test "any other name is said as it is, by the usual voice" {
+    stub_say
+    export FAKE_VOICES="Karen Satu"
+
+    run spoken_for "mark-house-style"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "Karen|mark-house-style" ]
+}
+
+@test "a checkout whose committed settings still call its own banner hook is left to it" {
+    mkdir -p "${MAIN}/scripts" "${MAIN}/.claude"
+    printf '#!/bin/bash\n' >"${MAIN}/scripts/notification.sh"
+    printf '{"hooks": {"Stop": [{"command": "scripts/notification.sh"}]}}\n' >"${MAIN}/.claude/settings.json"
+
+    run shown_for "$MAIN"
+
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "once the old hook is gone from the committed settings, this one takes over" {
+    mkdir -p "${MAIN}/scripts" "${MAIN}/.claude"
+    printf '#!/bin/bash\n' >"${MAIN}/scripts/notification.sh"
+    printf '{"hooks": {}}\n' >"${MAIN}/.claude/settings.json"
+
+    run shown_for "$MAIN"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"title=turva"* ]]
 }
