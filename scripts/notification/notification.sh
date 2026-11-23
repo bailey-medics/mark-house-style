@@ -72,6 +72,16 @@ case "$worktree" in
     *) name="$worktree" ;;
 esac
 
+# The banner's title. Quill Medical's worktrees are titled the way they are
+# spoken, "Quill 6" rather than "quillmedical-6"; every other project keeps
+# its session name.
+case "$name" in
+    quillmedical) label="Quill" ;;
+    quillmedical-owl) label="Quill Owl" ;;
+    quillmedical-[0-9]*) label="Quill ${name##*-}" ;;
+    *) label="$name" ;;
+esac
+
 # What the turn actually did, taken from `last_assistant_message` in the
 # payload. The first bullet of the closing TL;DR is written to carry the
 # result on its own, so its bold lead makes a better banner line than the
@@ -92,10 +102,10 @@ if [ -n "$payload" ] && command -v python3 >/dev/null 2>&1; then
 fi
 
 if [ "$MODE" = "needs-input" ]; then
-    title="$name"
+    title="$label"
     body="${summary:-Claude is waiting for your reply}"
 else
-    title="$name"
+    title="$label"
     if [ -n "$summary" ]; then
         body="$summary"
     elif [ -n "$branch" ]; then

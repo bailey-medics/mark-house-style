@@ -100,12 +100,31 @@ make_quill() {
     git -C "$QUILL" worktree add -q "${QUILL}-owl" -b owl
 }
 
-@test "Quill Medical's worktrees are spoken as Quill, by number" {
+@test "Quill Medical's worktrees are spoken and titled as Quill, by number" {
     make_quill
 
     run shown_for "${QUILL}-6"
 
     [[ "$output" == *"spoken=Quill 6"* ]]
+    printf "%s\n" "$output" | grep -qx "title=Quill 6"
+}
+
+@test "Quill Medical's main checkout and Owl's are titled Quill and Quill Owl" {
+    make_quill
+
+    run shown_for "$QUILL"
+
+    printf "%s\n" "$output" | grep -qx "title=Quill"
+
+    run shown_for "${QUILL}-owl"
+
+    printf "%s\n" "$output" | grep -qx "title=Quill Owl"
+}
+
+@test "other projects keep their session name as the title" {
+    run shown_for "$OTHER"
+
+    printf "%s\n" "$output" | grep -qx "title=turva-4"
 }
 
 @test "Quill Medical's main checkout is Quill alone, and Owl's Quill Owl" {
