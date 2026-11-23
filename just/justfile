@@ -1325,14 +1325,15 @@ voice-typecheck:
 # Remote desktop
 #
 # Switch a Linux dev box's desktop between Chrome Remote Desktop and RDP
-# carried by a Microsoft dev tunnel. Only one can run at a time. The tunnel's
-# name lives in ~/.config/remote-desktop/config, outside the repository; see
+# carried by a Microsoft dev tunnel, or turn both off. Only one can run at a
+# time, and nothing starts at boot. The tunnel's name lives in
+# ~/.config/remote-desktop/config, outside the repository; see
 # scripts/remote-desktop/config.example.
 remote_desktop := house / "scripts" / "remote-desktop"
 
 
 alias rd := remote-desktop
-# Switch the box's remote desktop: google, windows or status (ends the other desktop)
+# Switch the box's remote desktop: google, windows, off, kill or status (nothing starts at boot)
 [no-cd]
 remote-desktop mode="status":
     sudo /usr/local/sbin/remote-desktop "{{mode}}"

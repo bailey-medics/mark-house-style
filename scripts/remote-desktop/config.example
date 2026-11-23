@@ -7,3 +7,7 @@
 #   devtunnel create <name>
 #   devtunnel port create <name> -p 3389
 DEVTUNNEL_NAME=<your tunnel name>
+
+# Hours until "google" or "windows" turns itself off again: a whole number
+# from 0 to 168. 0 means never. Leave it out for the default, 12.
+AUTO_OFF_HOURS=12

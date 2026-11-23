@@ -6,9 +6,11 @@
 #
 # It copies the switch to /usr/local/sbin owned by root, so the copy that
 # runs as root cannot be edited without root. It lets the calling account
-# run its three modes, and nothing else, through sudo with no password, so
+# run its five modes, and nothing else, through sudo with no password, so
 # an agent can switch for you. And it installs the dev tunnel host as a user
 # service, which reads its tunnel name from ~/.config/remote-desktop/config.
+# The service never starts at boot: only "remote-desktop windows" starts it.
+# Nor does the RDP server, which "windows" starts and "kill" stops.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,9 +35,9 @@ install -o root -g root -m 755 "${here}/remote-desktop" /usr/local/sbin/remote-d
 rule="$(mktemp)"
 trap 'rm -f "$rule"' EXIT
 cat > "$rule" <<RULE
-# Let ${user} switch the remote desktop without a password: these three
+# Let ${user} switch the remote desktop without a password: these five
 # exact commands only. The script is owned by root, so it cannot be edited.
-${user} ALL=(root) NOPASSWD: /usr/local/sbin/remote-desktop google, /usr/local/sbin/remote-desktop windows, /usr/local/sbin/remote-desktop status
+${user} ALL=(root) NOPASSWD: /usr/local/sbin/remote-desktop google, /usr/local/sbin/remote-desktop windows, /usr/local/sbin/remote-desktop off, /usr/local/sbin/remote-desktop kill, /usr/local/sbin/remote-desktop status
 RULE
 visudo -cf "$rule"
 install -o root -g root -m 440 "$rule" /etc/sudoers.d/remote-desktop
@@ -45,7 +47,8 @@ units="${home}/.config/systemd/user"
 install -d -o "$user" -g "$user" "$units"
 install -o "$user" -g "$user" -m 644 "${here}/devtunnel-desktop.service" "${units}/devtunnel-desktop.service"
 systemctl --user -M "${user}@" daemon-reload
-systemctl --user -M "${user}@" enable devtunnel-desktop.service
+systemctl --user -M "${user}@" disable --quiet devtunnel-desktop.service
+systemctl disable --quiet xrdp xrdp-sesman
 
 if [ ! -e "$config" ]; then
     install -d -o "$user" -g "$user" "$(dirname "$config")"

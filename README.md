@@ -49,7 +49,10 @@ points the tab-topic and notification hooks at the scripts here.
 ## Remote desktop
 
 A Linux dev box can show its desktop two ways, and `t rd` switches between
-them. Only one runs at a time, because both start XFCE for the same user.
+them or turns both off. Only one runs at a time, because both start XFCE for
+the same user. Nothing starts at boot, so after a restart both are off, and
+whichever is on turns itself off after `AUTO_OFF_HOURS`, 12 unless the
+settings file says otherwise. Switching on again restarts that clock.
 
 - **`t rd google`** - Chrome Remote Desktop. It works in a browser through
   most filters, but gives one window, so two screens means stretching it.
@@ -58,11 +61,18 @@ them. Only one runs at a time, because both start XFCE for the same user.
   `~/bin/devtunnel connect <tunnel>` and leave it open, then connect Windows
   App to `localhost:3389`. The switch prints the command with the name filled
   in.
+- **`t rd off`** - stop both, so no remote desktop is reachable. The RDP
+  desktop stays open on the box, and the automatic off does this. Use VS
+  Code's tunnel or Tailscale to get back in and turn one on.
+- **`t rd kill`** - stop every remote desktop process, closing the RDP
+  desktop and stopping the RDP server too, to free their memory. Anything
+  unsaved in either desktop is lost. VS Code's tunnel, Tailscale and SSH are
+  left running.
 - **`t rd status`** - which one is running.
 
-Set it up once with `t rdi`. It installs the switch owned by root, lets your
-account run its three modes through sudo with no password, and installs the
-tunnel host as a user service. The tunnel's name goes in
+Set it up once with `t rdi`, and again after the switch changes. It installs
+the switch owned by root, lets your account run its five modes through sudo
+with no password, and installs the tunnel host as a user service. The tunnel's name goes in
 `~/.config/remote-desktop/config`, outside this repository; see
 `scripts/remote-desktop/config.example`. `t rdtune 10000 30` sets RDP's video
 cap per screen and frame rate, and `t rdt` runs the tests.

@@ -1,33 +1,47 @@
 #!/usr/bin/env bash
 # Switch a Linux dev box's desktop between Chrome Remote Desktop ("google")
-# and RDP carried by a Microsoft dev tunnel ("windows"). Only one can run at
-# a time: both start XFCE for the same user on the same D-Bus session bus, so
-# the second desktop quits as soon as it starts.
+# and RDP carried by a Microsoft dev tunnel ("windows"), or turn both off.
+# Only one can run at a time: both start XFCE for the same user on the same
+# D-Bus session bus, so the second desktop quits as soon as it starts.
 #
-#   sudo remote-desktop google    end any RDP desktop, start Chrome Remote Desktop
-#   sudo remote-desktop windows   end the Chrome Remote Desktop desktop, ready RDP
+#   sudo remote-desktop google    end any RDP desktop and the tunnel, start Chrome Remote Desktop
+#   sudo remote-desktop windows   end the Chrome Remote Desktop desktop, start RDP and the tunnel
+#   sudo remote-desktop off       stop the tunnel and Chrome Remote Desktop
+#   sudo remote-desktop kill      stop every remote desktop process, RDP's included
 #   sudo remote-desktop status    show which is running
 #
-# The chosen desktop also starts at boot. Switching ends the other desktop,
-# so anything unsaved in it is lost.
+# Nothing starts at boot: whichever is on stays on until it is switched off,
+# the box restarts, or AUTO_OFF_HOURS pass (12 unless the settings file says
+# otherwise; 0 for never). Switching on again restarts that clock. Switching to google ends the RDP desktop, and to
+# windows ends the Chrome Remote Desktop one, so anything unsaved there is
+# lost. Off leaves the RDP desktop open on the box, unreachable without the
+# tunnel, because the RDP server only listens on the box itself; the
+# automatic off uses it, so a forgotten file is never lost. Kill also closes
+# the RDP desktop and stops the RDP server, to free their memory, losing
+# anything unsaved. Neither touches VS Code's tunnel, Tailscale or SSH, which
+# are the way back in.
 #
 # This runs as root through a password-free sudo rule, so it runs nothing
-# from a settings file. It reads the tunnel's name from the caller's
-# ~/.config/remote-desktop/config only to print the Mac's command, and only
-# if the name is plain letters, digits, dots, dashes and underscores.
+# from a settings file. From the caller's ~/.config/remote-desktop/config it
+# reads only the tunnel's name, to print the Mac's command, when it is plain
+# letters, digits, dots, dashes and underscores, and AUTO_OFF_HOURS, when it
+# is a whole number from 0 to 168.
 set -euo pipefail
 
 tunnel_service=devtunnel-desktop.service
+auto_off=remote-desktop-auto-off
+installed=/usr/local/sbin/remote-desktop
+default_hours=12
 rdp_xorg='^/usr/lib/xorg/Xorg :1[0-9] .*xrdp/xorg\.conf'
 
 usage() {
-    echo "usage: remote-desktop google|windows|status" >&2
+    echo "usage: remote-desktop google|windows|off|kill|status" >&2
 }
 
 mode="${1:-status}"
 
 case "$mode" in
-    google | windows | status) ;;
+    google | windows | off | kill | status) ;;
     *)
         usage
         exit 2
@@ -48,18 +62,72 @@ fi
 
 crd="chrome-remote-desktop@${user}"
 
-# The tunnel's name from the caller's settings, for printing only.
-tunnel_name() {
-    local home config name
+# One value from the caller's settings file, as text. Never run or sourced.
+setting() {
+    local home
 
     home="$(getent passwd "$user" | cut -d: -f6)"
-    config="${home}/.config/remote-desktop/config"
-    name="$(sed -n 's/^DEVTUNNEL_NAME=//p' "$config" 2>/dev/null | head -n 1)"
+    sed -n "s/^$1=//p" "${home}/.config/remote-desktop/config" 2>/dev/null | head -n 1
+}
+
+# The tunnel's name, for printing only.
+tunnel_name() {
+    local name
+
+    name="$(setting DEVTUNNEL_NAME)"
 
     if [[ "$name" =~ ^[A-Za-z0-9._-]+$ ]]; then
         echo "$name"
     else
         echo "<tunnel>"
+    fi
+}
+
+# Hours until the automatic off: a whole number from 0 to 168, else the default.
+auto_off_hours() {
+    local hours
+
+    hours="$(setting AUTO_OFF_HOURS)"
+
+    if [[ "$hours" =~ ^[0-9]{1,3}$ ]] && [ "$((10#$hours))" -le 168 ]; then
+        echo "$((10#$hours))"
+    else
+        echo "$default_hours"
+    fi
+}
+
+cancel_auto_off() {
+    systemctl stop "${auto_off}.timer" 2>/dev/null || true
+    systemctl reset-failed "${auto_off}.timer" "${auto_off}.service" 2>/dev/null || true
+}
+
+# A one-off timer that runs "off" later. It is transient, so a restart drops
+# it, and a restart already leaves everything off.
+schedule_auto_off() {
+    local hours
+
+    hours="$(auto_off_hours)"
+    cancel_auto_off
+
+    if [ "$hours" -eq 0 ]; then
+        echo "Automatic off: never (AUTO_OFF_HOURS=0)"
+        return
+    fi
+
+    systemd-run --quiet --collect --unit="$auto_off" --on-active="${hours}h" \
+        --setenv=SUDO_USER="$user" "$installed" off
+    echo "Automatic off: in ${hours} hours"
+}
+
+auto_off_at() {
+    local next
+
+    next="$(systemctl list-timers --all --no-legend "${auto_off}.timer" 2>/dev/null | awk 'NF {print $1, $2, $3, $4; exit}')"
+
+    if [ -n "$next" ] && [ "$next" != "- - - -" ]; then
+        echo "$next"
+    else
+        echo "not set"
     fi
 }
 
@@ -72,26 +140,47 @@ rdp_desktop() {
 }
 
 status() {
-    echo "Chrome Remote Desktop : $(systemctl is-active "$crd" || true) ($(systemctl is-enabled "$crd" 2>/dev/null || true) at boot)"
+    echo "Chrome Remote Desktop : $(systemctl is-active "$crd" || true)"
     echo "RDP server            : $(systemctl is-active xrdp || true)"
     echo "RDP desktop           : $(rdp_desktop)"
     echo "Dev tunnel host       : $(systemctl --user -M "${user}@" is-active "$tunnel_service" 2>/dev/null || true)"
+    echo "Automatic off         : $(auto_off_at)"
 }
 
 case "$mode" in
     google)
+        systemctl --user -M "${user}@" stop "$tunnel_service"
         pkill -u "$user" -f "$rdp_xorg" || true
         sleep 2
-        systemctl enable --now "$crd"
+        systemctl disable --quiet "$crd"
+        systemctl start "$crd"
+        schedule_auto_off
         echo "Google: connect at remotedesktop.google.com/access"
         ;;
     windows)
-        systemctl disable --now "$crd"
+        systemctl disable --quiet --now "$crd"
         systemctl start xrdp-sesman xrdp
+        systemctl --user -M "${user}@" disable --quiet "$tunnel_service"
         systemctl --user -M "${user}@" start "$tunnel_service"
+        schedule_auto_off
         echo "Windows: on the Mac, run this and leave it open:"
         echo "    ~/bin/devtunnel connect $(tunnel_name)"
         echo "then connect Windows App to localhost:3389."
+        ;;
+    off)
+        cancel_auto_off
+        systemctl --user -M "${user}@" stop "$tunnel_service"
+        systemctl disable --quiet --now "$crd"
+        echo "Off: no remote desktop is reachable. Turn one on with google or windows."
+        ;;
+    kill)
+        cancel_auto_off
+        systemctl --user -M "${user}@" stop "$tunnel_service"
+        systemctl disable --quiet --now "$crd"
+        pkill -u "$user" -f "$rdp_xorg" || true
+        sleep 2
+        systemctl disable --quiet --now xrdp xrdp-sesman
+        echo "Killed: every remote desktop process is stopped. VS Code's tunnel, Tailscale and SSH still run."
         ;;
 esac
 
