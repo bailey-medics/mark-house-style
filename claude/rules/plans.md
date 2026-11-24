@@ -1,6 +1,6 @@
 ---
 paths:
-  - "plans/**"
+  - "**/plans/**"
 ---
 
 # Plan conventions
@@ -44,8 +44,9 @@ paths:
 - **Decisions** (optional, include when there are non-obvious
   trade-offs): a `## Decisions` section, one bullet per decision in the
   form above. The rationale explains _why_, not just what.
-- **There is no index of plans.** The folder listing, sorted by the
-  date each filename opens with, is the register. Do not create one.
+- **There is no index of plans unless the repository's own rules name
+  one.** Otherwise the folder listing, sorted by the date each filename
+  opens with, is the register. Do not create one.
 - Prefer reusing patterns/utilities already documented in nearby plans
   over inventing new structure - skim 1-2 recent plans for tone and
   section depth before writing a new one.
@@ -64,7 +65,8 @@ so its order is part of its content.
   order in the document**, then carry on. Do not work out of order
   while leaving the file describing a sequence nobody followed.
 - **The test**: someone reading the finished document top to bottom
-  should see the work in the order it was done.
+  should see the work in the order it was done. If they would not,
+  the document is out of date, not the memory of it.
 
 ## Write it to be built by `/t-f`
 
@@ -88,8 +90,8 @@ plan settles what `/t-f` would otherwise discover mid-run.
   earlier or later one.
 
 - **Name anything irreversible in its step**: a destructive migration,
-  a change to who can sign in or edit a safety file, a commit to a
-  safety file's Git history. `/t-f` stops and asks before committing that
+  a change to who can sign in, or anything the repository's own rules
+  name as irreversible. `/t-f` stops and asks before committing that
   unit, and a named step means the question can be answered before the
   run starts.
 
@@ -106,9 +108,9 @@ plan settles what `/t-f` would otherwise discover mid-run.
   ```markdown
   ## Open questions
 
-  - [x] **Should the export include closed hazards?** - Yes: a reviewer
-        needs to see why each was closed. Answered in `/t-g`, 16 November 2026.
-  - [ ] **Which template does a new safety file start from?**
+  - [x] **Should the export include archived records?** - No: the
+        export is for current work. Answered in `/t-g`, 16 November 2026.
+  - [ ] **Which bucket do the files go in?**
   ```
 
 - **Keep a `## Before running /f` section** for anything only a human

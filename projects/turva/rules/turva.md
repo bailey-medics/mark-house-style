@@ -15,6 +15,13 @@ disagree, `AGENTS.md` wins, except where these rules are stricter.
   `/t-e`, `/t-s` and `/t-in-code-documentation`. They name Turva's own
   commands, such as `./s/lint`, so use them only in Turva.
 
+## Plans
+
+- **Plans live in `plans/` at the root**, with no index.
+- **Irreversible, for the plans rule, also means** a change to who can
+  edit a safety file, and a commit to a safety file's Git history. Name
+  either in its step, so `/t-f` stops and asks before committing it.
+
 ## Git and pull requests
 
 - **`AGENTS.md` asks agents to commit and push each finished parcel.** The

@@ -2,8 +2,8 @@
 
 The repository is public. Anything written here can be read by anyone,
 and stays readable in git history after it is deleted. So nothing that
-locates or reaches the machines Turva is built on goes into code, docs,
-plans, comments, commit messages or pull requests:
+locates or reaches the machines the work is done on goes into code,
+docs, plans, comments, commit messages or pull requests:
 
 - **Addresses** - on a home or office network or a private network
   such as a VPN, IPv4 or IPv6.
@@ -22,10 +22,10 @@ plans, comments, commit messages or pull requests:
 about which machine could reach what, not about the value, and reads
 just as well.
 
-**Nothing checks this automatically here**, so it rests on whoever is
-writing. If one of these details turns up in a file, take it out; do
-not paste it into a commit message, a pull request or a comment to ask
-about it.
+**Unless the repository's own rules name a check, nothing catches this
+automatically**, so it rests on whoever is writing. If one of these
+details turns up in a file, take it out; do not paste it into a commit
+message, a pull request or a comment to ask about it.
 
 A generic name for a machine, such as "the dev box", and the username
 in a path are fine: they say there is a machine, not how to reach it.

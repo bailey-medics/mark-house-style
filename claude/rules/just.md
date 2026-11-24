@@ -1,6 +1,8 @@
 ---
 paths:
   - "justfile"
+  - "Justfile"
+  - "**/*.just"
 ---
 
 # Justfile conventions
@@ -18,8 +20,10 @@ paths:
   checks and the work itself read as separate groups.
 - When a recipe that already takes one positional argument needs a second,
   tell them apart by value, not by position, so the old form keeps working.
-  `just sd b` rebuilds before starting the stack, and must go on doing so
-  whatever `start-dev` is given to take next.
-- A recipe is either a thin wrapper over a script in `s/` or holds its own
-  logic, and both are fine. Do not turn one kind into the other: leave a
-  wrapper calling its script, and do not move a recipe's logic into `s/`.
+  A recipe that rebuilds when given `b` must go on doing so whatever it is
+  given to take next.
+- A recipe is either a thin wrapper over a script or holds its own logic,
+  and both are fine. Do not turn one kind into the other: leave a wrapper
+  calling its script, and do not move a recipe's logic into a script. The
+  one reason to break this is a test: logic that needs bats tests belongs
+  in a script, because a test cannot reach a recipe's body.
