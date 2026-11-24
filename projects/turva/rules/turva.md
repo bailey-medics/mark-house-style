@@ -28,6 +28,19 @@ what is particular to Turva.
   safety-critical by consequence. It names any gate that could not run.
 - **No readability command**: the description is not scored.
 - **No other repositories**: a repository argument is an error here.
+- **A Clinical Safety Officer decides** any new or changed hazard in
+  `SAFETY.md`, and any change to how risk level is derived from severity
+  and likelihood. A plan records who decides them, not a value the run
+  chooses.
+- **Tests that need a service**: the Django tests need the dev stack
+  running; the `safety_file` tests need only Git.
+- **In-code documentation** covers `safety_file/`, `app/` and
+  `frontend/src/`, and leaves Django migrations, the dependency locks and
+  `specifications/archive/` alone. The docs site's Code Reference pages
+  are built from the docstrings in `safety_file/`, in the Google style
+  that `docs/mkdocs.yml` sets for mkdocstrings. Longer prose about a
+  component goes in a sibling `.mdx` guide, as `.claude/rules/components.md`
+  sets out.
 
 ## Plans
 

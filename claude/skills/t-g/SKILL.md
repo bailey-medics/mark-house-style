@@ -41,25 +41,22 @@ touches. Then list everything that is not settled. Look for:
 - **A choice the plan states without a reason** where the other choice
   is just as plausible.
 - **Anything irreversible**: a destructive migration, a change to who
-  can sign in or who can edit a safety file, data deleted or moved, or
-  anything that writes to existing safety files' Git history, which is
-  append-only and is never rewritten. `/t-f` would stop before committing
+  can sign in, data deleted or moved, or anything the repository's own
+  rules name as irreversible. `/t-f` would stop before committing
   it, so agree it now.
-- **Anything that changes Turva's own safety case**: a new or changed
-  hazard in `SAFETY.md`, or a change to how risk level is derived from
-  severity and likelihood. Severity and likelihood are a Clinical Safety
-  Officer's judgement, so the plan records who decides them, not a value
-  the run chooses.
+- **Anything the repository's "For the shared skills" section says a
+  named person must decide**, so the plan records who decides it, not a
+  value the run chooses.
 - **Anything outside the repository**: an account, a secret, an API
   key, a permission, a paid service, a DNS record, a setting in a
   console. These are the human's jobs, and they go in the checklist.
 - **Anything that needs a person partway through**: a manual check, a
-  sign-off, a migration or a setting applied by hand between phases.
+  sign-off, a deploy, a migration or a setting applied by hand between
+  phases.
 - **A phase too big for one pull request**, or one too small to stand
   alone.
 - **Tests that cannot run here**, for want of a service or a fixture.
-  The Django tests need the dev stack running; the `safety_file` tests
-  need only Git.
+  The repository's section says which tests need a running service.
 
 **Answer from the code first.** Anything the repository can settle,
 settle yourself and do not ask. Only a real decision reaches the person. If
