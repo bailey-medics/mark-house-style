@@ -308,8 +308,32 @@ Then, for each unit in the plan:
    request. Always pass `draft`: without it `/crpd` marks the pull request
    ready.
 
-4. **Next unit**, back to step 1. Nothing to check out: the new branch is
-   already the top of the stack, so the next unit builds on it.
+4. **Check the stack's CI, and fix anything red before the next unit.**
+   Run `gh pr checks` on every open pull request in the stack;
+   `just stack-log-long` lists them.
+
+   - **Do not wait for the pull request just opened.** Its checks have
+     only just started. It is checked after the next unit, or at the end
+     of the run.
+   - **A failure in GitHub's own tooling gets one re-run**, with
+     `gh run rerun <run id> --failed`: an API or GraphQL error, a runner
+     that died, a network fetch that timed out. Read the job's log to
+     tell. If it fails again, treat it as real.
+   - **A real failure is fixed on the branch it belongs to.** Switch to
+     that branch, fix the code, then `just stu`, which amends that
+     branch's one commit and rebases every branch above it. Then
+     `just stack-submit`, and switch back to the top of the stack. "A
+     failing test" below applies: fix the code, not the test, and stop
+     after two attempts.
+   - **Say what was fixed in that pull request's description**, under
+     `## Decisions to check`.
+
+5. **Next unit**, back to step 1. The top of the stack is checked out,
+   so the next unit builds on it.
+
+**At the end of the plan, wait for every check on the stack to finish**,
+with a Monitor or a background until-loop rather than polling by hand.
+Fix anything red the same way, then write the report.
 
 ## Stopping
 
@@ -327,7 +351,10 @@ Stop and report - do not carry on to the next unit - when:
   worktree.
 - `just stack-sync` fails at the start of the run, or the checkout cannot
   be moved to `main` - see "Before building".
-- You reach the end of the plan.
+- A CI check is still red after two attempts to fix it, or GitHub's
+  tooling fails the same job twice.
+- You reach the end of the plan, and every check on the stack has
+  finished.
 
 **A unit that must wait to merge is not a reason to stop.** When it can
 only merge after a lower pull request has merged, deployed to App
@@ -392,6 +419,8 @@ At the end of a run, one block:
   stack-log-long` prints exactly this.
 - Anything that stopped the run, or anything left for a human to decide.
 - Which tests were run, by name. Never claim a suite that was not run.
+- The CI state of every pull request in the stack, and what was re-run or
+  fixed.
 
 Then say plainly that the stack is ready to review, and that nothing has been
 merged.
