@@ -1,6 +1,6 @@
 # Terminal tab titles from tmux
 
-`t c` and `t tw` name their tmux sessions after the Turva or Juttu
+`t cc` and `t tw` name their tmux sessions after the Turva or Juttu
 folder they are run from. Juttu's folder is `juttu-messaging`, and its
 sessions use the short name `juttu`:
 

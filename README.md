@@ -41,34 +41,39 @@ points the tab-topic and notification hooks at the scripts here.
 - **`claude/`** - what Claude Code reads in every repository.
 - **`projects/`** - additions for one repository, such as `projects/turva/`.
 - **`just/justfile`** - personal recipes; each runs in the repository it is
-  called from.
+  called from. Topics another repository may want, the banners and the
+  remote desktop and the tmux sessions, are in files of their own,
+  `just/banners.just`, `just/remote-desktop.just` and `just/session.just`.
+  The main justfile loads them, and a repository can load them too, with
+  `import?`, so they run there as `just rfb`, `just rdp windows` or
+  `just cc` without `-g`.
 - **`scripts/`** - the helper scripts the recipes and hooks call, with their
   tests.
 - **`plans/`** - plans for this repository.
 
 ## Remote desktop
 
-A Linux dev box can show its desktop two ways, and `t rd` switches between
+A Linux dev box can show its desktop two ways, and `t rdp` switches between
 them or turns both off. Only one runs at a time, because both start XFCE for
 the same user. Nothing starts at boot, so after a restart both are off, and
 whichever is on turns itself off after `AUTO_OFF_HOURS`, 12 unless the
 settings file says otherwise. Switching on again restarts that clock.
 
-- **`t rd google`** - Chrome Remote Desktop. It works in a browser through
+- **`t rdp google`** - Chrome Remote Desktop. It works in a browser through
   most filters, but gives one window, so two screens means stretching it.
-- **`t rd windows`** - RDP through a Microsoft dev tunnel, with true full
+- **`t rdp windows`** - RDP through a Microsoft dev tunnel, with true full
   screen on each display in Windows App. On the Mac, run
   `~/bin/devtunnel connect <tunnel>` and leave it open, then connect Windows
   App to `localhost:3389`. The switch prints the command with the name filled
   in.
-- **`t rd off`** - stop both, so no remote desktop is reachable. The RDP
+- **`t rdp off`** - stop both, so no remote desktop is reachable. The RDP
   desktop stays open on the box, and the automatic off does this. Use VS
   Code's tunnel or Tailscale to get back in and turn one on.
-- **`t rd kill`** - stop every remote desktop process, closing the RDP
+- **`t rdp kill`** - stop every remote desktop process, closing the RDP
   desktop and stopping the RDP server too, to free their memory. Anything
   unsaved in either desktop is lost. VS Code's tunnel, Tailscale and SSH are
   left running.
-- **`t rd status`** - which one is running.
+- **`t rdp status`** - which one is running.
 
 Set it up once with `t rdi`, and again after the switch changes. It installs
 the switch owned by root, lets your account run its five modes through sudo

@@ -62,7 +62,7 @@ fi
 worktree="$(basename "$cwd")"
 branch="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 
-# The banner names the session the way tmux and `t c` do. Juttu's folders
+# The banner names the session the way tmux and `t cc` do. Juttu's folders
 # carry the repository's full name, juttu-messaging, but its sessions are
 # juttu, juttu-2 and so on, so the banner says that too. Every other folder
 # is named as it is.
