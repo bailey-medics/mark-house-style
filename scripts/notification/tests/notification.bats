@@ -644,14 +644,14 @@ spoken_for() {
     cat "${BATS_TEST_TMPDIR}/spoken"
 }
 
-@test "with a Finnish voice, Juttu is said by it and the number by the usual voice" {
+@test "with a Finnish voice, Juttu and its number are said by it in one go" {
     stub_say
     export FAKE_VOICES="Karen Satu"
 
     run spoken_for "Juttu 2"
 
     [ "$status" -eq 0 ]
-    [ "$output" = $'Satu|Juttu\nKaren|2' ]
+    [ "$output" = "Satu|Juttu 2" ]
 }
 
 @test "with a Finnish voice, Turva's main checkout is said as Turva alone" {
@@ -682,7 +682,7 @@ spoken_for() {
     run spoken_for "Turva 3"
 
     [ "$status" -eq 0 ]
-    [ "$output" = $'Onni|Turva\nKaren|3' ]
+    [ "$output" = "Onni|Turva 3" ]
 }
 
 @test "any other name is said as it is, by the usual voice" {

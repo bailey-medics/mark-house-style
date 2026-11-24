@@ -91,6 +91,17 @@ for rc in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     done
 done
 
+# The terminal tab titles live in scripts/tmux/titles.conf, so ~/.tmux.conf
+# loads it, last, where its titles win over any older ones above it. A tmux
+# server already running picks it up at `tmux source-file ~/.tmux.conf`.
+tmux_conf="${HOME}/.tmux.conf"
+titles_line="source-file ${house}/scripts/tmux/titles.conf"
+
+if ! grep -qxF "${titles_line}" "${tmux_conf}" 2>/dev/null; then
+    printf '\n%s\n' "${titles_line}" >>"${tmux_conf}"
+    echo "${tmux_conf}: tab titles from mark-house-style loaded"
+fi
+
 echo "✓ Installed."
 echo "  A shell forgets an alias only when it starts again, so terminals and"
 echo "  tmux shells already open still know t. Open a new one, or run:"

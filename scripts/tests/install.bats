@@ -63,3 +63,23 @@ EOF
     [ -L "${HOME}/.config/just/justfile" ]
     [ "$(readlink "${HOME}/.config/just/justfile")" = "$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/just/justfile" ]
 }
+
+@test "tmux loads the tab titles, once, after what is already there" {
+    printf 'set -g mouse on\n' >"${HOME}/.tmux.conf"
+    titles_line="source-file $(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/scripts/tmux/titles.conf"
+
+    run "$SCRIPT"
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ "$(head -1 "${HOME}/.tmux.conf")" = "set -g mouse on" ]
+    [ "$(tail -1 "${HOME}/.tmux.conf")" = "${titles_line}" ]
+    [ "$(grep -cxF "${titles_line}" "${HOME}/.tmux.conf")" -eq 1 ]
+}
+
+@test "a missing tmux config is made with the tab titles in it" {
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    grep -q "scripts/tmux/titles.conf" "${HOME}/.tmux.conf"
+}

@@ -130,9 +130,10 @@ if [ "$BANNER" = "1" ]; then
 fi
 
 # The worktree spoken aloud. Turva and Juttu are Finnish words, so a Finnish
-# voice says them, Satu unless TURVA_NOTIFY_FINNISH_VOICE names another, and
-# the usual voice says the number after them. On a Mac without that voice,
-# English spellings the usual voice says close to the Finnish stand in.
+# voice says the whole phrase, Satu unless TURVA_NOTIFY_FINNISH_VOICE names
+# another, which reads the number in Finnish too: "Juttu kaksi". On a Mac
+# without that voice, English spellings the usual voice says close to the
+# Finnish stand in, with the number in English.
 # notification.sh on the box works out the words; this only picks the voice.
 FINNISH_VOICE="${TURVA_NOTIFY_FINNISH_VOICE:-Satu}"
 
@@ -155,10 +156,7 @@ say_finnish() {
     local rest="$3"
 
     if has_voice "$FINNISH_VOICE"; then
-        say_in "$FINNISH_VOICE" "$word"
-        if [ -n "$rest" ]; then
-            say_in "$VOICE" "$rest"
-        fi
+        say_in "$FINNISH_VOICE" "${word}${rest:+ $rest}"
     else
         say_in "$VOICE" "${english}${rest:+ $rest}"
     fi

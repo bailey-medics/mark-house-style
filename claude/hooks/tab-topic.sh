@@ -8,10 +8,9 @@
 # hook, so the prompt never waits for it, and `reset` as a SessionStart
 # hook, so a new session or a /clear starts without a title.
 #
-# The title is kept in the tmux session's `@topic` option, and the
-# `set-titles-string` in ~/.tmux.conf shows it after "Claude" for Turva's
-# `turva` sessions, after "Juttu" for Juttu's, and after "C<worktree number>"
-# for Quill Medical's.
+# The title is kept in the tmux session's `@topic` option, and
+# scripts/tmux/titles.conf shows it after the project and worktree, such as
+# "Quill-6", "Turva-2" or "Juttu", the main checkout having no number.
 #
 # After each prompt a small model is shown the title, the person's
 # previous message and their newest one, and asked whether it would name
