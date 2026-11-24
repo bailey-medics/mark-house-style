@@ -1,5 +1,5 @@
 ---
-name: t-in-code-documentation
+name: in-code-documentation
 description: In code documentation
 disable-model-invocation: true
 ---

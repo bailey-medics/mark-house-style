@@ -1,5 +1,5 @@
 ---
-name: t-crpd
+name: crpd
 description: Commit, rebase, push and describe one stacked branch
 argument-hint: "[repo] [draft]"
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git fetch:*), Bash(just stack-log:*), Bash(just stack-log-long:*), Bash(just stack-files:*), Bash(git switch:*), Bash(just stack-add:*), Bash(just stack-new:*), Bash(just stack-fresh:*), Bash(just stack-sync:*), Bash(just stack-rebase:*), Bash(just stack-submit:*), Bash(just stack-move:*), Bash(gh stack view:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh pr edit:*), Bash(gh pr ready:*), Bash(just stack-check), Bash(STACK_REPO=* just stack-*), Bash(git -C *), Bash(just validate-teaching:*), Bash(just -g stack-log:*), Bash(just -g stack-log-long:*), Bash(just -g stack-files:*), Bash(just -g stack-add:*), Bash(just -g stack-new:*), Bash(just -g stack-fresh:*), Bash(just -g stack-sync:*), Bash(just -g stack-rebase:*), Bash(just -g stack-submit:*), Bash(just -g stack-move:*), Bash(./s/lint:*), Bash(./s/test:*), Bash(./s/frontend:*)
@@ -34,7 +34,7 @@ not separable: a stack is pushed as a whole, rebased onto the latest trunk
 first, so a branch committed and pushed on its own leaves the rest of the
 stack behind it.
 
-`/t-f` calls this once per unit. It is also useful on
+`/f` calls this once per unit. It is also useful on
 its own, to finish a stacked branch by hand.
 
 ## The authorisation ends with the run
@@ -54,7 +54,7 @@ So after a run finishes:
   it is a draft.
 
 The branch this skill made is not an open workspace. A later fix on it
-needs the user to run `/t-crpd` again, or to ask for a commit in their
+needs the user to run `/crpd` again, or to ask for a commit in their
 own words.
 
 **Confirming that a change works is not asking for it to be landed.**
@@ -64,7 +64,7 @@ is uncommitted. So is silence about git: a message that does not mention
 committing is not asking for one.
 
 **This is how the rule gets broken, every time.** The user runs
-`/t-crpd`, the branch lands, work continues, they confirm the next fix -
+`/crpd`, the branch lands, work continues, they confirm the next fix -
 and amending "the branch we are already landing" feels like tidying
 rather than a new commit. It is a new commit. In the session that
 produced this section it happened five times in a row, each one reading
@@ -127,16 +127,16 @@ Up to two space-separated arguments, both optional, in either order:
 - **`draft`** - leave the pull request a draft. Omitted, the pull request
   is taken out of draft once it is described. Neither merges anything.
 - **`ready`** is accepted and changes nothing, since ready is the default.
-  It is kept so that `/t-crpd ready`, typed from habit, still works.
+  It is kept so that `/crpd ready`, typed from habit, still works.
 
-So `/t-crpd`, `/t-crpd draft`, `/t-crpd <repo>` and `/t-crpd <repo> draft`
+So `/crpd`, `/crpd draft`, `/crpd <repo>` and `/crpd <repo> draft`
 are all valid. `draft` and `ready` together are an error, and so is any
 other token: stop and ask what was meant rather than guessing.
 
-Default to marking it ready. Run by hand, `/t-crpd` usually finishes a
+Default to marking it ready. Run by hand, `/crpd` usually finishes a
 small change the human means to review and merge soon, and marking it
 ready starts any CI that waits for a ready pull request while they read
-it. `/t-f` passes `draft`: in a long unattended run the whole stack is
+it. `/f` passes `draft`: in a long unattended run the whole stack is
 reviewed the next morning, and a draft is the correct state until a
 human has read it.
 
@@ -548,7 +548,7 @@ to start a stack anywhere but the tip of `origin/main`, and says to run
    reviewed, and by this point the unit is being landed rather than built.
 
    This is narrower than it sounds, and it does not contradict
-   `/t-f`, which says to fix a failing test. That is
+   `/f`, which says to fix a failing test. That is
    the build phase, where fixing it is the work. This is the landing phase,
    reached because a human ran this command - so a test failing *here* means
    the work was finished with a red test, which a human should see.

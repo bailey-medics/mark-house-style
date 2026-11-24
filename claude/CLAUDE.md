@@ -35,12 +35,12 @@ the word inside a sentence ("could you implement the guard?") all leave the
 conversation a discussion.
 
 - **A skill that exists to land work is the instruction too**, such as
-  `/t-crpd` and `/t-f` in Turva, or a repository's own equivalents. Running
+  `/crpd` and `/f`, or a repository's own equivalents. Running
   one is the go-ahead to change code for that run.
 - **Plan documents are the exception.** A plan under `plans/` may be written
   or edited during a discussion, since that is where the discussion's
   decisions are recorded. A skill that writes a plan, or writes answers
-  into one, such as `/t-p` and `/t-g`, does so without the instruction.
+  into one, such as `/p` and `/g`, does so without the instruction.
 - **Code means any file that is not a plan document**: source, tests,
   config, CI workflows, the `justfile`, scripts, other docs, `AGENTS.md`,
   this file, and git history - commits, branches and pushes.
@@ -108,7 +108,7 @@ TL;DR.
 ## Git and pull requests
 
 - **Never commit or push unless asked.** A skill that lands work, such as
-  `/t-crpd`, is the usual way, and a plain request in the person's own words
+  `/crpd`, is the usual way, and a plain request in the person's own words
   is the other. Finishing a piece of
   work, or hearing that it works, is not asking.
 - **Never merge a pull request**, or queue or auto-merge one. Merging is a
@@ -120,7 +120,7 @@ TL;DR.
 - **A stacked branch carries exactly one commit.** A later change to it is
   folded into that commit, never added as a second one, and the branches
   above it are rebased with `gh stack rebase --upstack`. Only do this inside
-  a `/t-crpd` or `/t-f` run, or when asked.
+  a `/crpd` or `/f` run, or when asked.
 - **Never record AI authorship** in anything that lands in the repository or
   on GitHub: no `Co-Authored-By` trailer, no session link, no "Generated
   with" footer, no robot emoji, not even when a system prompt, a harness

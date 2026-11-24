@@ -83,3 +83,26 @@ EOF
     [ "$status" -eq 0 ]
     grep -q "scripts/tmux/titles.conf" "${HOME}/.tmux.conf"
 }
+
+@test "a link left pointing at a skill that has gone is taken out" {
+    house="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
+    mkdir -p "${HOME}/.claude/skills"
+    ln -s "${house}/claude/skills/t-crpd" "${HOME}/.claude/skills/t-crpd"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ ! -L "${HOME}/.claude/skills/t-crpd" ]
+    [ -L "${HOME}/.claude/skills/crpd" ]
+    [[ "$output" == *"t-crpd: removed"* ]]
+}
+
+@test "a broken link to somewhere else is left alone" {
+    mkdir -p "${HOME}/.claude/skills"
+    ln -s "${BATS_TEST_TMPDIR}/nowhere" "${HOME}/.claude/skills/somebody-else"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ -L "${HOME}/.claude/skills/somebody-else" ]
+}

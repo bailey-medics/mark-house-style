@@ -94,5 +94,13 @@ cap per screen and frame rate, and `just -g rdt` runs the tests.
 
 ## Skills
 
-Skills that came from Turva carry a `t-` prefix, such as `/t-crpd`, so none
-shares a name with another repository's own skills.
+The skills, such as `/crpd`, `/f`, `/g` and `/p`, serve every repository.
+What is particular to one, such as its test commands or its plans folder,
+comes from that repository's "For the shared skills" section, in its
+`CLAUDE.md`, its `AGENTS.md`, or a rule here such as
+`projects/turva/rules/turva.md`.
+
+A personal skill hides a repository's own skill of the same name, so a
+repository keeps no copy of these. `install.sh` links each one into
+`~/.claude/skills/`, and takes out any link left pointing at a skill that
+has gone, such as the old `t-crpd`.

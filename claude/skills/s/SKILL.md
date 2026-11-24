@@ -1,5 +1,5 @@
 ---
-name: t-s
+name: s
 description: Explain in simple terms the issue just discussed
 disallowed-tools: Edit, Write, NotebookEdit
 ---

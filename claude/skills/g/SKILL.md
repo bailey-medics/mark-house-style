@@ -1,6 +1,6 @@
 ---
-name: t-g
-description: Grill me - interview the person who ran it on a finished plan document, through the question dialog, until nothing could stop /t-f running it unattended
+name: g
+description: Grill me - interview the person who ran it on a finished plan document, through the question dialog, until nothing could stop /f running it unattended
 argument-hint: "[path/to/plan.md, or nothing to use the last plan mentioned]"
 disable-model-invocation: true
 ---
@@ -8,9 +8,9 @@ disable-model-invocation: true
 # Grill me on the plan
 
 Run this when the plan has been talked through and the person who ran it
-can think of nothing else. It comes after `/t-p` and the fine-tuning that follows
-it, and before `/t-f`. Its job is to find everything you are not
-completely sure about, and everything that could stop `/t-f` running the
+can think of nothing else. It comes after `/p` and the fine-tuning that follows
+it, and before `/f`. Its job is to find everything you are not
+completely sure about, and everything that could stop `/f` running the
 plan to the end unattended, and to settle each one with them while they are
 still at the keyboard.
 
@@ -19,7 +19,7 @@ document itself, in `plans/`.
 
 ## First: pick the plan, and say which
 
-Pick it the same way `/t-f` does, from the conversation alone:
+Pick it the same way `/f` does, from the conversation alone:
 
 1. **A path in the argument wins.** The argument was: `$ARGUMENTS`
 2. **Otherwise, the plan most recently mentioned in the chat**, or the
@@ -42,7 +42,7 @@ touches. Then list everything that is not settled. Look for:
   is just as plausible.
 - **Anything irreversible**: a destructive migration, a change to who
   can sign in, data deleted or moved, or anything the repository's own
-  rules name as irreversible. `/t-f` would stop before committing
+  rules name as irreversible. `/f` would stop before committing
   it, so agree it now.
 - **Anything the repository's "For the shared skills" section says a
   named person must decide**, so the plan records who decides it, not a
@@ -84,7 +84,7 @@ none fits.
 After each round, before asking the next:
 
 - **Tick each question answered under `## Open questions`**, with the
-  answer beside it and "Answered in `/t-g`" and the date. A question first
+  answer beside it and "Answered in `/g`" and the date. A question first
   raised in the interview is added there, ticked and answered, so the
   section records every decision made. Never delete the section, a
   question or an answer: it is the audit record.
@@ -103,5 +103,5 @@ When nothing is left to ask, report:
 - **What changed in the plan**: the steps an answer changed.
 - **What is still unticked under `## Before running /f`**, as a
   numbered list of what the person needs to do.
-- **Whether `/t-f` can start**: yes only when every box in both sections
+- **Whether `/f` can start**: yes only when every box in both sections
   is ticked.

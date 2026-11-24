@@ -48,6 +48,24 @@ for skill in "${house}"/claude/skills/*/; do
     link "${house}/claude/skills/${name}" "${HOME}/.claude/skills/${name}"
 done
 
+# A skill renamed or removed here leaves its old link pointing at nothing,
+# such as t-crpd after it became crpd. Take out only those that point into
+# this repository's skills folder; any other link is somebody else's.
+for old_link in "${HOME}"/.claude/skills/*; do
+    [ -L "${old_link}" ] || continue
+
+    target="$(readlink "${old_link}")"
+
+    case "${target}" in
+        "${house}/claude/skills/"*)
+            if [ ! -e "${target}" ]; then
+                rm "${old_link}"
+                echo "${old_link}: removed, as ${target} is gone"
+            fi
+            ;;
+    esac
+done
+
 # The global justfile, for `just -g`.
 link "${house}/just/justfile" "${HOME}/.config/just/justfile"
 

@@ -68,11 +68,11 @@ so its order is part of its content.
   should see the work in the order it was done. If they would not,
   the document is out of date, not the memory of it.
 
-## Write it to be built by `/t-f`
+## Write it to be built by `/f`
 
-`/t-f` builds a plan unattended, one stacked branch and draft pull request
+`/f` builds a plan unattended, one stacked branch and draft pull request
 per phase, and the human is gone by the time it finds a problem. So the
-plan settles what `/t-f` would otherwise discover mid-run.
+plan settles what `/f` would otherwise discover mid-run.
 
 - **One phase is one reviewable unit**: twenty to thirty minutes of a
   human reading its pull request. A phase that would need a long list
@@ -91,7 +91,7 @@ plan settles what `/t-f` would otherwise discover mid-run.
 
 - **Name anything irreversible in its step**: a destructive migration,
   a change to who can sign in, or anything the repository's own rules
-  name as irreversible. `/t-f` stops and asks before committing that
+  name as irreversible. `/f` stops and asks before committing that
   unit, and a named step means the question can be answered before the
   run starts.
 
@@ -101,7 +101,7 @@ plan settles what `/t-f` would otherwise discover mid-run.
   stays as the record of what was decided and why. Never delete it or
   an answered question: it is what an audit reads afterwards. Where an
   answer changes a step, update the step too. They need not all be
-  answered while the plan is written: `/t-g`, the
+  answered while the plan is written: `/g`, the
   "grill me" skill, can answer them later, by asking a human about each
   one and writing the answers in.
 
@@ -109,7 +109,7 @@ plan settles what `/t-f` would otherwise discover mid-run.
   ## Open questions
 
   - [x] **Should the export include archived records?** - No: the
-        export is for current work. Answered in `/t-g`, 16 November 2026.
+        export is for current work. Answered in `/g`, 16 November 2026.
   - [ ] **Which bucket do the files go in?**
   ```
 
@@ -118,8 +118,8 @@ plan settles what `/t-f` would otherwise discover mid-run.
   permission to grant. One checkbox each, ticked when done, and kept
   afterwards like the open questions.
 
-- **`/t-f` will not start while a box in either section is unticked.**
-  `/t-g` is the interview that settles them: it asks about each open
+- **`/f` will not start while a box in either section is unticked.**
+  `/g` is the interview that settles them: it asks about each open
   question and anything else that could stop the run, and writes the
   answers and the human jobs into these two sections.
 
@@ -142,8 +142,8 @@ plan settles what `/t-f` would otherwise discover mid-run.
 ## The order of the sections
 
 Every plan uses this order. Leave out a section the plan does not need,
-but never move one. The open questions and the jobs before `/t-f` come
-straight after the overview, because they are what stops `/t-f` from
+but never move one. The open questions and the jobs before `/f` come
+straight after the overview, because they are what stops `/f` from
 starting.
 
 ```markdown

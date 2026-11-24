@@ -11,7 +11,7 @@ disagree, `AGENTS.md` wins, except where these rules are stricter.
 
 ## For the shared skills
 
-The shared skills, such as `/t-crpd` and `/t-f`, read this section for
+The shared skills, such as `/crpd` and `/f`, read this section for
 what is particular to Turva.
 
 - **Tests before every commit are the whole gates, not a targeted
@@ -47,7 +47,7 @@ what is particular to Turva.
 - **Plans live in `plans/` at the root**, with no index.
 - **Irreversible, for the plans rule, also means** a change to who can
   edit a safety file, and a commit to a safety file's Git history. Name
-  either in its step, so `/t-f` stops and asks before committing it.
+  either in its step, so `/f` stops and asks before committing it.
 
 ## Git and pull requests
 

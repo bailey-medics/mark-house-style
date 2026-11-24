@@ -1,5 +1,5 @@
 ---
-name: t-f
+name: f
 description: Follow the plan document last mentioned in the chat, building it as a stack, one branch per reviewable unit
 argument-hint: "[path/to/plan.md, or nothing to use the last plan mentioned]"
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git add:*), Bash(git commit:*), Bash(git fetch:*), Bash(git push:*), Bash(git switch:*), Bash(just stack-log:*), Bash(just stack-log-long:*), Bash(just stack-files:*), Bash(just stack-update:*), Bash(just stack-sync:*), Bash(just stack-fresh:*), Bash(just stack-rebase:*), Bash(just stack-submit:*), Bash(just stack-move:*), Bash(just stack-help:*), Bash(gh stack view:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh pr edit:*), Bash(gh pr ready:*), Bash(just stack-check), Bash(./s/lint:*), Bash(./s/test:*), Bash(./s/frontend:*), Bash(./s/up:*), Bash(just -g stack-log:*), Bash(just -g stack-log-long:*), Bash(just -g stack-files:*), Bash(just -g stack-update:*), Bash(just -g stack-sync:*), Bash(just -g stack-fresh:*), Bash(just -g stack-rebase:*), Bash(just -g stack-submit:*), Bash(just -g stack-move:*), Bash(just -g stack-help:*), Bash(python3 ~/github/mark-house-style/scripts/stack/stack-status.py:*)
@@ -25,11 +25,11 @@ requests for a human to read rather than one large one.
 ## First: pick the plan document, and say which
 
 **This comes before everything else in this file**, and before any tool
-call. The human starts `/t-f` and walks away, so a run on the wrong plan is a
+call. The human starts `/f` and walks away, so a run on the wrong plan is a
 night spent building the wrong thing. They need to see which document was
 picked while they are still at the keyboard.
 
-The argument given to `/t-f` was: `$ARGUMENTS`
+The argument given to `/f` was: `$ARGUMENTS`
 
 Pick the plan from the conversation alone, without searching the
 repository:
@@ -87,9 +87,9 @@ anything:
 - **Every checkbox in it is already ticked**, so there is nothing left to
   follow.
 - **A box is unticked under `## Open questions` or `## Before running
-  /t-f`.** The first is a decision nobody has made, the second a job only
+  /f`.** The first is a decision nobody has made, the second a job only
   the human can do, and either would stop the run halfway. List the
-  unticked boxes, suggest `/t-g` to settle them, and wait. Ticked boxes in
+  unticked boxes, suggest `/g` to settle them, and wait. Ticked boxes in
   either section are the record of what was settled: read them as part
   of the plan, and never delete them.
 
@@ -123,7 +123,7 @@ attended one. There is power in being able to build something
 that is close to the right solution. So, when you are unsure about a decision,
 undertake online research of current best practices and relevant guidelines before
 making a decision. Write up this research in the plan document. Also, log these
-decisions in the PR description, when you commit, rebase and push using `/t-crpd`,
+decisions in the PR description, when you commit, rebase and push using `/crpd`,
 using the format stated in the latter mentioned agent.
 
 ## Never
@@ -147,7 +147,7 @@ using the format stated in the latter mentioned agent.
 ## Sizing a unit
 
 **One unit is twenty to thirty minutes of human reading.** That is the
-measure, not a line count. A plan written by `/t-p` makes each phase one
+measure, not a line count. A plan written by `/p` makes each phase one
 unit, so a phase is the default; where one is plainly two units, split
 the phase in the plan document first, then build it.
 
@@ -224,7 +224,7 @@ What `stack-log` shows decides what happens next:
     new one from `main`. Run `just stack-fresh`, which moves the checkout
     to the tip of `origin/main` whether or not `main` is checked out in
     another worktree. Then check `git rev-list --left-right --count
-    HEAD...origin/main` reports `0 0`. `/t-crpd` will find no stack there
+    HEAD...origin/main` reports `0 0`. `/crpd` will find no stack there
     and start one with `just stack-new`.
 
 - **A branch whose pull request GitHub closed without merging it.**
@@ -246,11 +246,11 @@ What `stack-log` shows decides what happens next:
   and say so.
 - **"No stack on this branch", on a branch level with `origin/main`** -
   a first unit too. `main` can be checked out in one worktree only, so
-  the others park on a temporary branch at its tip, and `/t-crpd` starts a
+  the others park on a temporary branch at its tip, and `/crpd` starts a
   stack from one exactly as it does from `main`. `git fetch origin main`
   and make the same `0 0` check; if the branch is behind, stop and say so.
 - **"No stack on this branch", on any other branch** - stop and ask.
-  `/t-crpd` refuses to land a unit there, and it is better found now than
+  `/crpd` refuses to land a unit there, and it is better found now than
   after the unit is built.
 
 **Starting a new stack does not abandon the old topic.** Once every
@@ -261,7 +261,7 @@ topic on is the stack key:
 - **The plan is the same area of work as the merged stack** - reuse its
   key, so the new pull requests read as the same series. A key is free
   again once its stack has finished.
-- **The plan is a different area** - choose a new key, as `/t-crpd` sets
+- **The plan is a different area** - choose a new key, as `/crpd` sets
   out under "The stack key".
 
 **If the working tree is dirty**, deal with that first. When the only
@@ -287,7 +287,7 @@ Then, for each unit in the plan:
    with matching tests that actually exercise the new behaviour - the
    repository requires this, and a unit without them is not finished.
 
-   Do not create a branch first. `/t-crpd` makes the branch from the work
+   Do not create a branch first. `/crpd` makes the branch from the work
    in step 3, so the unit is built on whatever branch is checked out -
    which "Before building" has already made current - and lifted onto
    its own branch when it is finished.
@@ -297,10 +297,10 @@ Then, for each unit in the plan:
    the tick is committed with the unit it describes rather than trailing a
    unit behind.
 
-3. **Finish the unit** with `/t-crpd draft`. It commits the work onto a
+3. **Finish the unit** with `/crpd draft`. It commits the work onto a
    **new** stacked branch, cascade-rebases, pushes, and writes that
    branch's pull request description. One unit, one branch, one pull
-   request. Always pass `draft`: without it `/t-crpd` marks the pull request
+   request. Always pass `draft`: without it `/crpd` marks the pull request
    ready.
 
 4. **Next unit**, back to step 1. Nothing to check out: the new branch is
@@ -327,7 +327,7 @@ Stop and report - do not carry on to the next unit - when:
 **A unit that must wait to merge is not a reason to stop.** When it can
 only merge after a lower pull request has merged, deployed to App
 production, or had Terraform applied, build it and land it anyway, on
-top of the one it waits for. `/t-crpd` writes the wait at the top of its
+top of the one it waits for. `/crpd` writes the wait at the top of its
 description as a numbered "Merge only after" list, so the human merges
 the lower one, does what is needed, then merges this one. A plan step
 such as "check X is running in production before this merges" is
