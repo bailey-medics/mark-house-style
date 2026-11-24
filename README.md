@@ -100,6 +100,9 @@ comes from that repository's "For the shared skills" section, in its
 `CLAUDE.md`, its `AGENTS.md`, or a rule here such as
 `projects/turva/rules/turva.md`.
 
+`/m` commits and pushes this repository to `main` in the background, from
+any session, after reading the diff for secrets and home details.
+
 A personal skill hides a repository's own skill of the same name, so a
 repository keeps no copy of these. `install.sh` links each one into
 `~/.claude/skills/`, and takes out any link left pointing at a skill that
