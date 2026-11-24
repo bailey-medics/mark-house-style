@@ -193,19 +193,19 @@ run_in() {
     [ "$(grep -c -e switch-client -e attach -e new-session "$CALLS")" -eq 0 ]
 }
 
-@test "a folder that is none of the three projects is refused" {
+@test "a folder that is none of the projects is refused" {
     git init -q "${BATS_TEST_TMPDIR}/elsewhere"
 
     run_in "${BATS_TEST_TMPDIR}/elsewhere"
     [ "$status" -eq 1 ]
-    [[ "$output" == *"is not a Quill Medical, Turva or Juttu checkout"* ]]
+    [[ "$output" == *"is not a Quill Medical, Turva, Juttu, Arnie or Digest checkout"* ]]
     [ ! -e "$CALLS" ] || [ "$(grep -c -e new-session -e attach "$CALLS")" -eq 0 ]
 }
 
 @test "outside a git repository it is refused" {
     run_in "$BATS_TEST_TMPDIR"
     [ "$status" -eq 1 ]
-    [[ "$output" == *"Run this from a Quill Medical, Turva or Juttu checkout"* ]]
+    [[ "$output" == *"Run this from a Quill Medical, Turva, Juttu, Arnie or Digest checkout"* ]]
 }
 
 @test "Turva's main checkout counts as 1" {
@@ -238,4 +238,15 @@ run_in() {
 
     grep -q "^tmux new-session -d -s tmux-juttu-1 " "$CALLS"
     grep -q "^tmux new-session -d -s tmux-juttu-3 " "$CALLS"
+}
+
+@test "Arnie's and Digest's shells are t-arnie and t-digest" {
+    git init -q "${BATS_TEST_TMPDIR}/arnie"
+    git init -q "${BATS_TEST_TMPDIR}/digest"
+
+    run_in "${BATS_TEST_TMPDIR}/arnie"
+    run_in "${BATS_TEST_TMPDIR}/digest" 2
+
+    grep -q "^tmux new-session -d -s t-arnie " "$CALLS"
+    grep -q "^tmux new-session -d -s t-digest-2 " "$CALLS"
 }

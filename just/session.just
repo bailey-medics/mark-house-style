@@ -1,7 +1,7 @@
 # Claude and shell sessions in tmux
 #
 # One tmux session per checkout, for Claude and for a plain shell, in Quill
-# Medical, Turva and Juttu alike. The names come from
+# Medical, Turva, Juttu, Arnie and Digest alike. The names come from
 # scripts/tmux/checkout-names.sh. Kept in a file of its own so other
 # repositories can load it with `import?` and run `just cc` or `just tw`,
 # while mark-house-style's own justfile loads it for `just -g`. The short

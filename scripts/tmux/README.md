@@ -12,6 +12,13 @@ sessions use the short name `juttu`:
 Quill Medical's `just cc` names its sessions `q1` to `q99`, where `q1` is
 the main checkout, and Owl's session is `owl`.
 
+Arnie and Digest have one checkout each, so their sessions are `arnie` and
+`digest`, and their shells `t-arnie` and `t-digest`. Each has its own
+`scripts/<session>-session`, which starts its session at boot, so
+`just cc` starts a missing session with it too. Digest's starter gives
+the session `DIGEST_SESSION=true`, which its nightly runner needs, and
+its Claude starts a fresh conversation rather than carrying on the last.
+
 ## The tmux server has a service of its own
 
 Every session on the box lives in one tmux server. When `just cc` or
@@ -28,7 +35,8 @@ tests.
 titles. A Claude tab reads the project, the worktree number and the
 conversation's topic: "Quill-6 Passport sign-off page", "Turva-2 Hazard
 log", "Juttu-3 Inbox". The main checkout has no number, so it reads
-"Quill", "Turva" or "Juttu". Owl's reads "Owl". A shell reads "Tmux
+"Quill", "Turva" or "Juttu". Owl's reads "Owl", Arnie's "Arnie" and
+Digest's "Digest". A shell reads "Tmux
 turva-1-2", "Tmux juttu-1" or "Tmux T3".
 
 The topic is the `@topic` session option, which the tab-topic hook

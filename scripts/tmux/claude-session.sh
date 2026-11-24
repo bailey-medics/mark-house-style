@@ -5,14 +5,19 @@
 # Each checkout has one tmux session, named by checkout-names.sh: q1 for
 # Quill Medical's main checkout and q6 for quillmedical-6, owl for Owl's
 # quillmedical-owl, turva and turva-2 for Turva, and juttu and juttu-3 for
-# Juttu. This:
+# Juttu, and arnie and digest. This:
 #
-#   - starts the session, with Claude in it, when there is none;
+#   - starts the session, with Claude in it, when there is none, through
+#     the checkout's own scripts/<session>-session when it has one, as
+#     Arnie and Digest do, since that is what starts it at boot;
 #   - starts Claude again in it when Claude has exited and left the shell;
 #   - attaches from outside tmux, or switches from another session.
 #
 # Run from the session's own shell after Claude has exited, it starts
 # Claude right there, in the foreground, since the shell is the pane.
+#
+# Claude carries on its last conversation, or starts a fresh one in
+# Digest, which checkout-names.sh says through CONTINUE_CLAUDE.
 #
 # Claude starts with --ide, which links it to the VS Code window open on
 # the devbox when there is exactly one, so it sees the file and lines
@@ -41,7 +46,7 @@ if ! command -v tmux > /dev/null; then
 fi
 
 if ! top="$(git rev-parse --show-toplevel 2> /dev/null)"; then
-    echo "✗ Run this from a Quill Medical, Turva or Juttu checkout." >&2
+    echo "✗ Run this from a Quill Medical, Turva, Juttu, Arnie or Digest checkout." >&2
     exit 1
 fi
 
@@ -56,7 +61,13 @@ if ! checkout_names "$(basename "${top}")"; then
 fi
 
 name="${CLAUDE_SESSION}"
-start_claude="claude --continue --ide --remote-control ${REMOTE_NAME} || claude --ide --remote-control ${REMOTE_NAME}"
+starter="${top}/scripts/${name}-session"
+
+if [ "${CONTINUE_CLAUDE}" = true ]; then
+    start_claude="claude --continue --ide --remote-control ${REMOTE_NAME} || claude --ide --remote-control ${REMOTE_NAME}"
+else
+    start_claude="claude --ide --remote-control ${REMOTE_NAME}"
+fi
 
 watcher_owns_it=false
 claude_was_running=false
@@ -74,8 +85,12 @@ refuse_for_watcher() {
 if ! tmux has-session -t "=${name}" 2> /dev/null; then
     [ "${watcher_owns_it}" = false ] || refuse_for_watcher
 
-    start_tmux new-session -d -s "${name}" -c "${top}" "bash -lc '${start_claude}; exec bash'"
-    echo "Started ${name} in ${top}"
+    if [ -x "${starter}" ]; then
+        "${starter}"
+    else
+        start_tmux new-session -d -s "${name}" -c "${top}" "bash -lc '${start_claude}; exec bash'"
+        echo "Started ${name} in ${top}"
+    fi
 else
     pane_id="$(tmux display-message -p -t "=${name}:" '#{pane_id}')"
     pane_pid="$(tmux display-message -p -t "=${name}:" '#{pane_pid}')"

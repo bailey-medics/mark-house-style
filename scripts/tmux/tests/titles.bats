@@ -71,6 +71,18 @@ title_for() {
     [ "$output" = "Owl Alert 42" ]
 }
 
+@test "Arnie's and Digest's tabs are their names and the topic" {
+    run title_for arnie "Boiler timer"
+    [ "$output" = "Arnie Boiler timer" ]
+    run title_for digest "Nightly run"
+    [ "$output" = "Digest Nightly run" ]
+}
+
+@test "Arnie's shell is Tmux arnie" {
+    run title_for t-arnie
+    [ "$output" = "Tmux arnie" ]
+}
+
 @test "with no topic, Claude Code's working title stands in" {
     tmux -L "${SOCKET}" new-session -d -s q6
     tmux -L "${SOCKET}" select-pane -t q6 -T "⠂ Fixing the tests"

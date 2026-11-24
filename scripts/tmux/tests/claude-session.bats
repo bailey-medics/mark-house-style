@@ -158,12 +158,12 @@ run_in() {
     [ "$(grep -c -e send-keys -e switch-client -e attach "$CALLS")" -eq 0 ]
 }
 
-@test "a folder that is none of the three projects is refused" {
+@test "a folder that is none of the projects is refused" {
     git init -q "${BATS_TEST_TMPDIR}/elsewhere"
 
     run_in "${BATS_TEST_TMPDIR}/elsewhere"
     [ "$status" -eq 1 ]
-    [[ "$output" == *"is not a Quill Medical, Turva or Juttu checkout"* ]]
+    [[ "$output" == *"is not a Quill Medical, Turva, Juttu, Arnie or Digest checkout"* ]]
 }
 
 @test "a folder outside git is refused" {
@@ -282,4 +282,59 @@ run_in() {
     run_in "${BATS_TEST_TMPDIR}/turva-old"
     [ "$status" -eq 1 ]
     [ ! -e "$CALLS" ] || [ "$(grep -c -e new-session -e attach "$CALLS")" -eq 0 ]
+}
+
+@test "Arnie's checkout is arnie, and Claude carries on its conversation" {
+    git init -q "${BATS_TEST_TMPDIR}/arnie"
+
+    SESSION_EXISTS=1 run_in "${BATS_TEST_TMPDIR}/arnie"
+    [ "$status" -eq 0 ]
+    grep -qx "tmux send-keys -t %7 claude --continue --ide --remote-control arnie || claude --ide --remote-control arnie Enter" "$CALLS"
+    grep -qx "tmux attach -t =arnie" "$CALLS"
+}
+
+@test "Digest's Claude starts a fresh conversation when it has exited" {
+    git init -q "${BATS_TEST_TMPDIR}/digest"
+
+    SESSION_EXISTS=1 run_in "${BATS_TEST_TMPDIR}/digest"
+    [ "$status" -eq 0 ]
+    grep -qx "tmux send-keys -t %7 claude --ide --remote-control digest Enter" "$CALLS"
+    grep -qx "tmux attach -t =digest" "$CALLS"
+}
+
+@test "a missing session is started by the checkout's own starter when it has one" {
+    local repo="${BATS_TEST_TMPDIR}/digest"
+    git init -q "${repo}"
+    mkdir -p "${repo}/scripts"
+    printf '#!/usr/bin/env bash\necho "starter in $PWD" >> "%s"\n' "${CALLS}" > "${repo}/scripts/digest-session"
+    chmod +x "${repo}/scripts/digest-session"
+
+    run_in "${repo}"
+    [ "$status" -eq 0 ]
+    grep -qx "starter in $(cd -P "${repo}" && pwd)" "$CALLS"
+    [ "$(grep -c new-session "$CALLS")" -eq 0 ]
+    grep -qx "tmux attach -t =digest" "$CALLS"
+}
+
+@test "a starter that cannot be run is passed over for the usual start" {
+    local repo="${BATS_TEST_TMPDIR}/arnie"
+    git init -q "${repo}"
+    mkdir -p "${repo}/scripts"
+    touch "${repo}/scripts/arnie-session"
+
+    run_in "${repo}"
+    [ "$status" -eq 0 ]
+    grep -q "^tmux new-session -d -s arnie -c .*/arnie bash -lc 'claude --continue --ide --remote-control arnie " "$CALLS"
+}
+
+@test "a starter that fails stops the script before it attaches" {
+    local repo="${BATS_TEST_TMPDIR}/digest"
+    git init -q "${repo}"
+    mkdir -p "${repo}/scripts"
+    printf '#!/usr/bin/env bash\nexit 3\n' > "${repo}/scripts/digest-session"
+    chmod +x "${repo}/scripts/digest-session"
+
+    run_in "${repo}"
+    [ "$status" -eq 3 ]
+    [ ! -e "$CALLS" ] || [ "$(grep -c attach "$CALLS")" -eq 0 ]
 }
