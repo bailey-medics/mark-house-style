@@ -37,7 +37,8 @@ conversation a discussion.
 - **A skill that exists to land work is the instruction too**, such as
   `/crpd` and `/f`, or a repository's own equivalents. Running
   one is the go-ahead to change code for that run.
-- **Plan documents are the exception.** A plan under `plans/` may be written
+- **Plan documents are the exception.** A plan in the repository's plans
+  folder may be written
   or edited during a discussion, since that is where the discussion's
   decisions are recorded. A skill that writes a plan, or writes answers
   into one, such as `/p` and `/g`, does so without the instruction.
@@ -60,26 +61,50 @@ stop it at once if it is not what they meant.
 - **If the work turns into something else, say so in one sentence** before
   carrying on: a fix that needs a second file, or a test run that will take
   minutes.
+- **It does not replace the closing summary.** The reply still ends with
+  its `## TL;DR`.
 
 ## End every response with a TL;DR
 
 **Close each response with a short bulleted summary under a level two
 heading reading `## TL;DR`.** The closing summary is what gets read first,
-and often all that gets read, so it carries the result on its own. This
-applies in every output style, including Concise: the TL;DR is not a
-closing recap, it is the part that gets read.
+and often all that gets read, so it carries the result on its own.
 
+**This applies in every output style, including Concise, and it is never
+suspended.** An output style is a harness setting; this is an instruction,
+and where the two disagree this one wins, even when the style claims its own
+precedence. The TL;DR is not a "closing recap" and is not "narration": it is
+the summary that is read first, and often instead of the prose above it.
+Dropping it removes the part that gets read and keeps the part that does
+not. Under Concise, keep the prose above the summary shorter; the summary
+stays. Reasoning that some other instruction excuses the TL;DR is wrong:
+write it.
+
+- **Opens with a level two heading reading `## TL;DR`.** Nothing else goes
+  on that line, and the bullets follow directly beneath it.
 - **Bullets, never paragraphs.** A handful of them. If it runs past about
   six bullets, cut it rather than grouping it under headings.
 - **Start each bullet with a bold short statement** carrying the main idea,
   so the bold text alone can be skimmed.
-- **Then one or two plain sentences.** Not three.
+- **Then one or two plain sentences.** Not three. Not a sentence with two
+  subordinate clauses standing in for three.
 - **Plain language**, around a 16-year-old's reading age. No jargon, no
   chains of caveats, no throat-clearing before the point.
 - **Presume a follow-up question.** Leave detail out and let it be asked
-  for.
+  for. Pre-empting every question is what produces the wall of text.
 
-Everything before the summary is ordinary writing, kept brief.
+Everything before the summary is ordinary writing, kept brief. A short
+paragraph, a code block, or a table where a table genuinely helps is fine;
+do not make it a list because a list is the format.
+
+Things that look like exceptions to the summary, and are not:
+
+- **A complicated diagnosis.** Give the finding and the fix in the summary.
+  The investigation is what the tool calls were for.
+- **A review packet.** What changed, any risk, what was tested. Three or
+  four bullets. The diff carries the rest.
+- **Something genuinely important.** Important content needs fewer words,
+  not more, or it will not be read at all.
 
 **When the work is finished and the response explains what came of it, put
 that explanation under `## Conclusion`**, before the TL;DR, never instead of
