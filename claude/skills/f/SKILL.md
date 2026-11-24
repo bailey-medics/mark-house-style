@@ -292,6 +292,11 @@ Then, for each unit in the plan:
    which "Before building" has already made current - and lifted onto
    its own branch when it is finished.
 
+   **Take the screenshots now, when the unit changes what a person sees
+   or the plan asks for them.** Save them as PNGs in the scratchpad, never
+   in the repository. `/crpd` puts them in the description under
+   `## Screenshots` and uploads them with `gh pr edit --attach`.
+
 2. **Tick the plan.** Mark every checkbox the unit completed `- [x]`,
    which for a whole phase is all of them, before finishing, so
    the tick is committed with the unit it describes rather than trailing a
