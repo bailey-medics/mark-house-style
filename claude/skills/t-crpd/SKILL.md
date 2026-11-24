@@ -1,45 +1,55 @@
 ---
 name: t-crpd
 description: Commit, rebase, push and describe one stacked branch
-argument-hint: "[draft]"
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git rev-list:*), Bash(git fetch:*), Bash(git switch:*), Bash(git add:*), Bash(git commit:*), Bash(git worktree list:*), Bash(git merge-base:*), Bash(gh stack view:*), Bash(gh stack init:*), Bash(gh stack add:*), Bash(gh stack rebase:*), Bash(gh stack submit:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh pr edit:*), Bash(gh pr ready:*), Bash(./s/lint:*), Bash(./s/test:*), Bash(./s/frontend:*)
-disallowed-tools: Bash(gh pr merge:*), Bash(gh stack merge:*), Bash(gh stack unstack:*), Bash(gh pr create:*), Bash(git rebase:*), Bash(git reset:*), Bash(git cherry-pick:*), Bash(git stash:*), Bash(git push:*), mcp__github__merge_pull_request, mcp__github__enable_pr_auto_merge
+argument-hint: "[repo] [draft]"
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git fetch:*), Bash(just stack-log:*), Bash(just stack-log-long:*), Bash(just stack-files:*), Bash(git switch:*), Bash(just stack-add:*), Bash(just stack-new:*), Bash(just stack-fresh:*), Bash(just stack-sync:*), Bash(just stack-rebase:*), Bash(just stack-submit:*), Bash(just stack-move:*), Bash(gh stack view:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh pr edit:*), Bash(gh pr ready:*), Bash(just stack-check), Bash(STACK_REPO=* just stack-*), Bash(git -C *), Bash(just validate-teaching:*), Bash(just -g stack-log:*), Bash(just -g stack-log-long:*), Bash(just -g stack-files:*), Bash(just -g stack-add:*), Bash(just -g stack-new:*), Bash(just -g stack-fresh:*), Bash(just -g stack-sync:*), Bash(just -g stack-rebase:*), Bash(just -g stack-submit:*), Bash(just -g stack-move:*), Bash(./s/lint:*), Bash(./s/test:*), Bash(./s/frontend:*)
+disallowed-tools: Bash(gh pr merge:*), Bash(gh stack merge:*), Bash(git rebase:*), Bash(git commit:*), Bash(git reset:*), Bash(git cherry-pick:*), Bash(git stash:*), Bash(git push:*), Bash(gh pr create:*), Bash(gh stack unstack:*), mcp__github__merge_pull_request, mcp__github__enable_pr_auto_merge
 ---
 
 # Commit, rebase, push and describe one stacked branch
 
 The single act that finishes one unit of work. The uncommitted work becomes
-a new branch with a single commit, stacked on the branch checked out, and
-that branch gets its own pull request.
+a new branch with a single commit, stacked on the branch checked out, or
+starting a new stack from `main`, and that branch gets its own pull
+request.
 
-**One call, one branch, one pull request.** Call it again after the next
-piece of work and it stacks another on top.
+**Where this skill needs to know something about the repository**, such as
+its test commands, read the repository's "For the shared skills" section,
+in its `CLAUDE.md` or `AGENTS.md` or in a rule Claude Code has loaded. Where
+the section says nothing on a point, do without it and say so in the
+report.
+
+**The stack recipes are `just stack-*`.** They come from Mark's
+mark-house-style repository. In a repository whose justfile imports the
+global one, run them as written; anywhere else, run them as
+`just -g stack-*`.
+
+**One call, one branch, one pull request.** The uncommitted work becomes a
+new branch stacked on the current one, with a single commit, and that branch
+gets its own pull request. Call it again after the next piece of work and it
+stacks another on top.
 
 It is deliberately one act rather than four, because on a stack the four are
 not separable: a stack is pushed as a whole, rebased onto the latest trunk
 first, so a branch committed and pushed on its own leaves the rest of the
 stack behind it.
 
-`/t-f` calls this once per unit. It is also useful on its own, to finish a
-piece of work by hand.
-
-The stack is managed with GitHub's `gh stack` extension, which records
-which branch sits on which and keeps GitHub's record of the stack in step.
-Every command below goes through it, or through plain `git` where `gh stack`
-has nothing to say.
+`/t-f` calls this once per unit. It is also useful on
+its own, to finish a stacked branch by hand.
 
 ## The authorisation ends with the run
 
-**Everything this skill does - committing, branching, rebasing, pushing,
-opening a pull request, writing its description - is authorised only while
-this skill is running.** The moment its report is written, that
-authorisation is spent.
+**Everything this skill does - committing, amending, branching, rebasing,
+pushing, opening a pull request - is authorised only while this skill is
+running.** The moment its report is written, that authorisation is spent.
 
 So after a run finishes:
 
 - **Do not amend the branch** because the work changed. Not with
-  `git commit --amend`, and not with a new commit on the same branch.
-- **Do not push** the branch again, with `gh stack submit` or anything else.
+  `git commit --amend`, and not with `just stack-update` or `just stu`,
+  which is the same act behind a recipe.
+- **Do not push** the branch again. `just stack-submit` and `git push`
+  are both out.
 - **Do not open or update the pull request**, and do not change whether
   it is a draft.
 
@@ -47,14 +57,19 @@ The branch this skill made is not an open workspace. A later fix on it
 needs the user to run `/t-crpd` again, or to ask for a commit in their
 own words.
 
-**Confirming that a change works is not asking for it to be landed**, as
-`CLAUDE.md` already says: stop, leave the tree dirty, and say what is
-uncommitted.
+**Confirming that a change works is not asking for it to be landed.**
+"That works", "great", "yes", "perfect" are verification. The right
+response to them is to stop, leave the tree dirty, and say plainly what
+is uncommitted. So is silence about git: a message that does not mention
+committing is not asking for one.
 
 **This is how the rule gets broken, every time.** The user runs
 `/t-crpd`, the branch lands, work continues, they confirm the next fix -
 and amending "the branch we are already landing" feels like tidying
-rather than a new commit. It is a new commit, and it needs `/t-crpd`.
+rather than a new commit. It is a new commit. In the session that
+produced this section it happened five times in a row, each one reading
+as housekeeping, and the user's correction was "stop doing commits and
+pushes without crpd".
 
 If the work genuinely needs to be in git to be testable, commit it, show
 what was committed, and stop there. Never push on top of that.
@@ -65,26 +80,31 @@ These hold on every run.
 
 - **Never merge a pull request. Ever.** Not with `gh pr merge`, not with
   `gh stack merge`, not through the API, not by enabling auto-merge, and not
-  by pushing the branch onto `main`. Merging into `main` is a decision that
-  belongs to a human alone. Marking a pull request ready gets it ready for a
-  human to review and merge; it never takes that last step. If asked to
-  merge as part of this command, refuse and say why. Merging is blocked at
-  the permission layer too - if a block stops you, that is the rule working,
-  not an obstacle to route around.
-- **Never commit or push to `main` directly.** Every unit of work goes on
-  its own branch and through a pull request, as `AGENTS.md` requires, even
-  though GitHub does not enforce it yet.
+  by pushing the branch onto `main`. Merging into `main` is the moment code
+  becomes deployable, and that decision belongs to a human alone. Marking a
+  pull request ready gets it ready for a human to review and merge; it never
+  takes that last step. If asked to merge as part of this command, refuse and say
+  why. Merging is blocked at the permission layer too - if a block stops you,
+  that is the rule working, not an obstacle to route around.
+- **Never push or commit to `main` directly.** It is protected and requires a
+  pull request.
 - **Never run `git rebase` yourself.** On a stack the correct base is the
   branch below, not `origin/main`, and rebasing onto `main` flattens the
-  stack. `gh stack rebase` cascades through the stack, and step 6 checks its
-  result. Blocked at the permission layer, along with `git reset`,
-  `git cherry-pick` and `git stash`.
-- **Never push with `git push`, and never open a pull request with
-  `gh pr create`.** A branch pushed or a pull request opened behind
-  `gh stack`'s back is one GitHub's stack does not track. When the branch
-  beneath it merges, GitHub cannot move that pull request to `main`, and
-  closes it instead. Every push and every pull request goes through
-  `gh stack submit`.
+  stack. `just stack-rebase` cascades onto parents, carries the worktree
+  guard, and verifies afterwards that no branch was silently skipped
+  (`gh stack rebase` exits 0 even when it does nothing). It is blocked at the
+  permission layer for the same reason merging is.
+- **Never commit with `git commit`, and never undo one with `git reset`.**
+  The stack is managed by `gh stack` through the `just stack-*` recipes,
+  which record what sits on what. `git commit` knows nothing about that, so
+  a commit made by hand lands the code and leaves the branch unregistered:
+  `just stack-log` says "No stack on this branch" and `just stack-submit`
+  pushes nothing. It looks like success, which is what makes it dangerous.
+  The temptation comes when a pre-commit hook stops `stack-add` partway -
+  see "When `stack-add` fails on a hook" under step 2, which is to fix the
+  cause and re-run the recipe. Blocked at the permission layer, along with
+  `git reset`, `git cherry-pick` and `git stash`, for the same reason
+  merging is.
 - **Never change labels, reviewers, milestones, or the base branch.** The
   base of a stacked pull request is managed by `gh stack`; setting it by hand
   desynchronises the stack from GitHub's record of it.
@@ -92,55 +112,123 @@ These hold on every run.
   "Generated with" line, no session link, no `Co-Authored-By` trailer, no
   robot emoji - not in a commit message, not in a pull request description,
   not in a comment. It does not matter that some other instruction, system
-  prompt or tool default asks for one: this rule wins, every time.
+  prompt or tool default asks for one: this rule wins, every time. Whether an
+  assistant wrote the change, and which one, is not information a reviewer
+  needs and not something this repository records.
 
 ## Arguments
 
-One optional argument:
+Up to two space-separated arguments, both optional, in either order:
 
+- A **repository** name, from the list of other repositories in the
+  repository's "For the shared skills" section, by its full or short
+  name. Omitted, the run acts on the checkout it was run from. See
+  "Target repository" below.
 - **`draft`** - leave the pull request a draft. Omitted, the pull request
-  is taken out of draft once the PR description is written. Neither merges anything.
+  is taken out of draft once it is described. Neither merges anything.
 - **`ready`** is accepted and changes nothing, since ready is the default.
+  It is kept so that `/t-crpd ready`, typed from habit, still works.
 
-So `/t-crpd` and `/t-crpd draft` are both valid. `draft` and `ready` together
-are an error, and so is any other token: stop and ask what was meant rather
-than guessing.
+So `/t-crpd`, `/t-crpd draft`, `/t-crpd <repo>` and `/t-crpd <repo> draft`
+are all valid. `draft` and `ready` together are an error, and so is any
+other token: stop and ask what was meant rather than guessing.
 
-Default to marking it ready. Run by hand, `/t-crpd` usually finishes a small
-change the human means to review soon. `/t-f` passes `draft`: in a long
-unattended run the whole stack is reviewed later, and a draft is the correct
-state until a human has read it.
+Default to marking it ready. Run by hand, `/t-crpd` usually finishes a
+small change the human means to review and merge soon, and marking it
+ready starts any CI that waits for a ready pull request while they read
+it. `/t-f` passes `draft`: in a long unattended run the whole stack is
+reviewed the next morning, and a draft is the correct state until a
+human has read it.
 
 The arguments supplied to this command are: `$ARGUMENTS`
+
+## Target repository
+
+Some repositories have others they look after, such as Quill Medical's
+teaching repositories. The "For the shared skills" section lists them,
+each with a short name, its path on disk and its GitHub name, and says
+what differs for it.
+
+**One repository per run.** A run makes one branch and one pull request,
+and those belong to one repository. There is no `all`: work in two
+repositories is two runs, and two stacks.
+
+With no repository argument, everything below is read exactly as written.
+With one, the same steps run against that repository, and three things
+change in how each command is written. Call its path `<repo>` and its
+GitHub name `<owner/name>`.
+
+- **Every `just stack-*` recipe takes the repository from `STACK_REPO`.**
+  A repository with no justfile of its own is acted on from the checkout
+  this was run from:
+
+  ```bash
+  STACK_REPO=<repo> just stack-log
+  STACK_REPO=<repo> just stack-add <name> "<message>"
+  STACK_REPO=<repo> just stack-submit
+  ```
+
+  Set it on **every** stack recipe in the run, `stack-new`, `stack-add`,
+  `stack-rebase`, `stack-sync`, `stack-files` and `stack-submit` alike. A
+  recipe run without it acts on the checkout it was run from, and says
+  nothing about the mistake: it would commit that checkout's uncommitted
+  work instead.
+- **Every `git` command names the repository**: `git -C <repo> status
+  --short`, `git -C <repo> fetch origin main`, `git -C <repo> switch main`.
+- **Every `gh` command names it too**: `gh pr list -R <owner/name> …`,
+  `gh pr edit <number> -R <owner/name> …`, `gh pr ready <number> -R
+  <owner/name>`. Without `-R`, `gh` answers about the checkout it was run
+  from. `gh stack view` has no `-R`; run it as
+  `(cd <repo> && gh stack view --json)`.
+
+What else differs, such as the tests in step 4, what the stack key
+names, or what the description is written about, is in that
+repository's entry in the section. Merging never becomes this command's
+job, for any repository.
 
 ## Before anything
 
 1. **Find out whether there is a stack yet.**
 
    ```bash
-   gh stack view --json
+   just stack-log
    ```
 
-   - **A stack with at least one unmerged branch** - the ordinary case.
-     Step 3 uses `gh stack add`, which stacks the new branch on the one
+   - **In a stack with at least one unmerged branch** - the ordinary case.
+     Step 2 uses `just stack-add`, which stacks the new branch on the one
      checked out.
-   - **A stack where every branch has `isMerged: true`** - the stack is
-     spent, and the next unit starts a new one from `main`. Step 3 uses the
-     first-unit form.
-   - **No stack, on `main` or on a branch level with `origin/main`** - this
-     is the first unit, and step 3 uses the first-unit form. Check "level"
-     rather than assume it: `git fetch origin main`, then
-     `git rev-list --left-right --count HEAD...origin/main` must report
-     `0 0`.
-   - **No stack, on any other branch** - stop and say so. Committing here
-     would put the work on a branch that is not part of any stack.
+   - **In a stack where every branch is merged** - the stack is spent, and
+     the next unit belongs to a new one. See "Starting again after a stack
+     has merged" below; the work is carried to `main` first, and step 2
+     then uses `just stack-new`.
+   - **"No stack on this branch", and on `main`** - this is the first unit.
+     Step 2 uses `just stack-new` instead, which starts the stack. Everything
+     else is the same.
+   - **"No stack on this branch", on a branch level with `origin/main`** -
+     also the first unit, and step 2 uses `just stack-new` just the same.
+     `main` can be checked out in one worktree only, so the others park on
+     a temporary branch at its tip. Check it rather than assume it:
+     `git fetch origin main`, then `git rev-list --left-right --count
+     HEAD...origin/main` must report `0 0`. The branch then holds nothing
+     `main` does not, and `stack-new` cuts the new branch from it.
+   - **"No stack on this branch", on any other branch** - stop and say so.
+     Committing here would put the work on a branch that is not part of any
+     stack, and landing that is not this command's job.
 
-   **The merged marks are only as fresh as the last sync, so ask GitHub
-   too.** `gh stack view` reports what it knew when it last talked to
-   GitHub. A pull request merged since then still reads as open. That is
-   the usual state when this command is run: the human merged, came back,
-   and carried on working. So before trusting an unmerged branch, ask about
-   the one checked out:
+   The merged case is easy to miss, because `stack-log` still draws the
+   stack - every branch simply carries `merged`. Read the marks, not the
+   shape: stacking onto a merged branch bases the new unit on history that
+   is already in `main`, and its pull request then carries the old stack's
+   merge commits.
+
+   **The marks are only as fresh as the last sync, so ask GitHub too.**
+   `stack-log` reads the stack's local record, which learns of a merge
+   only when something syncs. A pull request merged on GitHub since then
+   still reads as open, in `stack-log` and in `stack-log-long` alike
+   (which says only "no pull request"). That is the usual state when
+   this command is run: the human merged, came back, and carried on
+   working. So before trusting an unmarked branch, ask about the one
+   checked out:
 
    ```bash
    gh pr list --head "$(git branch --show-current)" --state merged \
@@ -148,28 +236,73 @@ The arguments supplied to this command are: `$ARGUMENTS`
    ```
 
    - **Empty** - the branch has not merged. Carry on with whichever case
-     `gh stack view` showed.
+     `stack-log` showed.
    - **A pull request comes back** - the branch checked out has merged,
      whatever the marks say. A stack merges from the bottom, so every
-     branch beneath it has too and the stack is spent. Use the first-unit
-     form in step 3.
+     branch beneath it has too and the stack is spent. Treat it as "every
+     branch is merged": follow "Starting again after a stack has merged"
+     below, and step 2 uses `just stack-new`.
 
-   **Two ways a stack can look merged and not be.**
+   `just stack-add` makes the same check and refuses to stack on a branch
+   whose pull request has merged. That refusal means this step was
+   skipped. Do what it says, never work round it.
+
+   **Two ways a stack can look merged and not be.** Both happened in
+   Quill Medical on 15 October 2026.
+
    - **A pull request GitHub closed without merging.** When the branch
      beneath it is deleted after a merge into another branch, GitHub
      closes the pull request above rather than moving it to `main`. Its
-     branch is intact, and `gh stack submit` opens a fresh pull request
-     for it. Never reopen or replace it by hand.
+     branch is intact: `just stack-sync`, then `just stack-submit` opens
+     a fresh pull request for it. Never reopen or replace it by hand.
    - **A pull request merged into the branch below rather than `main`.**
      Its work is not on `main`. Check the merge commit with
-     `git merge-base --is-ancestor <commit> origin/main`; if it is not on
-     `main`, stop and report it, because the work needs a pull request into
-     `main` that only the human should open.
+     `git merge-base --is-ancestor <commit> origin/main` before syncing;
+     if it is not on `main`, stop and report it, because `stack-sync`
+     would drop the branch as done and the work needs a pull request
+     into `main` that only the human should open.
 
-2. **Stop if the stack spans worktrees.** `git worktree list` shows every
-   branch checked out elsewhere. A stack lives in one worktree;
-   `gh stack rebase` would skip a branch checked out in another and still
-   report success. Report it and stop rather than working around it.
+2. **Stop if the stack spans worktrees.** `just stack-log` names any branch
+   checked out elsewhere. A stack lives in one worktree; `gh stack rebase`
+   would skip those branches and still report success. Report it and stop
+   rather than working around it.
+
+## Starting again after a stack has merged
+
+Only when step 1 found the stack spent: every branch marked `merged`, or
+GitHub saying the branch checked out has merged. The checkout is then
+behind `main` by at least the merge commits of the stack's own pull
+requests, and the working tree holds the next unit.
+
+```bash
+just stack-fresh
+```
+
+It fetches, moves the checkout to the tip of `origin/main`, carries the
+uncommitted work across, and tidies the spent stack's record. Then carry
+on at step 1 of "Steps" and use `just stack-new`, exactly as for a first
+unit.
+
+**Do not use `just stack-sync` then `git switch main` here**, which is
+what this section used to say. Neither survives the ordinary case:
+
+- `stack-sync` will not rebase with uncommitted changes in the tree, and
+  the tree is dirty by definition: that is the unit being landed.
+- `main` is usually checked out in another worktree, so this one cannot
+  switch to it. `stack-fresh` detaches at `origin/main` instead, which
+  `stack-new` starts from just the same.
+- A plain switch refuses whenever `main` has changed a file that is also
+  changed locally, and it has if the unit carries on from what just
+  merged. `stack-fresh` carries the work with a three-way merge.
+
+**If `stack-fresh` reports files that overlap, stop and report them.**
+The unit and something merged since have changed the same lines, git has
+left both versions between conflict markers, and choosing between them
+is a human's call. Nothing is lost.
+
+`just stack-new` checks the same thing from the other side: it refuses
+to start a stack anywhere but the tip of `origin/main`, and says to run
+`just stack-fresh`. That refusal means this section was skipped.
 
 ## Steps
 
@@ -184,171 +317,190 @@ The arguments supplied to this command are: `$ARGUMENTS`
    re-describe a pull request whose work is already committed, edit it
    directly rather than running this.
 
-2. **Run the gates `AGENTS.md` requires before every commit.**
+2. **Put the work on its own new branch.**
 
    ```bash
-   ./s/lint
-   ./s/test
+   just stack-add <name> "<message>"
    ```
 
-   Add `./s/frontend` when the unit touches `frontend/`. These are the
-   whole suites, not a targeted subset: `AGENTS.md` says not to commit red,
-   and these are what it names.
-
-   `./s/lint` checks untracked files as well as tracked ones, so it sees
-   the unit as it will be committed. `./s/test` runs its second suite in the
-   `web` container, so the dev stack must be up.
-   - **A gate fails on the unit's own files** - stop and report it. Fixing
-     it is a code change nobody has reviewed, and by this point the unit is
-     being landed rather than built. A formatter that rewrote a file has
-     already fixed it; that is mechanical, so re-run the gate and carry on.
-   - **A gate cannot run** - pytest missing on the host, the stack not
-     running, Zizmor not installed. Say so in the report and in the pull
-     request's Risks section, and carry on. Never claim a gate passed that
-     did not run.
-
-   This does not contradict `/t-f`, which says to fix a failing test. That is
-   the build phase, where fixing it is the work. This is the landing phase,
-   reached because a human ran this command - so a test failing _here_
-   means the work was finished with a red test, which a human should see.
-
-3. **Put the work on its own new branch, with one commit.**
-
-   On a stack with an unmerged branch checked out:
+   …or, when step 1 said this is the first unit of a new stack - on `main`,
+   or on `main` having just carried the work off a merged stack:
 
    ```bash
-   gh stack add -A -m "<message>" feature/<name>
+   just stack-new <name> "<message>"
    ```
 
-   That creates the branch on top of the one checked out, stages
-   everything including untracked files, commits, and records the branch
-   in the stack.
+   One call, one new branch, one commit, one pull request. That is the
+   point: each unit of work gets a pull request of its own rather than
+   accumulating commits on a branch someone has to disentangle later.
 
-   For the first unit of a new stack, from `main` or a spent stack:
-
-   ```bash
-   git fetch origin main
-   git switch -c feature/<name> origin/main
-   gh stack init feature/<name>
-   git add -A
-   git commit -m "<message>"
-   ```
-
-   `git switch -c … origin/main` carries the uncommitted work onto a branch
-   cut from the latest trunk. If it refuses because `main` has changed a
-   file the unit also changes, stop and report the files: choosing between
-   the two versions is a human's call.
+   Both stage everything and commit it. `stack-add` stacks the branch on
+   top of the one currently checked out, so the new unit depends on the one
+   below it exactly as the stack describes; `stack-new` starts a fresh
+   stack from `main` instead. The name and message are chosen the same way
+   either way.
 
    **Choose both the name and the message yourself**, from what actually
    changed - do not ask for them. This command is called unattended, and
    stopping to ask would defeat that.
-   - **The name** describes the unit, not the session: `hazard-stale-save`,
-     not `fixes` or `part-2`. Lower case, hyphenated, after a `feature/`
-     prefix. Keep it short enough to read in a stack diagram. Name it for
-     what the change does, never for the files it touches - the pull request
-     title is this same name read back as a sentence, so a name that
-     describes the files produces a title that says nothing.
+
+   - **The name** describes the unit, not the session: `pr-description-join`,
+     not `fixes` or `part-2`. Lower case, hyphenated, no `feature/` prefix -
+     `stack-add` adds it. Keep it short enough to read in a stack diagram.
+     Name it for what the change does, never for the files it touches - the
+     pull request title is this same name read back as a sentence, so a
+     name that describes the files produces a title that says nothing.
    - **The name opens with the stack key**, so every branch in the stack
-     sorts and reads together. See "The stack key" below. On a stack that
+     sorts and reads together: `passport-record-and-review`,
+     `passport-sign-off-page`. See "The stack key" below. On a stack that
      already has branches, take the key from them rather than choosing
      again.
-   - **The message** is conventional-commit style, as `AGENTS.md` asks:
-     `feat(hazards): refuse a save from a stale form`. Describe what the
-     change does, not what you did. Add a body when the why is not obvious
-     from the subject, and say there whether `SAFETY.md` needed changing.
-   - **Read the diff before naming either.** `git diff --stat`, then
-     `git diff`, plus `git status --short` for new files; the name and
-     message should come from the code, not from what the conversation was
-     about.
+   - **The message** is conventional-commit style, matching the branch's own
+     history: `fix(tooling): stack-log-long could not read pull requests`.
+     Describe what the change does, not what you did. Where the "For the
+     shared skills" section asks for more, such as a body saying whether a
+     particular file needed changing, add it.
+   - **Read the diff before naming either.** `git diff --stat` and the diff
+     itself; the name and message should come from the code, not from what
+     the conversation was about.
 
    ### The stack key
 
    Every branch in one stack opens its name with the same single word,
    so the pull requests read as a set rather than as unrelated work.
-   `hazards-stale-save` and `hazards-closure-reason` sit together in a
-   list; `make-saves-safe` and `require-a-reason` do not, even when they
-   are the same stack.
+   `passport-record-and-review` and `passport-sign-off-page` sit
+   together in a list; `make-the-passport-usable` and
+   `stop-a-hook-failure` do not, even when they are the same stack.
 
-   **One word, naming the area the stack is about**: `Hazards`,
-   `Mitigations`, `Teams`. Not the change - the area. The rest of the name
+   **One word, naming the area the stack is about**: `Passport`,
+   `Teaching`, `Billing`. Not the change - the area. The rest of the name
    says what this unit does.
 
    **Capitalised in a title, lower case in a branch name.**
-   `Hazards: stale save` is what a reader sees; `feature/hazards-stale-save`
-   is what git holds. Same word, written the way each place writes words.
+   `Passport: record and review` is what a reader sees;
+   `passport-record-and-review` is what git holds, because branch names
+   here are lower case throughout. Same word, written the way each
+   place writes words.
 
-   **Choose it once, when the stack is started.** Every later branch takes
+   **Choose it once, when the stack is started** - the `stack-new` run,
+   or the first `stack-add` onto a bare branch. Every later branch takes
    the key from the branches already in the stack, read from
-   `gh stack view`. It does not change while the stack lives, even as the
-   work drifts.
+   `just stack-log`. It does not change while the stack lives, even as
+   the work drifts: a stack whose PRs share a word and then stop sharing
+   it is worse than one that never had a key.
 
    **Check the key is free before adopting it.** Another open stack using
    the same word would leave two unrelated sets of pull requests looking
    like one:
 
    ```bash
-   gh pr list --state open --json number,title,headRefName --limit 100
+   gh pr list --state open --json number,title,headRefName \
+     --limit 100
    ```
 
    If any open pull request's branch already opens with the word, choose
-   another. Prefer a narrower one - `hazard-scoring` over `hazards` -
-   rather than a vaguer one. Closed and merged pull requests do not count:
-   a key is reusable once its stack is finished.
+   another. Prefer a narrower one - `passport-evidence` over `passport` -
+   rather than a vaguer one. Closed and merged pull requests do not
+   count: a key is reusable once its stack is finished.
 
-   **The title reads `Hazards: what this branch does`** - the key, a
+   **The title reads `Passport: what this branch does`** - the key, a
    colon, then a plain description of the unit. The colon is what makes
-   the key scannable.
+   the key scannable: `Passport: record and review` reads as a set,
+   `Passport record and review` reads as a sentence that happens to
+   start with a word.
 
    **The title and the branch name say the same thing.** Not only the
-   key - the words after it too. `feature/hazards-stale-save` becomes
-   `Hazards: stale save`: hyphens to spaces, nothing added and nothing
-   dropped. Write the branch name first, then read it back as a title; if
-   that does not produce a title worth reading, the branch name was the
-   problem and it is still cheap to change.
+   key - the words after it too. `passport-record-and-review` becomes
+   `Passport: record and review`: hyphens to spaces, nothing added and
+   nothing dropped. Write the branch name first, then read it back as a
+   title; if that does not produce a title worth reading, the branch
+   name was the problem and it is still cheap to change.
+
+   The two are read side by side all the time - in `just stack-log`
+   against the pull request list, in a notification naming a branch, in
+   a review that mentions one and links the other. A reader should not
+   have to work out that they are the same unit. When they drift, it is
+   usually because the branch was named from the files touched and the
+   title from what the change does: `stack-tidier-sync-and-help` beside
+   `Stack: prune on sync, and line up the short names` shares a key and
+   nothing else, and the branch name is the weaker half.
 
    **Set the title, because nothing else will get it right.**
-   `gh stack submit` titles a new pull request from the commit subject, so
-   it opens with the conventional-commit form. Set the key form alongside
-   the description in step 10. Leave every other field alone.
+   A repository's own automation may build a title, such as Quill
+   Medical's `auto-pr.yml` making `Feature: <the branch words>`, and
+   `gh stack submit` falls back to the commit subject, so whichever
+   opens the pull request produces something close but not this. Set it
+   alongside the description in step 9:
 
-   ### When the commit fails on a hook
+   ```bash
+   gh pr edit <number> --title "Passport: what this branch does"
+   ```
 
-   A pre-commit hook may stop the commit - a spelling word it does not
-   know, a formatter that rewrote a file, a linter with a finding. The
-   branch has then been created and checked out, but holds no commit.
+   Leave every other field alone - labels, reviewers, milestones and
+   the base branch are still not this command's to change, and the base
+   in particular belongs to `gh stack`.
 
-   **Fix the cause, then finish the same unit. How depends on the form.**
-   - **The first-unit form is safe to finish by hand.** The branch exists,
-     is checked out and is in the stack, so `git add -A` and the same
-     `git commit -m` complete it.
-   - **`gh stack add` is not.** It may have created the branch without
-     recording it, or recorded a branch with no commit. Go back to the
-     branch below, delete the empty one, and run it again:
+   ### When `stack-add` fails on a hook
+
+   A pre-commit hook will sooner or later stop the commit - a spelling
+   word it does not know, a formatter that rewrote a file, a linter with
+   a finding. The recipe then exits non-zero **having already created
+   and checked out the branch**, because making the branch comes before
+   committing onto it. The stack has no record of that branch: writing
+   it into the stack is the last thing the recipe does, and it never got
+   there.
+
+   **Fix the cause, then run the recipe again. How depends on which.**
+
+   - **`just stack-new` is safe to re-run as it is.** The branch already
+     exists and is checked out, so the same command, with the same name
+     and message, commits onto it and finishes. Do not switch branches
+     first.
+   - **`just stack-add` is not.** Its guard runs first, finds the
+     half-made branch in no stack, and refuses with "No stack on this
+     branch". Go back to the branch below, delete the empty one, and run
+     it again:
 
      ```bash
      git switch <the branch below>
      git branch -d feature/<name>
-     gh stack add -A -m "<message>" feature/<name>
+     just stack-add <name> "<message>"
      ```
 
-     The work is in the working tree throughout and travels with the
-     switch. `-d`, never `-D`: the branch holds no commit of its own, so git
-     deletes it without being forced, and if it will not, it is not empty
-     and something else is wrong.
+     The work is in the working tree throughout, staged, and travels
+     with the switch. `-d`, never `-D`: the branch holds no commit of its
+     own, so git deletes it without being forced, and if it will not, it
+     is not empty and something else is wrong.
+   - **Fix the cause.** A hook that rewrote
+     files, or a spelling fix, is mechanical: apply it and re-run
+     without pausing. A formatter that rewrote a file has already fixed
+     it, so the re-run is the whole fix. Anything needing you to write or
+     change code - mypy, a lint finding a formatter would not fix, bandit -
+     is a change nobody has reviewed: stop, show the diff and the
+     reason, and wait.
 
-   - **A mechanical cause is fixed without pausing.** A hook that rewrote
-     files, or a spelling fix, is mechanical: apply it and re-run. Anything
-     needing you to write or change code - a type error, a lint finding a
-     formatter would not fix - is a change nobody has reviewed: stop, show
-     the diff and the reason, and wait.
+   **Never finish the job with `git commit`.** This is the failure this
+   section exists for, and it looks exactly like success: the code is
+   committed, the tree is clean, and the branch carries the right
+   commit. What is missing is invisible - `git commit` knows nothing
+   about stacks, so the branch is never registered, `just stack-log`
+   reports "No stack on this branch", and `just stack-submit` pushes
+   nothing and opens no pull request. The work looks landed and is not.
 
-   **Check the registration, not just the commit.** After step 3,
-   `gh stack view --json` must list the new branch. A clean tree and a good
-   commit prove only that git is happy. A branch committed but missing from
-   the stack is pushed by nothing and gets no pull request.
+   `git commit`, `git rebase`, `git cherry-pick` and `git reset` are all
+   outside this command for the same reason: the stack is managed by
+   `gh stack` through the `just stack-*` recipes, and any git command
+   that writes history behind its back leaves the two disagreeing. If a
+   recipe cannot be made to work, stop and report it - that is a
+   mechanical failure of the first kind, and repairing a stack by hand
+   is not this command's job.
+
+   **Check the registration, not just the commit.** After `stack-add` or
+   `stack-new` returns, `just stack-log` must draw the new branch in the
+   stack. A clean tree and a good commit prove only that git is happy.
 
    **Do not judge the work. Commit it.** Whatever is uncommitted becomes
-   one branch and one pull request. Running this command _is_ the decision
+   one branch and one pull request. Running this command *is* the decision
    that the work is ready, and it has already been taken by the person who
    ran it. Stopping to second-guess it turns a one-word command into a
    negotiation and breaks an unattended run at the moment it most needs to
@@ -356,6 +508,7 @@ The arguments supplied to this command are: `$ARGUMENTS`
 
    This covers every kind of second-guessing, not only whether the work is
    one unit:
+
    - **What the work is.** A plan document, a scratch file, notes, a
      half-built feature - all of it is the unit. It is not your business
      whether the file looks like an input rather than an output, or
@@ -374,49 +527,63 @@ The arguments supplied to this command are: `$ARGUMENTS`
    **Read every file you are about to commit**, as you must for anything
    you distribute - but read it to describe it, never to decide whether it
    deserves committing. Noticing something odd is fine; say it in the
-   report, after the work is landed, not instead of landing it. The two
-   exceptions are a `.env` file and anything holding a credential, which
-   `AGENTS.md` forbids committing: stop on those.
+   report, after the work is landed, not instead of landing it.
 
-4. **Do not rebase here.** The new branch is always the top of the stack:
-   a stack is one line, and `gh stack add` puts the new branch on its end.
-   Nothing sits above it, so nothing has been left on an older parent. The
-   only rebase a run needs is the one onto the latest trunk, in step 6.
+3. **Do not rebase here.** The new branch is always the top of the
+   stack: a stack is one line, and `stack-add` puts the new branch on its
+   end. Nothing sits above it, so nothing has been left on an older
+   parent. The only rebase a run needs is the one onto the latest trunk,
+   and `stack-submit` does that itself in step 5.
 
-5. **Find out whether a pull request in the stack is queued or merging.**
-   `gh stack view --json` marks a queued branch `isQueued: true`.
-   `gh stack rebase` and `gh stack submit` both leave a queued branch
-   alone and say so, so carry on either way; just mention it in the
-   report.
+   If `just stack-log` ever warns that a branch needs rebasing, that is
+   the trunk having moved, and step 5 deals with it.
 
-6. **Rebase the stack onto the latest trunk, and check it worked.**
+4. **Run the targeted tests for what this branch touched**, with the
+   commands the "For the shared skills" section names, and nothing wider.
+   For another repository named in the arguments, run the tests its entry
+   names. CI runs the full suites on every push; a local full run
+   duplicates that, unless the repository's instructions say otherwise.
 
-   ```bash
-   gh stack rebase
-   gh stack view --json
-   ```
+   If a test fails, stop and report it. Fixing it is a code change nobody has
+   reviewed, and by this point the unit is being landed rather than built.
 
-   `gh stack rebase` exits 0 even when it skipped a branch, so its result
-   is checked rather than trusted: after it, no branch may report
-   `needsRebase: true`, apart from a queued one. If one does, or the rebase
-   stops on a conflict, stop and report it. Resolving a conflict is a code
-   change nobody has reviewed.
+   This is narrower than it sounds, and it does not contradict
+   `/t-f`, which says to fix a failing test. That is
+   the build phase, where fixing it is the work. This is the landing phase,
+   reached because a human ran this command - so a test failing *here* means
+   the work was finished with a red test, which a human should see.
 
-7. **Push the whole stack and open or update its pull requests.**
+5. **Push the whole stack and open or update its pull requests.**
 
    ```bash
-   gh stack submit --auto
+   just stack-submit
    ```
 
-   That pushes every branch and creates a draft pull request for each
-   branch that has none, with its base set to the branch below. It pushes
-   the _whole_ stack, not just this branch - that is unavoidable, because
-   rebasing onto the latest trunk rewrites every branch in it.
+   This rebases onto the latest trunk first, then pushes every branch and
+   creates or updates a draft pull request for each. New pull requests open
+   as drafts, which is what this repository's heavy CI tier and its four gate
+   checks require.
 
-   If the push fails on authentication, stop and report it. Do not change
-   the remote or the credentials to get past it.
+   It pushes the *whole* stack, not just this branch - that is unavoidable,
+   because rebasing onto the latest trunk rewrites every branch in it.
 
-8. **Find this branch's pull request.**
+   **Run it whether or not a pull request in the stack is queued to
+   merge.** `gh stack submit` skips a queued branch itself: it neither
+   rebases nor pushes it, so it stays in the queue, and it reports so
+   ("Skipping feature/… (PR #2001 queued)"). Everything above it is
+   rebased and pushed as usual.
+
+   This step used to say the opposite: with a queued pull request below,
+   push the new branch alone and open its pull request with
+   `gh pr create`. That was written on 4 October 2026, when
+   `stack-submit` would force-push a queued branch and drop it from the
+   queue. It no longer does, and a pull request made with `gh pr create`
+   is one GitHub's stack feature does not track: when the stack beneath
+   it merges, GitHub cannot move it to `main`, and closes it. That
+   closed #2014 on 15 October. So every pull request is made here, by
+   `stack-submit`, and never by hand.
+
+6. **Find this branch's pull request.**
 
    ```bash
    gh pr list --head "$(git branch --show-current)" --state open \
@@ -426,377 +593,464 @@ The arguments supplied to this command are: `$ARGUMENTS`
    If there is none, stop and say so. If more than one comes back, stop and
    ask which to update.
 
-9. **Read this branch's own change, not the whole stack.** Diff it against
-   the branch below, or against `origin/main` for the bottom branch:
+7. **Read this branch's own change, not the whole stack.**
 
    ```bash
-   git diff --stat <the branch below>...HEAD
-   git diff <the branch below>...HEAD
+   just stack-files
    ```
 
-   That is the unit being reviewed. Diffing a branch higher in the stack
-   against `origin/main` replays every unit below it, and describing all of
-   them on one pull request is exactly what stacking exists to avoid.
+   That lists what each branch changes **against its own parent** - the unit
+   being reviewed. Do not use `git diff origin/main...HEAD`: on a stacked
+   branch that replays every unit below it, and describing all of them on one
+   pull request is exactly what stacking exists to avoid.
 
-   Read the patch, not just the file list: the decisions and risks step 10
+   For the full patch of this branch's unit:
+
+   ```bash
+   just stack-files p
+   ```
+
+   Read the patch, not just the file list: the decisions and risks step 9
    asks for are visible only in the change itself.
 
-10. **Check you are not overwriting a human, then write the title and the
-    body.**
+8. **Check you are not overwriting a human.** Replace the body without asking
+   only when it is empty, is a placeholder the repository's own
+   automation wrote, such as Quill Medical's `auto-pr.yml`, carries only
+   gh-stack's `<sub>Stack created with…</sub>` footer, or carries the
+   `<!-- crp:pr-summary -->` marker meaning it was generated here before.
+   Anything else is someone's writing: show it, and ask before replacing it.
 
-    Replace the body without asking only when it is empty, holds only the
-    commit message `gh stack submit` copied in, or carries only gh-stack's
-    `<sub>Stack created with…</sub>` footer. Anything else is someone's
-    writing, including a description this skill wrote earlier that a person
-    may since have edited: show it, and ask before replacing it.
+9. **Write the title and the body.** The title takes the stack key form -
+   `Passport: what this branch does`, as "The stack key" sets out.
 
-    The title takes the stack key form - `Hazards: what this branch does`,
-    as "The stack key" sets out.
+   **The reader is the person who ran the overnight stack, reading the
+   next morning, probably on a phone, deciding in twenty seconds whether
+   to merge after a skim, read every line, or push back.** Every rule
+   below follows from that sentence, and where a rule and the sentence
+   disagree, the sentence wins.
 
-    **The reader is the person reviewing the stack, possibly the next
-    morning, probably on a phone, deciding in twenty seconds whether to
-    merge after a skim, read every line, or push back.** Every rule below
-    follows from that sentence, and where a rule and the sentence disagree,
-    the sentence wins.
+   The reader could work most of this out from the diff. The point is
+   that they should not have to. Summarising what the change does is the
+   job; *transcribing* it is not. A file list, a count of lines or tests,
+   or a walk through the diff in order costs the reader time and tells
+   them what the diff already shows.
 
-    The reader could work most of this out from the diff. The point is
-    that they should not have to. Summarising what the change does is the
-    job; _transcribing_ it is not. A file list, a count of lines or tests,
-    or a walk through the diff in order costs the reader time and tells
-    them what the diff already shows.
+   **The body is an opening, a triage block, then three level-two
+   sections.** This is Quill Medical's pull request #2263 written that
+   way:
 
-    **The body is an opening, a triage block, then three level-two
-    sections.** A change to hazard saving, written that way:
+   ```markdown
+   Changing your email address now needs confirming. Quill sends a link to
+   the new address and does nothing until it is clicked. It also tells the
+   old address that a change was asked for.
 
-    ```markdown
-    Saving a hazard now fails if somebody else saved the same safety file
-    after the form was opened. The form shows what changed and keeps what
-    was typed, so nothing is lost.
+   **Size:** large. 20 files, a migration, two new emails.
+   **Look hardest at:** where the change link is checked in `backend/app/security.py`.
+   **Check for me:** that signing somebody out after they confirm is acceptable.
 
-    **Size:** large. A change to how every hazard save reaches the safety file's Git history.
-    **Look hardest at:** the `expected_head` check in `SafetyFileRepository.edit` in `safety_file/repository.py`.
-    **Check for me:** that a stale save should be refused outright (HTTP 409) rather than merged with the newer version. Merging would keep both edits, but could combine two clinical judgements nobody made together.
+   ## Decisions to check
 
-    ## Decisions to check
+   - **The current password is optional for now.** You chose expand then
+     contract before the run. Until then somebody with a stolen cookie but
+     no password can start a change, but cannot finish it.
+   - **The confirm link reuses the `/verify-email` page instead of a new
+     one.** A new page would have duplicated the token-in-URL handling. Its
+     own signing salt means a verification link cannot be used as a change
+     link.
+   - **A password change cancels a pending link.** The link carries
+     `token_version`, which a password change bumps. So the account page
+     saves the password first and the email second. My reading; the plan
+     is silent.
 
-    - **A stale save is refused, not retried.** Retrying against the
-      newer version would record a judgement made against a version the
-      author never saw.
-    - **The check compares the commit the form was opened at.** The form
-      sends it as `expected_head`, and `SafetyFileRepository.edit` raises
-      `StaleVersionError` when the file has moved on.
+   ## Risks
 
-    ## Risks
+   - **A mistyped new address keeps the old one.** No link arrives,
+     nothing changes. That is the safe failure.
+   - **Confirming signs the person out.** They must sign in again.
 
-    - **Two people editing one file will now see conflicts.** That is the
-      point, but it is new to them.
-    - **A save that fails part-way leaves the working tree for
-      inspection.** It is never reset automatically.
+   ## What has changed
 
-    ## What has changed
+   - **`users.pending_email` holds the new address** until it is
+     confirmed (migration `772b1a92d9dd`).
+   - **Two new emails**, `email_change_confirm` and `email_change_notice`,
+     each with a Storybook render.
+   - **The account page asks for the current password** before an email
+     change, and says to check the new inbox.
 
-    - **`PATCH /api/v1/safety-files/{slug}/hazards/{hazard_id}/`
-      returns 409** when the form's `expected_head` is out of date.
-    - **The hazard form page says the file changed** and offers to compare
-      before saving again.
-    ```
+   <!-- crp:pr-summary -->
+   ```
 
-    A one-file wording change is the same shape, much shorter:
+   A one-file wording change is the same shape, much shorter:
 
-    ```markdown
-    The demo walkthrough now says the demo account can edit hazards as
-    well as read them.
+   ```markdown
+   The "Add a delegate by hand" guide now says a delegate can be found by
+   username as well as by email address.
 
-    **Size:** tiny. One file, `demo/README.md`, wording only. Merge if it reads well.
-    **Look hardest at:** the "Signing in" section of `demo/README.md`.
-    **Check for me:** nothing in particular.
+   **Size:** tiny. One guide file, wording only. Merge if it reads well.
+   **Look hardest at:** step 3 of `frontend/src/guides/content/add-a-delegate-by-hand.md`.
+   **Check for me:** nothing in particular.
 
-    ## Risks
+   ## Risks
 
-    - None found. Only documentation wording changes.
+   - None found. Only guide wording changes.
 
-    ## What has changed
+   ## What has changed
 
-    - **The "Signing in" section names both things the account can do**,
-      which is what the seeded permissions allow.
-    ```
+   - **Step 3 names both ways to find somebody**, which is what the Add
+     staff page's lookup accepts.
 
-    ### The opening
+   <!-- crp:pr-summary -->
+   ```
 
-    First in the body, so the reader learns what the change is before
-    being told how to review it.
-    - **Two or three short sentences: what is true now that was not true
-      before.** In terms of what someone using the thing would see. Never
-      a paraphrase of the title, and never a sentence that only parses if
-      you already know the answer.
-    - **Name the screen, and explain the domain words.** "What someone
-      would see" means a named page or route, not "a form" or "the table".
-      A domain word the change turns on, such as "mitigation" or "residual
-      risk", gets its short explanation here, the first time it appears.
-    - **If you do link something - a plan, a document - use a full
-      `https://github.com/…/blob/main/…` URL.** GitHub does not resolve a
-      relative path in a pull request body.
+   ### The opening
 
-    ### The triage block
+   First in the body, so the reader learns what the change is before
+   being told how to review it.
 
-    Three lines, after the opening and before the first section, each a
-    bold label and one plain sentence. Saying what feedback the author
-    wants is the strongest single predictor of a pull request merging
-    (Pirouzkhah, Wurzel Gonçalves and Bacchelli, arXiv 2602.14611), and
-    these lines are where that is said.
-    - **`Size`** - `tiny`, `small`, `medium` or `large`, then what makes it
-      so in a few words: the file count, a migration, a security boundary,
-      safety evidence. A migration, a security or permission boundary, or
-      anything that writes to a safety file's Git history makes it `large`
-      whatever the line count. A `tiny` change may add "Merge if it reads
-      well."
-    - **`Look hardest at`** - one place, named well enough to open: a file
-      path and a function or component, and what to look for there. It is
-      where you are least sure, or where a mistake would hurt most. One
-      place, not a list.
-    - **`Check for me`** - the one thing the reader must agree with before
-      merging, written as a request. "Nothing in particular" is allowed for
-      a `tiny` change. **It must make sense read on its own**: what
-      happens, where in the code or on which page, and the alternative you
-      did not choose, so the reader can say yes or pick the other one.
+   - **Two or three short sentences: what is true now that was not true
+     before.** In terms of what someone using the thing would see. Never
+     a paraphrase of the title, and never a sentence that only parses if
+     you already know the answer.
+   - **Name the screen, and explain the domain words.** "What someone
+     would see" means a named page or route, not "a form" or "the table".
+     A domain word the change turns on, such as a framework's "level" or
+     "scope", gets its short explanation here, the first time it appears.
+   - **If you do link something - a plan, a document - use a full
+     `https://github.com/…/blob/main/…` URL.** GitHub does not resolve a
+     relative path in a pull request body.
 
-      > ✗ "that refusing it is right."
-      >
-      > ✓ "A save from a form opened before somebody else's save is refused
-      > with HTTP 409 (`StaleVersionError` in `safety_file/errors.py`). Is
-      > that right, or should it be merged with the newer version?"
+   ### The triage block
 
-    There is no review-time line: the Size line carries what the reader
-    triages on.
+   Three lines, after the opening and before the first section, each a
+   bold label and one plain sentence. Saying what feedback the author
+   wants is the strongest single predictor of a pull request merging
+   (Pirouzkhah, Wurzel Gonçalves and Bacchelli, arXiv 2602.14611), and
+   these lines are where that is said.
 
-    ### Sentences
+   - **`Size`** - `tiny`, `small`, `medium` or `large`, then what makes it
+     so in a few words: the file count, a migration, a new email, a
+     security boundary, clinical data. A migration, a security boundary or
+     clinical data makes it `large` whatever the line count. A `tiny`
+     change may add "Merge if it reads well."
+   - **`Look hardest at`** - one place, named well enough to open: a file
+     path and a function or component, and what to look for there. It is
+     where you are least sure, or where a mistake would hurt most. One
+     place, not a list.
+   - **`Check for me`** - the one thing the reader must agree with before
+     merging, written as a request. "Nothing in particular" is allowed for
+     a `tiny` change. **It must make sense read on its own**: what
+     happens, where in the code or on which page, and the alternative you
+     did not choose, so the reader can say yes or pick the other one.
 
-    Language models over-produce four things that make prose slow for a
-    person to read: inanimate subjects doing human verbs, dropped "that"
-    and "which", stacked nouns, and rare word pairings (Clark, Martin and
-    Mahowald, arXiv 2610.29162). All four come from reaching for the
-    shorter of two phrasings, so **never trade a plain sentence for a
-    shorter one**.
-    - **The subject is a person or a named thing in the code.** "Turva
-      refuses the save", "`SafetyFileRepository.edit` raises
-      `StaleVersionError`", "the owner clicks". Never an abstraction doing
-      a human verb: not "the file hears of it", "a second save stops an
-      older form", "the page asks".
-    - **Keep the small words**: that, which, because, so, but, instead of.
-      They show how one fact leads to the next. Cutting them saves two
-      words and costs a re-read.
-    - **One fact a sentence, around fifteen words.** Two short sentences
-      beat one with a comma in the middle.
-    - **Concrete before abstract.** "Somebody who opened the form before
-      another save", not "a stale session".
-    - **No stacked nouns.** "The commit the form was opened at", not "the
-      form base commit".
-    - **Spell out an abbreviation the first time**, unless it is an
-      identifier the code uses. CSO is "Clinical Safety Officer" first.
-    - **No pointing at context the reader does not have.** "Fix 3a", "as
-      asked", "as a human chose before the run" each point at something
-      that was in the conversation and is not in the reader's head the next
-      morning. Say the thing - "you chose this before the run", "the plan's
-      Phase 3" - or leave it out.
-    - **No aphorisms.** A neat, balanced line states a conclusion whose
-      premise the reader has not been given:
+     > ✗ "that asking again at a higher level, after the old level
+     > retired, counting as a progression is right."
+     >
+     > ✓ "When a level retires, a learner who asks for a sign-off at a
+     > higher level counts as a progression (`SignOffKind` in
+     > `schemas.py`). Is that right, or should it be a fresh request?"
 
-      > ✗ "Whose save wins is decided at the commit, not the form."
-      >
-      > ✓ "Two saves of the same file now cannot both succeed. The second
-      > one is refused, because the file moved on after its form opened."
+   There is no review-time line: the Size line carries what the reader
+   triages on.
 
-    **There is no word count.** Length follows the change: a one-file
-    wording fix is a handful of lines, and a twenty-file security change is
-    as long as it needs to be. A little repetition is fine. A sentence that
-    only parses on the second read is not.
+   ### When this pull request must wait to merge
 
-    ### Bullets: a bold lead, then the plain detail
+   **Some units can only merge after something else has happened**: a
+   lower pull request has merged, its deploy to production has
+   finished, or Terraform has applied it. Build and land those units
+   anyway. The wait is written into the description, so it is the first
+   thing the reader meets, before the triage block:
 
-    **Every bullet opens with its claim in bold, five to eight words, then
-    one or two plain sentences giving the reason or the consequence.** The
-    reader skims the bold column and dips into the plain text only where
-    they want to.
-    - **The bold and the plain text never say the same thing.** A bold
-      headline that the sentence then repeats is wasted, and so is a
-      conclusion in bold with its premise left out.
-    - **One idea per bullet.** Two bullets on the same idea are one bullet;
-      one bullet carrying two ideas is two.
-    - **No sentence that restates another**, however short it is.
+   ```markdown
+   **Merge only after:**
 
-    ### Names
+   1. Merge #2482.
+   2. Wait for its deploy to production to finish.
+   3. Run `just terraform-github`, and check it applied.
+   4. Then merge this.
+   ```
 
-    **Use the vocabulary of the specifications and of the code, not a
-    private synonym for it.** If the code calls it a safety file, write
-    safety file; if the route is `/api/v1/safety-files/`, write that. A
-    gentler word is worse than jargon because it can be wrong. Leave out
-    the _incidental_ - a local variable, a private helper - which only the
-    diff needs.
+   - **A numbered list, in the order the human does it.** Each step is
+     one action they can take or check, naming the pull request, the
+     workflow or the recipe.
+   - **Say what goes wrong if the order is broken**, in one sentence
+     under `## Risks`: which job fails, or which setting a backend cannot
+     read.
+   - **Leave it out when there is no wait.** An ordinary stacked pull
+     request that only needs the one below merged first says nothing
+     here: merging from the bottom is how every stack lands.
+   - **Repeat the wait in the report**, so it is seen in the terminal as
+     well as on GitHub.
 
-    **Give every name three or four words saying what it is, the first
-    time it appears:** "`expected_head`, the commit the form was opened
-    at". Bare after that. **This covers domain words as well as
-    identifiers**: "residual risk, the risk left after mitigations" is as
-    much a name as `expected_head` is, and the reader needs it just as
-    much.
+   ### Sentences
 
-    **Never point at something with a bare noun phrase.** "The new list",
-    "the form", "the loader", "the routes", "the tables" ask the reader to
-    guess which thing is meant.
+   Language models over-produce four things that make prose slow for a
+   person to read: inanimate subjects doing human verbs, dropped "that"
+   and "which", stacked nouns, and rare word pairings (Clark, Martin and
+   Mahowald, arXiv 2610.29162). All four come from reaching for the
+   shorter of two phrasings, so **never trade a plain sentence for a
+   shorter one**.
 
-    **Each kind of thing has one way to be named:**
-    - **A route**: its method and path,
-      `PATCH /api/v1/safety-files/{slug}/hazards/{hazard_id}/`.
-    - **A page or form**: its on-screen title and URL, or its component
-      name, such as `HazardFormPage`.
-    - **A model or field**: `SafetyFile.slug`.
-    - **A function**: its name and file, `save_hazard` in
-      `app/safetyfiles/services.py`.
-    - **A test**: its file and the test's name.
-    - **Another pull request**: its number, `#68`. Never "the pull request
-      below".
-    - **A migration**: its app, number and what it adds.
-    - **A count**: the things counted. Not "two new checks" but "the
-      `expected_head` check and the closure-reason check".
+   - **The subject is a person or a named thing in the code.** "Quill
+     sends a link", "`decode_token` refuses the token", "the user clicks".
+     Never an abstraction doing a human verb: not "the old address hears
+     of it", "a second change stops an older link", "the page asks".
+   - **Keep the small words**: that, which, because, so, but, instead of.
+     They show how one fact leads to the next. Cutting them saves two
+     words and costs a re-read.
+   - **One fact a sentence, around fifteen words.** Two short sentences
+     beat one with a comma in the middle.
+   - **Concrete before abstract.** "Somebody with a stolen cookie but no
+     password", not "a session alone".
+   - **No stacked nouns.** "The seed the guide screenshots run against",
+     not "the guide screenshot seed".
+   - **Spell out an abbreviation the first time**, unless it is an
+     identifier the code uses. Mark is dyslexic.
+   - **No pointing at context the reader does not have.** "Fix 3a", "as
+     asked", "as a human chose before the run" each point at something
+     that was in the conversation and is not in the reader's head the next
+     morning. Say the thing - "you chose this before the run", "the plan's
+     Phase 3" - or leave it out.
+   - **No aphorisms.** A neat, balanced line states a conclusion whose
+     premise the reader has not been given:
 
-    > ✗ "The save now refuses an old form."
-    >
-    > ✓ "`save_hazard` now refuses a form whose `expected_head` is out of
-    > date."
+     > ✗ "Whose tree a place goes into is checked on the move, not only
+     > on the create."
+     >
+     > ✓ "Moving an `org_unit` now checks its new parent is in the same
+     > organisation. Creating one already did."
 
-    The same goes for a test:
+   **There is no word count.** Length follows the change: a one-file
+   wording fix is a handful of lines, and a twenty-file security change is
+   as long as it needs to be. A little repetition is fine. A sentence that
+   only parses on the second read is not.
 
-    > ✗ "So the test from the pull request below stays."
-    >
-    > ✓ "So `test_a_stale_form_cannot_overwrite_another_save`, in
-    > `app/api/tests/test_hazard_writes.py`, stays."
+   ### Bullets: a bold lead, then the plain detail
 
-    This holds for the branch below too. A reader arrives at one pull
-    request in a stack, not at all of them in order.
+   **Every bullet opens with its claim in bold, five to eight words, then
+   one or two plain sentences giving the reason or the consequence.** The
+   reader skims the bold column and dips into the plain text only where
+   they want to, as they do with every `## TL;DR`.
 
-    **Before posting, do a "which one?" pass.** Read each sentence as if it
-    were the only one on the screen. Wherever "the X", "it", "one" or "a
-    form" leaves you asking "which?" or "what is that?", put the name in, in
-    the form above. Check the name against the diff, not your memory of it.
+   - **The bold and the plain text never say the same thing.** A bold
+     headline that the sentence then repeats is wasted, and so is a
+     conclusion in bold with its premise left out.
+   - **One idea per bullet.** Two bullets on the same idea are one bullet;
+     one bullet carrying two ideas is two.
+   - **No sentence that restates another**, however short it is.
 
-    ### Punctuation and spelling
+   ### Names
 
-    **No em dashes.** Not in the opening, not in a bullet, not in a
-    heading. A comma, a colon, a full stop or a pair of brackets does the
-    same job. A sentence reaching for an em dash is usually one clause too
-    long, so the honest fix is to split it.
+   **Use the vocabulary of the plan and of the code, not a private
+   synonym for it.** If the plan calls it an `org_unit`, write `org_unit`;
+   if the route is `/api/sites`, write `/api/sites`. A gentler word is
+   worse than jargon because it can be wrong: "place" for `org_unit` cost
+   a review, since the plan says the tree is governance, not geography.
+   Leave out the *incidental* - a local variable, a private helper - which
+   only the diff needs.
 
-    **British English throughout**, as `AGENTS.md` requires: organisation,
-    behaviour, recognise, licence as the noun. Identifiers, route paths and
-    library names keep whatever spelling the code gives them.
+   **Give every name three or four words saying what it is, the first
+   time it appears:** "`org_unit`, a node in the governance tree: a trust,
+   a hospital or a ward". Bare after that. **This covers domain words as
+   well as identifiers**: "a level, the grade a sign-off is given at" is
+   as much a name as `org_unit` is, and the reader needs it just as much.
 
-    ### Writing for a dyslexic reader
+   **Never point at something with a bare noun phrase.** "The new list",
+   "the form", "the loader", "the routes", "the tables" ask the reader to
+   guess which thing is meant.
 
-    Write so that a dyslexic reader can follow it. These are the British
-    Dyslexia Association's writing rules, from its style guide: "Use short,
-    simple sentences in a direct style. Give instructions clearly. Avoid
-    long sentences of explanation. Use active rather than passive voice.
-    Avoid double negatives. Be concise." The sentence rules above already
-    carry the short sentences, the bullets, the first-use explanation of a
-    name and bold in place of italics. These are the rest.
-    - **Active voice.** "Turva refuses the save", never "the save is
-      refused". The subject names who does the verb, so the sentence says
-      who did it.
-    - **No double negatives.** Not "a save that is not stale does not
-      fail" but "every save from an up-to-date form succeeds". Security
-      write-ups breed these, so look for them there.
-    - **Instructions a person must carry out go in a numbered list**, in
-      the order they are done, separate from the explanation. A migration
-      to run, a setting to change by hand, a command to run afterwards:
-      each is a numbered step.
-    - **No italics, no underlining, no block capitals outside a code
-      span.** The guide says underlining and italics "make the text appear
-      to run together" and block capitals are "much harder to read". Bold
-      is the only emphasis, and only for a word that must not be missed.
-    - **Every bullet ends with a full stop.** A text-to-speech reader
-      pauses on punctuation and runs straight on without it.
-    - **No tables, and no text inside an image.** A text reader stumbles on
-      a table and cannot hear an image. An embedded screenshot needs a
-      sentence beside it saying what it shows.
+   **Each kind of thing has one way to be named:**
 
-    ### The sections
+   - **A route**: its method and path,
+     `POST /api/passport/{passport_id}/competencies/{competency_id}/requests`.
+   - **A page or form**: its on-screen title and URL, or its component
+     name.
+   - **A table or column**: `passport_framework_level.retired_on`.
+   - **A function**: its name and file, `level_ref` in
+     `backend/app/features/passport/definitions.py`.
+   - **A test**: its file and the test's name.
+   - **Another pull request**: its number, `#2365`. Never "the pull
+     request below".
+   - **A migration**: its id and what it adds.
+   - **A count**: the things counted. Not "four nullable columns" but
+     "`retired_on` and `retired_in_version`, on both tables".
 
-    Three sections, in this order.
-    - **`## Decisions to check`** - the choices you made that a human might
-      have made differently. A wrong one means the whole pull request needs
-      a closer read, so it comes first. Each bullet takes one shape: what
-      was chosen, what it was chosen instead of, and why. Then, where the
-      choice is not certain, one of two fixed words, so they can be scanned
-      for: `my reading` (the plan was silent and you picked a reading) or
-      `a guess`. No word means you are sure. Do not hedge with "may",
-      "should" or "I believe". A departure from the plan opens with
-      "Departed from the plan:". Following the plan is not a decision. Omit
-      the section when there genuinely were none. **Each bullet makes sense
-      on its own**: it names the code or the page the choice lives in.
+   > ✗ "The new list is added beside the old ones."
+   >
+   > ✓ "`place_ids` is added beside `organisation_ids` and `site_ids`."
 
-    - **`## Risks`** - security, data leaks, safety evidence, anything that
-      could go wrong beyond the code being incorrect. Turva is
-      safety-critical by consequence, so say here whether `SAFETY.md`
-      changed and why, or why it did not need to. Name any gate from step 2
-      that could not run. **Always present**, even as "None found.",
-      because an omitted section cannot be told apart from one nobody
-      thought about. Say "none found", never "none": it is what you
-      noticed, not a guarantee, and your judgement of risk is not well
-      calibrated.
+   > ✗ "So the `xfail` test from the pull request below stays."
+   >
+   > ✓ "So `test_asking_again_at_a_higher_level_after_the_old_one_went`,
+   > the `xfail` test from #2365, stays."
 
-    - **`## What has changed`** - what is different now, in terms of what a
-      user of the thing would see. **Always present**, never collapsed, and
-      one bullet when one is all there is. Not a file list and not a commit
-      list: the diff already carries those. **Counting is not describing** -
-      "sixteen tests" tells the reader nothing on its own; say what the
-      tests pin down.
+   > ✗ "The routes refuse a retired level or scope."
+   >
+   > ✓ "`POST /api/passport/{passport_id}/competencies/{competency_id}/requests`
+   > refuses a retired level or scope."
 
-    ### Closing
+   This holds for the branch below too. A reader arrives at one pull
+   request in a stack, not at all of them in order.
 
-    End with the `## What has changed` section, with nothing after it: no
-    marker, and no line listing the checks that ran. **Do not report which
-    commands ran or how many tests passed**, such as "Checked: `./s/lint`
-    passed; 485 tests passed". CI shows the reviewer that, and a count says
-    nothing about what was tested. Only a check that failed or could not
-    run is mentioned, under `## Risks`.
+   **Before scoring, do a "which one?" pass.** Read each sentence as if
+   it were the only one on the screen. Wherever "the X", "it", "one" or
+   "a form" leaves you asking "which?" or "what is that?", put the name
+   in, in the form above. Check the name against the diff, not your
+   memory of it.
 
-    **No attribution footer anywhere in the body**, no "Generated by",
-    no session link, no robot emoji: if a tool appends one, strip it
-    before the body is posted and say that you did.
+   ### Punctuation and spelling
 
-    ### Post it once
+   **No em dashes.** Not in the opening, not in a bullet, not in a
+   heading. A comma, a colon, a full stop or a pair of brackets does the
+   same job. A sentence reaching for an em dash is usually one clause too
+   long, so the honest fix is to split it.
 
-    Write the body to a file in the scratchpad, read it through once more
-    against the rules above, then post title and body in one edit, so a
-    reader watching the pull request gets one notification:
+   **British English throughout**, as the working instructions require: organisation,
+   behaviour, recognise, licence as the noun. Identifiers, route paths and
+   library names keep whatever spelling the code gives them.
 
-    ```bash
-    gh pr edit <number> \
-      --title "Hazards: what this branch does" \
-      --body-file <path to the body>
-    ```
+   ### Writing for a dyslexic reader
 
-    `--body-file` rather than `--body`: the body holds backticks, quotes
-    and newlines, and passing it inline leaves them at the shell's mercy.
+   The reader is dyslexic, and these are the British Dyslexia Association's
+   writing rules, from its style guide: "Use short, simple sentences in a
+   direct style. Give instructions clearly. Avoid long sentences of
+   explanation. Use active rather than passive voice. Avoid double
+   negatives. Be concise." The sentence rules above already carry the short
+   sentences, the bullets, the first-use explanation of a name and bold in
+   place of italics. These are the rest.
 
-11. **Mark it ready unless `draft` was given**, and only if step 8 reported
-    `isDraft: true`:
+   - **Active voice.** "Quill sends a link", never "a link is sent". The
+     subject names who does the verb, so the sentence says who did it.
+   - **No double negatives.** Not "a job that is not excluded does not
+     fail" but "every job the check covers passes". Security write-ups
+     breed these, so look for them there.
+   - **Instructions a person must carry out go in a numbered list**, in
+     the order they are done, separate from the explanation. The guide
+     says to give instructions clearly and to avoid long sentences of
+     explanation around them. Secrets to set before merging, a command to
+     run afterwards, a setting to change by hand: each is a numbered step.
+   - **No italics, no underlining, no block capitals outside a code
+     span.** The guide says underlining and italics "make the text appear
+     to run together" and block capitals are "much harder to read". Bold
+     is the only emphasis, and only for a word that must not be missed.
+   - **Every bullet ends with a full stop.** A text-to-speech reader
+     pauses on punctuation and runs straight on without it.
+   - **No tables, and no text inside an image.** A text reader stumbles on
+     a table and cannot hear an image. An embedded screenshot needs a
+     sentence beside it saying what it shows.
 
-    ```bash
-    gh pr ready <number>
-    ```
+   ### The sections
 
-    If it is already out of draft, leave it and say so. With `draft`, leave
-    it a draft, and never put back into draft a pull request that is
-    already out of it. This is the last step; do not merge it.
+   - **`## Decisions to check`** - the choices you made that a human might
+     have made differently. A wrong one means the whole pull request needs
+     a closer read, so it comes first. Each bullet takes one shape: what
+     was chosen, what it was chosen instead of, and why. Then, where the
+     choice is not certain, one of two fixed words, so they can be scanned
+     for: `my reading` (the plan was silent and you picked a reading) or
+     `a guess`. No word means you are sure. Do not hedge with "may",
+     "should" or "I believe". A departure from the plan opens with
+     "Departed from the plan:". Following the plan is not a decision. Omit
+     the section when there genuinely were none. **Each bullet makes sense
+     on its own**: it names the code or the page the choice lives in, so
+     "the loader" is `_check_part_retirement` in
+     `backend/app/cbac/competencies.py`.
+
+   - **`## Risks`** - security, data leaks, patient safety, anything that
+     could go wrong beyond the code being incorrect. **Always present**,
+     even as "None found.", because an omitted section cannot be told
+     apart from one nobody thought about. Say "none found", never "none":
+     it is what you noticed, not a guarantee, and your judgement of risk
+     is not well calibrated.
+
+   - **`## What has changed`** - what is different now, in terms of what a
+     user of the thing would see. **Always present**, never collapsed, and
+     one bullet when one is all there is. Not a file list and not a commit
+     list: the diff already carries those. **Counting is not describing** -
+     "sixteen tests" tells the reader nothing on its own; say what the
+     tests pin down.
+
+   ### Closing
+
+   Finish with `<!-- crp:pr-summary -->` on its own line - nothing after
+   it. **No attribution footer anywhere in the body**, no "Generated by",
+   no session link, no robot emoji: if a tool appends one, strip it
+   before the body is posted and say that you did.
+
+   ### Score it, and rewrite up to twice
+
+   Write the body to a file in the scratchpad, `attempt-1.md`, and score
+   it before anything reaches GitHub, with the readability command the
+   "For the shared skills" section names, such as:
+
+   ```bash
+   python3 scripts/readability.py --longest <path to attempt-1.md>
+   ```
+
+   Where the section names none, skip the scoring, post the first attempt,
+   and say in the report that it was not scored.
+
+   It prints the Flesch reading ease and the Flesch-Kincaid grade, with
+   code spans, URLs and the triage labels taken out first so that a real
+   name such as `GCP_DEPLOY_SERVICE_ACCOUNT` does not sink the score, and
+   under them the five longest sentences with their word counts. The
+   British Dyslexia Association's targets are an ease of 70 to 80 and a
+   grade of about 5, reached by shortening sentences, never by swapping a
+   real name for a softer word.
+
+   The score informs a rewrite. It never blocks a post.
+
+   - **An ease of 70 or above posts as it is.** Stop here.
+   - **Under 70, rewrite once, aimed at the longest sentences.** Split
+     each one the script listed, break a bullet that stacks clauses into
+     two bullets, and swap a long word that is not a name for a short
+     one. Never change a name, a fact or a bold lead: a body that reaches
+     70 by calling `GCP_DEPLOY_SERVICE_ACCOUNT` "the account" has lost
+     what the reader needed. **Never cut a name or its explanation to
+     raise the score.** A name added by the "which one?" pass that lowers
+     the score is correct; split the sentence it sits in instead. Write
+     the result to `attempt-2.md` and score it the same way.
+   - **Still under 70, rewrite once more, then stop.** `attempt-3.md` is
+     the last. Three is the ceiling because every pass costs a reading of
+     the whole body, and a body full of identifiers will not reach 70 on
+     any pass.
+   - **Post the attempt with the highest ease**, whichever number it
+     carries. The others stay in the scratchpad.
+
+   Only the chosen attempt reaches GitHub, in one edit, so a reader
+   watching the pull request never sees a draft replaced and gets one
+   notification rather than three:
+
+   ```bash
+   gh pr edit <number> \
+     --title "Passport: what this branch does" \
+     --body-file <path to the chosen attempt>
+   ```
+
+   `--body-file` rather than `--body`: the body holds backticks, quotes
+   and newlines, and passing it inline leaves them at the shell's mercy.
+
+   Keep every attempt's ease, in order, for the report.
+
+10. **Mark it ready unless `draft` was given**, and only if step 6 reported
+   `isDraft: true`:
+
+   ```bash
+   gh pr ready <number>
+   ```
+
+   Marking ready starts the heavy CI tier - say so when reporting. If it is
+   already out of draft, leave it and say so. With `draft`, leave it a draft,
+   and never put back into draft a pull request that is already out of it.
+   This is the last step; do not merge it.
 
 ## Report
 
 One short block:
 
-- The branch created, and its position in the stack (`gh stack view`).
+- The branch created, and its position in the stack (`just stack-log`).
 - The pull request URL, and under it the description's three triage
   lines: Size, Look hardest at, Check for me.
+- Every attempt's ease, in order, and which attempt was posted: "Scores
+  58, 66, 72. Attempt 3 posted."
 - Whether it was left a draft or marked ready.
 - The commit message and the title used, since the name, the message and
   the title were all chosen for you.
@@ -804,16 +1058,15 @@ One short block:
   one line each. After an unattended run the terminal is read before the
   pull requests are, and a decision nobody sees is a decision nobody
   checked.
-- Which gates were run, and which could not run. Never claim a suite that
-  was not run.
+- Which tests were run, by name. Never claim a suite that was not run.
 
-If a step fails mechanically - a gate fails, a rebase conflicts, the push
-is refused, two pull requests match the branch - stop and report it rather
-than working around it.
+If a step fails mechanically - a test fails, a rebase conflicts, two pull
+requests match the branch - stop and report it rather than working around
+it.
 
 **That is not licence to stop because the work itself gave you pause.**
 The stopping conditions in this command are all of the first kind: no
-stack, a stack spanning worktrees, a failing gate, an ambiguous pull
+stack, a stack spanning worktrees, a failing test, an ambiguous pull
 request. None of them is about what the work is, where it lives, or
 whether it looks ready. Those are settled by the command having been run.
 
@@ -822,5 +1075,3 @@ that point the branch is the user's, not yours: no further commit, no
 amend, no push, no pull request edit, however small the change or however
 clearly it belongs to the unit just landed. See "The authorisation ends
 with the run" above.
-
-<!-- cspell:words crpd unstack worktrees Pirouzkhah Bacchelli Mahowald scratchpad -->

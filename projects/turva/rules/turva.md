@@ -9,11 +9,25 @@ session-start hook refreshes it. Change this file, never the copy.
 its layout, its commands and what needs approval. Where it and these rules
 disagree, `AGENTS.md` wins, except where these rules are stricter.
 
-## Skills
+## For the shared skills
 
-- **Turva's skills carry a `t-` prefix**: `/t-crpd`, `/t-f`, `/t-g`, `/t-p`,
-  `/t-e`, `/t-s` and `/t-in-code-documentation`. They name Turva's own
-  commands, such as `./s/lint`, so use them only in Turva.
+The shared skills, such as `/t-crpd` and `/t-f`, read this section for
+what is particular to Turva.
+
+- **Tests before every commit are the whole gates, not a targeted
+  subset**: `./s/lint` and `./s/test`, plus `./s/frontend` when the unit
+  touches `frontend/`. `AGENTS.md` says not to commit red. `./s/lint`
+  checks untracked files as well, so it sees the unit as it will be
+  committed. `./s/test` needs the dev stack: start it with `./s/up -d`
+  rather than skip the tests. While building, run only the tests that
+  cover the unit, so each try is quick.
+- **The commit message** adds a body when the why is not obvious from
+  the subject, and says there whether `SAFETY.md` needed changing.
+- **The pull request's `## Risks` section** says whether `SAFETY.md`
+  changed and why, or why it did not need to, because Turva is
+  safety-critical by consequence. It names any gate that could not run.
+- **No readability command**: the description is not scored.
+- **No other repositories**: a repository argument is an error here.
 
 ## Plans
 

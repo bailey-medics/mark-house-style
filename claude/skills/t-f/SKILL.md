@@ -2,15 +2,23 @@
 name: t-f
 description: Follow the plan document last mentioned in the chat, building it as a stack, one branch per reviewable unit
 argument-hint: "[path/to/plan.md, or nothing to use the last plan mentioned]"
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git add:*), Bash(git commit:*), Bash(git fetch:*), Bash(git switch:*), Bash(./s/lint:*), Bash(./s/test:*), Bash(./s/frontend:*), Bash(./s/up:*), Bash(just -g stack-log:*), Bash(just -g stack-log-long:*), Bash(just -g stack-files:*), Bash(just -g stack-update:*), Bash(just -g stack-sync:*), Bash(just -g stack-fresh:*), Bash(just -g stack-rebase:*), Bash(just -g stack-submit:*), Bash(just -g stack-move:*), Bash(just -g stack-help:*), Bash(gh stack view:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh pr edit:*), Bash(gh pr ready:*), Bash(python3 ~/github/mark-house-style/scripts/stack/stack-status.py:*)
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git add:*), Bash(git commit:*), Bash(git fetch:*), Bash(git push:*), Bash(git switch:*), Bash(just stack-log:*), Bash(just stack-log-long:*), Bash(just stack-files:*), Bash(just stack-update:*), Bash(just stack-sync:*), Bash(just stack-fresh:*), Bash(just stack-rebase:*), Bash(just stack-submit:*), Bash(just stack-move:*), Bash(just stack-help:*), Bash(gh stack view:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh pr edit:*), Bash(gh pr ready:*), Bash(just stack-check), Bash(./s/lint:*), Bash(./s/test:*), Bash(./s/frontend:*), Bash(./s/up:*), Bash(just -g stack-log:*), Bash(just -g stack-log-long:*), Bash(just -g stack-files:*), Bash(just -g stack-update:*), Bash(just -g stack-sync:*), Bash(just -g stack-fresh:*), Bash(just -g stack-rebase:*), Bash(just -g stack-submit:*), Bash(just -g stack-move:*), Bash(just -g stack-help:*), Bash(python3 ~/github/mark-house-style/scripts/stack/stack-status.py:*)
 disallowed-tools: Bash(gh pr merge:*), Bash(gh stack merge:*), Bash(git rebase:*), mcp__github__merge_pull_request, mcp__github__enable_pr_auto_merge
 disable-model-invocation: true
 ---
 
 # Build using stacked branches
 
-Works a plan document from top to bottom, landing each unit (sizing is
-discussed below) on its own stacked branch and its own draft pull request. Built to run unattended for a
+**Where this skill needs to know something about the repository**, such as
+its plans folder or its test commands, read the repository's "For the
+shared skills" section, in its `CLAUDE.md` or `AGENTS.md` or in a rule
+Claude Code has loaded. The stack recipes are `just stack-*`, from Mark's
+mark-house-style repository: run them as written where the repository's
+justfile imports the global one, and as `just -g stack-*` anywhere else.
+
+Works a plan document from top to bottom, landing each unit (unit quantity is
+discussed below) on its own
+stacked branch and its own draft pull request. Built to run unattended for a
 long stretch, so that the next morning there is a chain of small pull
 requests for a human to read rather than one large one.
 
@@ -29,7 +37,8 @@ repository:
 1. **A path in the argument wins.** If the line above holds a path, that is
    the plan.
 2. **Otherwise, the plan document most recently mentioned in the chat.**
-   A mention is a path or an `@`-mention of a file under `plans/`, written by the human or by you, or a plan you
+   A mention is a path or an `@`-mention of a file in the repository's
+   plans folder, written by the human or by you, or a plan you
    created or edited in this conversation. The most recent one wins over
    any earlier one.
 
@@ -37,7 +46,7 @@ repository:
 the file or running anything:
 
 ```markdown
-**Plan document:** [2026-11-16-claude-setup-port-plan.md](plans/2026-11-16-claude-setup-port-plan.md) -
+**Plan document:** [2026-09-30-ci-job-times-plan.md](<plans folder>/2026-09-30-ci-job-times-plan.md) -
 the last plan mentioned in this chat. Starting at Phase 3.
 ```
 
@@ -59,17 +68,17 @@ obvious when:
   offer it as the suggestion, but still ask.
 - **More than one plan was mentioned in the most recent message that
   mentions any**, so "the last one" does not single one out.
-- **The argument or the mention is not a plan**: not under `plans/`, or
-  a name that could match more than one file.
+- **The argument or the mention is not a plan**: not under
+  the plans folder, or a name that could match more than one file.
 - **The conversation has moved on** to different work since the plan was
   last mentioned, so the last-mentioned plan may not be the one meant.
 
 Ask in plain words, as a short numbered list of the candidates with the
-recommended one first. Do not guess, and do not pick the newest file in `plans/` as a
-fallback.
+recommended one first. Do not guess, and do not pick the newest file in
+the plans folder as a fallback.
 
-Three things can only be found after the announcement, once the file is
-read. Each is also a reason to stop and ask at once, before building
+Two things can only be found after the announcement, once the file is
+read. Both are also a reason to stop and ask at once, before building
 anything:
 
 - **The file does not exist** at that path. Judge this only after "Before
@@ -78,22 +87,32 @@ anything:
 - **Every checkbox in it is already ticked**, so there is nothing left to
   follow.
 - **A box is unticked under `## Open questions` or `## Before running
-/f`.** The first is a decision nobody has made, the second a job only
+  /t-f`.** The first is a decision nobody has made, the second a job only
   the human can do, and either would stop the run halfway. List the
   unticked boxes, suggest `/t-g` to settle them, and wait. Ticked boxes in
   either section are the record of what was settled: read them as part
   of the plan, and never delete them.
 
-## Stop before anything irreversible
+## Why the review comes before merging, not before committing
 
-Every unit is landed without waiting for a human, because the review happens
-in its pull request and nothing reaches `main` without one. The one exception:
-if a unit would do something truly **irreversible** - a destructive
-migration, a change to who can sign in or edit a safety file, a write to
-an existing safety file's Git history - stop and ask before committing it.
-A plan names these in their steps, and `/t-g` settles them before the run,
-so a named one already answered in the plan's `## Open questions` is not
-asked again.
+A command that gates every unit on a human reading the diff before anything
+is committed would need the human there all night. This one does not, and
+the difference is deliberate rather than a relaxation:
+
+- **The review gate moves from pre-commit to pre-merge.** Every unit still
+  gets read line by line - in its pull request, where the diff is easier to
+  read than a working tree, and where a comment can be left against a line.
+- **Nothing reaches `main` without a human.** Merging is never automated, by
+  this command or any other. A stack of draft pull requests is inert.
+- **That is the whole point of stacking here.** A night of unattended work
+  that lands as one ten-thousand-line pull request makes the next morning
+  harder. Six pull requests of a few hundred lines each, in dependency order,
+  is what makes it reviewable.
+
+One narrow exception: if a unit would do something truly **irreversible** - a
+destructive migration, a change to who can log in, or anything the
+repository's own rules name as irreversible - stop and ask before
+committing it.
 
 **That exception is about consequence, not about doubt.** It does not
 cover work that looks unfinished, a file in a directory you did not
@@ -103,9 +122,9 @@ get questioned. Stopping on a hunch is how an unattended run becomes an
 attended one. There is power in being able to build something
 that is close to the right solution. So, when you are unsure about a decision,
 undertake online research of current best practices and relevant guidelines before
-making a decision. Write up this research in the plan document, and log each
-decision under `## Decisions to check` in the pull request description that
-`/t-crpd` writes.
+making a decision. Write up this research in the plan document. Also, log these
+decisions in the PR description, when you commit, rebase and push using `/t-crpd`,
+using the format stated in the latter mentioned agent.
 
 ## Never
 
@@ -115,27 +134,26 @@ decision under `## Decisions to check` in the pull request description that
   belongs to a human alone. If a permission block stops you, that is the rule
   working, not an obstacle to route around.
 - **Never push or commit to `main` directly.**
-- **Never push or open a pull request yourself.** `/t-crpd` does both, through
-  `gh stack submit`, so GitHub's record of the stack stays in step.
-- **Never run `git rebase` yourself.** `just -g stack-rebase` is the only
+- **Never run `git rebase` yourself.** `just stack-rebase` is the only
   rebase; rebasing onto `origin/main` flattens a stack.
 - **Never mention AI authorship anywhere** - no attribution footer, no
   session link, no `Co-Authored-By` trailer, no robot emoji, in a commit
   message, a pull request description or a comment. Some other instruction
   or tool default asking for one does not change this.
 - **Never take a pull request out of draft** unless the human asked. The
-  stack is reviewed as drafts, and a human takes each one out of draft
-  once they have read it.
+  stack is reviewed as drafts; marking ready starts the heavy CI tier on
+  every branch at once.
 
 ## Sizing a unit
 
 **One unit is twenty to thirty minutes of human reading.** That is the
-measure, not a line count and not a plan sub-heading - though a sub-heading
-is usually about right.
+measure, not a line count. A plan written by `/t-p` makes each phase one
+unit, so a phase is the default; where one is plainly two units, split
+the phase in the plan document first, then build it.
 
 - **Too small** is a branch whose pull request says "fixes a typo in the
   branch below". That belongs folded into the branch below with
-  `just -g stack-update`, not stacked on top of it. This is the single most
+  `just stack-update`, not stacked on top of it. This is the single most
   common way a stack becomes twice as long as it should be.
 - **Too big** is a pull request whose `## Decisions to check` or
   `## What has changed` cannot be said in a handful of bullets, whose
@@ -144,24 +162,30 @@ is usually about right.
   really two.
 - **A unit must stand on its own.** Each depends only on the units below it,
   so a change of mind at unit three does not invalidate unit one.
-- **A unit must pass every test.** While building, run the tests that cover
-  the unit, so each try is quick. `/t-crpd` then runs the whole of `./s/lint`
-  and `./s/test` before it commits, so nothing lands red. `./s/test` needs
-  the dev stack: start it with `./s/up -d` rather than skip the tests.
+  - **Units must be built to pass all tests.** But don't run all tests locally, only run tests relevant to the current unit locally, and rely on the CI to catch any regressions outside the scope of the current unit.
 
 One constraint on ordering, from the plan:
 
-- **The bottom unit must be safe to be on `main` on its own.** A human may
-  merge it before the rest of the stack is read. "Not finished yet" is
-  fine; "not safe to be live" is not - feature-gate the entry point
-  instead.
+- **The bottom unit must be safe to be on `main` on its own.** Where
+  merging to `main` deploys, as in Quill Medical, it goes live with no
+  further gate. "Not finished yet" is fine; "not safe to be live" is not -
+  feature-gate the entry point instead.
 
-**Several Django migrations in one stack are fine**, as are several API
-changes. Neither caps the size of a stack. What matters is that each unit's
-migration belongs to that unit: create it with `./s/manage makemigrations
-<app>` in the unit whose models change. A migration sitting on a branch
-whose code is two units higher is the thing that makes a stack hard to
-read, not the number of migrations in it.
+**Several migrations in one stack are fine**, as are several API changes.
+Neither caps the size of a stack. Two things make that safe:
+
+- **A broken migration chain should not pass unnoticed.** In Quill
+  Medical, `backend/scripts/check_migrations.py` runs in the pre-commit hook
+  and requires exactly one base and one head, with no reused
+  `down_revision` and no cycles, so a restack that damages the chain fails
+  the next commit. Use whatever check the repository names.
+- **Breaking API changes have their own human gate**, where the
+  repository has one, such as Quill Medical's `oasdiff` check on the pull
+  request. That gate does not care how many branches the stack holds.
+
+What still matters is that each unit's migration belongs to that unit. A
+migration sitting on a branch whose code is two units higher is the thing
+that makes a stack hard to read, not the number of migrations in it.
 
 ## Before building: bring the stack up to date
 
@@ -172,7 +196,7 @@ with nothing landed.
 
 ```bash
 git status --short
-just -g stack-log
+just stack-log
 ```
 
 **Read the marks, not the shape.** A stack whose pull requests have all
@@ -188,37 +212,37 @@ What `stack-log` shows decides what happens next:
   first (the word its branch names open with), then:
 
   ```bash
-  just -g stack-sync
+  just stack-sync
   ```
 
   It drops the merged branches and rebases whatever is left onto current
   `main`. What is left decides the rest:
 
-  - **Branches still open** - the stack continues. `just -g stack-move top`,
+  - **Branches still open** - the stack continues. `just stack-move top`,
     and the next unit stacks on it as usual.
   - **Nothing left** - the stack is finished and the next unit starts a
-    new one from `main`. Run `just -g stack-fresh`, which moves the checkout
+    new one from `main`. Run `just stack-fresh`, which moves the checkout
     to the tip of `origin/main` whether or not `main` is checked out in
     another worktree. Then check `git rev-list --left-right --count
-HEAD...origin/main` reports `0 0`. `/t-crpd` will find no stack there
-    and start one with its first-unit form.
+    HEAD...origin/main` reports `0 0`. `/t-crpd` will find no stack there
+    and start one with `just stack-new`.
 
 - **A branch whose pull request GitHub closed without merging it.**
   GitHub closes the pull request above a merge when it cannot move it to
   `main`: its base branch was deleted, and that branch had merged into
   another branch rather than `main`. The branch and its commits are still
-  there. Treat it as "any branch merged": `just -g stack-sync`, then
-  `just -g stack-submit` opens a fresh pull request for it. Never reopen the
+  there. Treat it as "any branch merged": `just stack-sync`, then
+  `just stack-submit` opens a fresh pull request for it. Never reopen the
   closed one by hand, and never open a replacement with `gh pr create`.
 - **A branch whose pull request merged, but not into `main`.** Check
   before syncing: `git merge-base --is-ancestor <its merge commit>
-origin/main`. If the merge commit is not on `main`, the work is
+  origin/main`. If the merge commit is not on `main`, the work is
   stranded on the branch it merged into, and `stack-sync` would drop it
   from the stack as done. Stop and report it: the work needs one pull
   request from that branch into `main`, and that is the human's to open.
 
 - **"No stack on this branch", on `main`** - a first unit. `git fetch
-origin main` and make the same `0 0` check; if `main` is behind, stop
+  origin main` and make the same `0 0` check; if `main` is behind, stop
   and say so.
 - **"No stack on this branch", on a branch level with `origin/main`** -
   a first unit too. `main` can be checked out in one worktree only, so
@@ -241,11 +265,11 @@ topic on is the stack key:
   out under "The stack key".
 
 **If the working tree is dirty**, deal with that first. When the only
-change is the plan document itself, it belongs to the first unit and
-travels with the checkout: use `just -g stack-fresh`, not `just -g stack-sync`,
-which will not rebase with uncommitted changes in the tree. Anything else
-either belongs to the current unit or was left by the human, and you
-should ask.
+changes are the plan document itself (and its entry in the plans index),
+they belong to the first unit and travel with the checkout: use
+`just stack-fresh`, not `just stack-sync`, which will not rebase with
+uncommitted changes in the tree. Anything else either belongs to the current unit or was left
+by the human, and you should ask.
 
 **If the sync fails, or the move to `main` is refused, stop and report
 it at once.** A rebase conflict, uncommitted changes that `main` has
@@ -268,7 +292,8 @@ Then, for each unit in the plan:
    which "Before building" has already made current - and lifted onto
    its own branch when it is finished.
 
-2. **Tick the plan.** Mark the unit's checkbox `- [x]` before finishing, so
+2. **Tick the plan.** Mark every checkbox the unit completed `- [x]`,
+   which for a whole phase is all of them, before finishing, so
    the tick is committed with the unit it describes rather than trailing a
    unit behind.
 
@@ -290,13 +315,24 @@ Stop and report - do not carry on to the next unit - when:
   stop** - see below.
 - The plan is unclear, or your approach has diverged from it. Reconcile with
   the human rather than improvising.
-- A migration will not apply, or two units' migrations conflict. A second
-  migration in the same stack is not itself a reason to stop.
-- The stack spans worktrees (`just -g stack-log` says so). A stack lives in one
+- A migration check fails - such as Quill Medical's `check_migrations.py` reporting a broken chain, a
+  destructive operation without its marker, or an empty `downgrade()`. A
+  second migration in the same stack is not itself a reason to stop.
+- The stack spans worktrees (`just stack-log` says so). A stack lives in one
   worktree.
-- `just -g stack-sync` fails at the start of the run, or the checkout cannot
+- `just stack-sync` fails at the start of the run, or the checkout cannot
   be moved to `main` - see "Before building".
 - You reach the end of the plan.
+
+**A unit that must wait to merge is not a reason to stop.** When it can
+only merge after a lower pull request has merged, deployed to App
+production, or had Terraform applied, build it and land it anyway, on
+top of the one it waits for. `/t-crpd` writes the wait at the top of its
+description as a numbered "Merge only after" list, so the human merges
+the lower one, does what is needed, then merges this one. A plan step
+such as "check X is running in production before this merges" is
+one of these waits, never a stopping point. The human does the merging
+and the deploying; the run's job is to have every unit ready for them.
 
 If you discover something important while building, add it to the plan
 document. A plan is a living record.
@@ -317,7 +353,7 @@ diff, and a reviewer may well catch it - but it is the easiest thing to skim
 past on a pull request where everything is green. So:
 
 - **Change the test only when the unit deliberately changed what is
-  correct.** Then the test is out of date and updating it _is_ the fix. Say
+  correct.** Then the test is out of date and updating it *is* the fix. Say
   so in the pull request description, under `## Decisions to check`, naming the
   old behaviour and the new one.
 - **Never weaken a test to get green.** No widening an assertion to a range,
@@ -326,18 +362,19 @@ past on a pull request where everything is green. So:
   way to pass, stop - it is a genuine disagreement between the plan and the
   test suite, and a human's to settle.
 
-  **That is not a ban on `xfail` and `skip`.** Cases written from a plan
-  for behaviour not built yet may be marked `xfail(strict=True)`. They run
-  on every suite, and the moment one passes, pytest reports it as
-  unexpectedly passing and fails the build. Cases that cannot even be set
-  up yet are `skip`, with a reason naming what is missing.
+  **That is not a ban on `xfail` and `skip`**, which this repository uses
+  appropriately. Quill Medical's `backend/tests/org_scoped_access_criteria_test.py` is the pattern:
+  twelve cases written from a plan, marked `xfail(strict=True)` because the
+  design they describe is not built yet. They run on every suite, and the
+  moment one passes, pytest reports it as unexpectedly passing and fails the
+  build. Cases that cannot even be set up with today's tables are `skip`
+  with a reason naming what is missing.
 
   The difference is direction. Marking a test `xfail` to silence a failure
   hides it. Writing a test `xfail(strict=True)` for behaviour not yet built
   asserts the gap and makes CI tell you when it closes. The first is
   forbidden; the second is welcome, and belongs in the pull request
   description.
-
 - **Never touch a test in another unit's territory.** A red test in code this
   unit did not change is a regression, not a stale test. Stop and report it.
 
@@ -346,12 +383,10 @@ past on a pull request where everything is green. So:
 At the end of a run, one block:
 
 - The plan document, and which units were completed.
-- The stack, bottom to top, with each pull request number -
-  `just -g stack-log-long` prints exactly this.
+- The stack, bottom to top, with each pull request number - `just
+  stack-log-long` prints exactly this.
 - Anything that stopped the run, or anything left for a human to decide.
 - Which tests were run, by name. Never claim a suite that was not run.
 
 Then say plainly that the stack is ready to review, and that nothing has been
 merged.
-
-<!-- cspell:words crpd worktrees xfail -->
