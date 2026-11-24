@@ -40,7 +40,7 @@ turva-link:
 voice := house / "voice"
 
 
-alias vt := voice-test
+alias voicet := voice-test
 # Run the voice channel's tests
 [no-cd]
 voice-test:
