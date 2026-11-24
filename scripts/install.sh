@@ -21,6 +21,23 @@ link() {
     echo "${path} -> ${target}"
 }
 
+# Remove one exact line from a file, the same way on macOS and Linux, whose
+# `sed -i` differ. Fails, changing nothing, when the line is not there.
+remove_line() {
+    local line="$1"
+    local file="$2"
+    local kept
+
+    if ! grep -qxF "${line}" "${file}"; then
+        return 1
+    fi
+
+    kept="$(mktemp)"
+    grep -vxF "${line}" "${file}" >"${kept}" || true
+    cat "${kept}" >"${file}"
+    rm -f "${kept}"
+}
+
 # Claude Code reads these in every repository.
 link "${house}/claude/CLAUDE.md" "${HOME}/.claude/CLAUDE.md"
 link "${house}/claude/rules" "${HOME}/.claude/rules"
@@ -60,18 +77,21 @@ ignore="${XDG_CONFIG_HOME:-${HOME}/.config}/git/ignore"
 mkdir -p "$(dirname "${ignore}")"
 grep -qxF 'CLAUDE.local.md' "${ignore}" 2>/dev/null || { echo 'CLAUDE.local.md' >> "${ignore}"; echo "${ignore}: CLAUDE.local.md added"; }
 
-# `t` runs the global recipes. `j` is left alone: it is plain `just`.
-# `jg` was the earlier name, so it is taken out.
+# `t` and its earlier name `jg` ran the global recipes. A repository now
+# imports them, so they run there as plain `just`, and `just -g` covers
+# everywhere else, so both aliases are taken out and nothing is added.
+# `j` is left alone: it is plain `just`.
 for rc in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     [ -f "${rc}" ] || continue
-    if grep -qxF "alias jg='just -g'" "${rc}"; then
-        sed -i "\\|^alias jg='just -g'\$|d" "${rc}"
-        echo "${rc}: alias jg removed"
-    fi
-    grep -qxF "alias t='just -g'" "${rc}" || { echo "alias t='just -g'" >> "${rc}"; echo "${rc}: alias t added"; }
+
+    for alias_line in "alias t='just -g'" "alias jg='just -g'"; do
+        if remove_line "${alias_line}" "${rc}"; then
+            echo "${rc}: ${alias_line} removed"
+        fi
+    done
 done
 
 echo "✓ Installed."
-echo "  A shell reads its aliases only when it starts, so terminals and tmux"
-echo "  shells already open will not know t. Open a new one, or run:"
-echo "    source ~/.bashrc"
+echo "  A shell forgets an alias only when it starts again, so terminals and"
+echo "  tmux shells already open still know t. Open a new one, or run:"
+echo "    unalias t"

@@ -87,13 +87,13 @@ async function relay(output: vscode.OutputChannel): Promise<void> {
         return;
     }
 
-    // Its own copy of the banner scripts, from `t nri`, so it never depends
+    // Its own copy of the banner scripts, from `just -g nri`, so it never depends
     // on which listener the Mac has, or on an older copy of them.
     const scripts = config.get<string>("scriptsDir") || join(homedir(), "Library", "Application Support", "banner-relay");
     const queueScript = join(scripts, "notification-queue.py");
     const showScript = join(scripts, "notification-show.sh");
     if (!existsSync(queueScript) || !existsSync(showScript)) {
-        warnOnce(output, "scripts", `No banner scripts in ${scripts}; run \`t nri\` on the Mac again.`);
+        warnOnce(output, "scripts", `No banner scripts in ${scripts}; run \`just -g nri\` on the Mac again.`);
         return;
     }
 

@@ -21,7 +21,7 @@
 # the tab.
 #
 # Works only in Turva's `turva` and `turva-<number>` sessions and Juttu's
-# `juttu` and `juttu-<number>` (the ones `t cc` makes), in
+# `juttu` and `juttu-<number>` (the ones `just -g cc` makes), in
 # Quill Medical's `q` sessions (`q1` to `q99`) and in Owl's `owl` session. Owl's alerts arrive as `/clear` then `/alert`,
 # and a slash command is skipped, so during an alert the tab shows Claude
 # Code's own title instead. A plain shell, Owl's `towl` and a web session

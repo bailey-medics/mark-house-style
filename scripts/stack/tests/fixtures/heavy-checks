@@ -1,0 +1,9 @@
+# A sample .stack-heavy-checks, as Quill Medical lists its heavy tier.
+Storybook interaction tests
+SAST
+E2E image build
+E2E (Playwright)
+Competency catalogue check
+DB migration immutability check
+Storybook interaction tests (*
+E2E (Playwright) (*

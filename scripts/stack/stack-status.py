@@ -462,12 +462,79 @@ def best_conclusion_per_check(
     return best
 
 
-def summarise_checks(pr: dict[str, object], palette: Palette) -> str:
-    """Report the pull request's checks as one mark.
+# A repository may split its CI into a fast tier, run on every push, and a
+# heavy tier, gated on the pull request not being a draft. It lists its
+# heavy jobs in this file at its root, one name a line, so the stack shows
+# the two tiers as two marks. A name ending in `*` is a prefix, for a job
+# fanned out over a matrix whose legs report as "<name> (2/3)". Blank lines
+# and lines starting `#` are ignored. With no file, every job is one tier.
+HEAVY_CHECKS_FILE = ".stack-heavy-checks"
 
-    Every job in Turva's CI runs on every push, draft or not, so one mark
-    answers "is this one green yet": ✗ failing, ● still running, ✓ passed,
-    and - when every job skipped.
+
+@dataclass(frozen=True)
+class HeavyChecks:
+    """The repository's heavy-tier job names, exact and by prefix."""
+
+    names: frozenset[str] = frozenset()
+    prefixes: tuple[str, ...] = ()
+
+    def __bool__(self) -> bool:
+        return bool(self.names or self.prefixes)
+
+
+def read_heavy_checks(path: Path) -> HeavyChecks:
+    """The heavy-tier job names listed in ``path``, or none if it is missing."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return HeavyChecks()
+
+    names: set[str] = set()
+    prefixes: list[str] = []
+
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.endswith("*"):
+            prefixes.append(line[:-1])
+        else:
+            names.add(line)
+
+    return HeavyChecks(frozenset(names), tuple(prefixes))
+
+
+_repository_heavy_checks: HeavyChecks | None = None
+
+
+def repository_heavy_checks() -> HeavyChecks:
+    """The heavy-tier list of the repository this runs in, read once."""
+    global _repository_heavy_checks
+
+    if _repository_heavy_checks is None:
+        top = run(["git", "rev-parse", "--show-toplevel"], check=False).strip()
+        _repository_heavy_checks = (
+            read_heavy_checks(Path(top) / HEAVY_CHECKS_FILE) if top else HeavyChecks()
+        )
+
+    return _repository_heavy_checks
+
+
+def is_heavy(name: str, heavy: HeavyChecks) -> bool:
+    """Whether a check name belongs to the heavy tier."""
+    return name in heavy.names or name.startswith(heavy.prefixes)
+
+
+def summarise_checks(
+    pr: dict[str, object], palette: Palette, heavy: HeavyChecks | None = None
+) -> str:
+    """Report the pull request's checks as one mark, or two for two tiers.
+
+    One mark answers "is this one green yet": ✗ failing, ● still running,
+    ✓ passed, and - when nothing has run. A repository whose heavy tier is
+    gated on the pull request not being a draft, and listed in
+    HEAVY_CHECKS_FILE, gets two marks, fast then heavy, because one tick
+    would hide that a draft's heavy tier has not run at all.
     """
     rollup = pr.get("statusCheckRollup") or []
 
@@ -475,23 +542,42 @@ def summarise_checks(pr: dict[str, object], palette: Palette) -> str:
         return palette.dim("no checks")
 
     best = best_conclusion_per_check(rollup)
-    kinds = {kind for kind, _ in best.values()}
+    tiers = repository_heavy_checks() if heavy is None else heavy
 
-    if "failing" in kinds:
-        return palette.red("✗")
+    def mark(names: dict[str, tuple[str, str]]) -> str:
+        # No job of the tier has reported at all: the ordinary state of a
+        # draft's heavy tier, and not a failure, hence green rather than dim.
+        if not names:
+            return palette.green("-")
 
-    # Green like the tick: a run still going is not a problem, and only ✗
-    # should draw the eye.
-    if "pending" in kinds:
-        return palette.green("●")
+        kinds = {kind for kind, _ in names.values()}
 
-    # Every job skipped means nothing has run. Say so rather than showing a
-    # tick nobody earned. One job having actually run is enough to call it a
-    # pass, since the rest skipped on their own conditions.
-    if kinds == {"skipped"}:
-        return palette.green("-")
+        if "failing" in kinds:
+            return palette.red("✗")
 
-    return palette.green("✓")
+        # Green like the tick: a run still going is not a problem, and only
+        # ✗ should draw the eye.
+        if "pending" in kinds:
+            return palette.green("●")
+
+        # Every job skipped means the tier has not run. Say so rather than
+        # showing a tick nobody earned. One job having actually run is
+        # enough to call it a pass, since the rest skipped on their own
+        # conditions.
+        if kinds == {"skipped"}:
+            return palette.green("-")
+
+        return palette.green("✓")
+
+    if not tiers:
+        return mark(best)
+
+    heavy_jobs = {n: v for n, v in best.items() if is_heavy(n, tiers)}
+    fast_jobs = {n: v for n, v in best.items() if not is_heavy(n, tiers)}
+
+    # Fast first, heavy second, always in that order and unlabelled: two
+    # marks in a fixed position are read at a glance.
+    return f"{mark(fast_jobs)} {mark(heavy_jobs)}"
 
 
 def conflict_mark(pr: dict[str, object], palette: Palette) -> str | None:

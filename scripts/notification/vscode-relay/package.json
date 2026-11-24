@@ -33,7 +33,7 @@
         "bannerRelay.scriptsDir": {
           "type": "string",
           "default": "",
-          "description": "Where the relay's copy of the banner scripts is. Empty for the folder `t nri` installs them to."
+          "description": "Where the relay's copy of the banner scripts is. Empty for the folder `just -g nri` installs them to."
         },
         "bannerRelay.intervalSeconds": {
           "type": "number",

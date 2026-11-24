@@ -53,13 +53,13 @@ that connection instead.
 - A click on a relayed banner finds the window titled `[Tunnel: <name>]`,
   or opens the folder over the tunnel.
 
-On the Mac, run **`just -g notify-relay-install`** (`t nri`). It copies the
+On the Mac, run **`just -g notify-relay-install`** (`just -g nri`). It copies the
 banner scripts the relay calls into `~/Library/Application Support/banner-relay`,
 then builds the extension and installs it in VS Code, which must be 1.90 or
 newer. Reload the windows connected to
 the box to start it. Its settings, under "Banner relay" in VS Code, are
 needed only when it cannot work out the box or the queue itself. Run its
-tests with `just -g notify-relay-test` (`t nrt`).
+tests with `just -g notify-relay-test` (`just -g nrt`).
 
 ## Icons
 
@@ -69,10 +69,10 @@ copy of terminal-notifier. `build-notifier-app.sh <name>` makes
 solid background is used as the whole icon; one with a see-through
 background is set on white, inset so the rounded corners do not clip it.
 
-**After pulling any banner change, run `just -g refresh-banners` (`t rfb`)
+**After pulling any banner change, run `just -g refresh-banners` (`just -g rfb`)
 on the Mac.** It rebuilds every icon's app, copies the current banner
 scripts into the relay's and the listener's installed folders, and restarts
-macOS's notification services. `t nap <name>` rebuilds one app on its own.
+macOS's notification services. `just -g nap <name>` rebuilds one app on its own.
 
 - **Pillow is set up for you.** The builder needs it to prepare an icon.
   When the Mac's `python3` lacks it, the builder makes a private
