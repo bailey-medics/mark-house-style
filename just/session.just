@@ -17,6 +17,13 @@ claude-session:
     @bash "{{session_scripts}}/claude-session.sh"
 
 
+alias sest := session-test
+# Run the tmux session scripts' tests
+[no-cd]
+session-test:
+    bats "{{session_scripts}}/tests"
+
+
 alias tw := tmux-window
 # Go to a plain shell in tmux for this checkout, starting it if needed; `just tw 2` for a second
 [no-cd]

@@ -5,22 +5,34 @@
 # tmux, pgrep, systemctl and claude are stubs that record what they were
 # asked, so no tmux server is touched and no claude runs. The answers come
 # from SESSION_EXISTS, CLAUDE_RUNNING, WATCHER_ENABLED and CURRENT_SESSION,
-# and the session's active pane is always %7.
+# and the session's active pane is always %7. A tmux server is running
+# unless NO_SERVER=1. systemd-run is a stub too: it records its options and
+# runs the command after them.
 
 setup() {
     SCRIPT="${BATS_TEST_DIRNAME}/../claude-session.sh"
     CALLS="${BATS_TEST_TMPDIR}/calls"
     WORKTREE="${BATS_TEST_TMPDIR}/quillmedical-3"
-    unset TMUX TMUX_PANE TERM_PROGRAM SESSION_EXISTS CLAUDE_RUNNING WATCHER_ENABLED CURRENT_SESSION
+    unset TMUX TMUX_PANE TERM_PROGRAM SESSION_EXISTS CLAUDE_RUNNING WATCHER_ENABLED CURRENT_SESSION NO_SERVER
 
     git init -q "${WORKTREE}"
     mkdir -p "${BATS_TEST_TMPDIR}/bin"
+
+    cat > "${BATS_TEST_TMPDIR}/bin/systemd-run" <<EOF
+#!/usr/bin/env bash
+printf 'systemd-run %s\n' "\$*" >> "${CALLS}"
+while [ "\$#" -gt 0 ] && [ "\${1#--}" != "\$1" ]; do
+    shift
+done
+exec "\$@"
+EOF
 
     cat > "${BATS_TEST_TMPDIR}/bin/tmux" <<EOF
 #!/usr/bin/env bash
 printf 'tmux %s\n' "\$*" >> "${CALLS}"
 case "\$1" in
     has-session) [ "\${SESSION_EXISTS:-}" = "1" ] ;;
+    list-sessions) [ "\${NO_SERVER:-}" != "1" ] ;;
     display-message)
         case "\$*" in
             *pane_id*) echo "%7" ;;
@@ -68,6 +80,18 @@ run_in() {
     [ "$status" -eq 0 ]
     grep -q "^tmux new-session -d -s q3 -c .*quillmedical-3 bash -lc 'claude --continue --ide --remote-control quillmedical-3 || claude --ide --remote-control quillmedical-3; exec bash'$" "$CALLS"
     grep -qx "tmux attach -t =q3" "$CALLS"
+}
+
+@test "with no tmux server, the session starts the server in a service of its own" {
+    NO_SERVER=1 run_in "$WORKTREE"
+    [ "$status" -eq 0 ]
+    grep -q "^systemd-run --user --quiet --collect --unit=tmux-server --property=Type=forking tmux new-session -d -s q3 " "$CALLS"
+}
+
+@test "with a tmux server running, the session is started with no service" {
+    run_in "$WORKTREE"
+    [ "$status" -eq 0 ]
+    [ "$(grep -c systemd-run "$CALLS")" -eq 0 ]
 }
 
 @test "a subdirectory of the worktree finds the same session" {

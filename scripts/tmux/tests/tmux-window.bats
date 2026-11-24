@@ -3,13 +3,15 @@
 # tmux for the worktree, starting the session when it is missing.
 #
 # tmux is a stub that records what it was asked, so no tmux server is
-# touched. Its answers come from SESSION_EXISTS and CURRENT_SESSION.
+# touched. Its answers come from SESSION_EXISTS and CURRENT_SESSION, and a
+# server is running unless NO_SERVER=1. systemd-run is a stub too: it
+# records its options and runs the command after them.
 
 setup() {
     SCRIPT="${BATS_TEST_DIRNAME}/../tmux-window.sh"
     CALLS="${BATS_TEST_TMPDIR}/calls"
     WORKTREE="${BATS_TEST_TMPDIR}/quillmedical-3"
-    unset TMUX TMUX_PANE SESSION_EXISTS CURRENT_SESSION
+    unset TMUX TMUX_PANE SESSION_EXISTS CURRENT_SESSION NO_SERVER
 
     git init -q "${WORKTREE}"
     mkdir -p "${BATS_TEST_TMPDIR}/bin"
@@ -19,8 +21,18 @@ setup() {
 printf 'tmux %s\n' "\$*" >> "${CALLS}"
 case "\$1" in
     has-session) [ "\${SESSION_EXISTS:-}" = "1" ] ;;
+    list-sessions) [ "\${NO_SERVER:-}" != "1" ] ;;
     display-message) echo "\${CURRENT_SESSION:-other}" ;;
 esac
+EOF
+
+    cat > "${BATS_TEST_TMPDIR}/bin/systemd-run" <<EOF
+#!/usr/bin/env bash
+printf 'systemd-run %s\n' "\$*" >> "${CALLS}"
+while [ "\$#" -gt 0 ] && [ "\${1#--}" != "\$1" ]; do
+    shift
+done
+exec "\$@"
 EOF
 
     chmod +x "${BATS_TEST_TMPDIR}"/bin/*
@@ -38,6 +50,18 @@ run_in() {
     [ "$status" -eq 0 ]
     grep -q "^tmux new-session -d -s t3 -c .*quillmedical-3 bash -l$" "$CALLS"
     grep -qx "tmux attach -t =t3" "$CALLS"
+}
+
+@test "with no tmux server, the session starts the server in a service of its own" {
+    NO_SERVER=1 run_in "$WORKTREE"
+    [ "$status" -eq 0 ]
+    grep -q "^systemd-run --user --quiet --collect --unit=tmux-server --property=Type=forking tmux new-session -d -s t3 " "$CALLS"
+}
+
+@test "with a tmux server running, the session is started with no service" {
+    run_in "$WORKTREE"
+    [ "$status" -eq 0 ]
+    [ "$(grep -c systemd-run "$CALLS")" -eq 0 ]
 }
 
 @test "outside tmux, an existing session is attached to and not started again" {

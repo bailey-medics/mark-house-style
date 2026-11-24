@@ -25,6 +25,9 @@
 # A session of its own, rather than a window in a q session, keeps `just cc`
 # landing on Claude, and keeps it out of Owl's way: Owl types into
 # whichever window of the owl session is active.
+#
+# If this is the first session on the box, start-tmux.sh starts the tmux
+# server in a service of its own, so it does not belong to the terminal's.
 
 set -euo pipefail
 
@@ -50,6 +53,8 @@ fi
 
 # shellcheck source=checkout-names.sh
 source "$(dirname "${BASH_SOURCE[0]}")/checkout-names.sh"
+# shellcheck source=start-tmux.sh
+source "$(dirname "${BASH_SOURCE[0]}")/start-tmux.sh"
 
 if ! checkout_names "$(basename "${top}")"; then
     echo "✗ ${top} ${CHECKOUT_REFUSAL}" >&2
@@ -63,7 +68,7 @@ if [ -n "${number}" ]; then
 fi
 
 if ! tmux has-session -t "=${name}" 2> /dev/null; then
-    tmux new-session -d -s "${name}" -c "${top}" "bash -l"
+    start_tmux new-session -d -s "${name}" -c "${top}" "bash -l"
 
     activate="${top}/backend/.venv/bin/activate"
     if [ -f "${activate}" ]; then

@@ -25,6 +25,9 @@
 # session, not from tmux's pane_current_command: a pane started with
 # `bash -lc 'claude ...'` reports bash while Claude runs as its child.
 #
+# If this is the first session on the box, start-tmux.sh starts the tmux
+# server in a service of its own, so it does not belong to the terminal's.
+#
 # The owl session belongs to Owl while quill-owl.service is enabled. Its
 # Claude needs Owl's environment and allowlist, which only Quill Medical's
 # scripts/owl/start-session.sh gives it, so a missing
@@ -44,6 +47,8 @@ fi
 
 # shellcheck source=checkout-names.sh
 source "$(dirname "${BASH_SOURCE[0]}")/checkout-names.sh"
+# shellcheck source=start-tmux.sh
+source "$(dirname "${BASH_SOURCE[0]}")/start-tmux.sh"
 
 if ! checkout_names "$(basename "${top}")"; then
     echo "✗ ${top} ${CHECKOUT_REFUSAL}" >&2
@@ -69,7 +74,7 @@ refuse_for_watcher() {
 if ! tmux has-session -t "=${name}" 2> /dev/null; then
     [ "${watcher_owns_it}" = false ] || refuse_for_watcher
 
-    tmux new-session -d -s "${name}" -c "${top}" "bash -lc '${start_claude}; exec bash'"
+    start_tmux new-session -d -s "${name}" -c "${top}" "bash -lc '${start_claude}; exec bash'"
     echo "Started ${name} in ${top}"
 else
     pane_id="$(tmux display-message -p -t "=${name}:" '#{pane_id}')"

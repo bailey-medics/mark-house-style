@@ -12,6 +12,18 @@ sessions use the short name `juttu`:
 Quill Medical's `just cc` names its sessions `q1` to `q99`, where `q1` is
 the main checkout, and Owl's session is `owl`.
 
+## The tmux server has a service of its own
+
+Every session on the box lives in one tmux server. When `just cc` or
+`just tw` is the first to ask for a session, `start-tmux.sh` starts that
+server as its own systemd service, `tmux-server`. Otherwise the
+server would belong to whichever service the terminal came from, and
+stopping that service would close every session on the box. The boot
+scripts in the other repositories do the same. `just -g sest` runs the
+tests.
+
+## Tab titles
+
 `titles.conf`, beside this file, turns those names into terminal tab
 titles. A Claude tab reads the project, the worktree number and the
 conversation's topic: "Quill-6 Passport sign-off page", "Turva-2 Hazard
