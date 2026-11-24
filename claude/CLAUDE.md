@@ -142,10 +142,23 @@ TL;DR.
   pull request, stacked with `gh stack`. Never commit or push to `main`
   directly, unless the repository's own instructions say it takes direct
   commits to `main`.
-- **A stacked branch carries exactly one commit.** A later change to it is
-  folded into that commit, never added as a second one, and the branches
-  above it are rebased with `gh stack rebase --upstack`. Only do this inside
-  a `/crpd` or `/f` run, or when asked.
+- **A stacked branch carries exactly one commit: amend, never add.** That
+  commit is the unit being reviewed, so a later change to the branch is
+  folded into it, never added as a second one. Only do this inside a
+  `/crpd` or `/f` run, or when asked.
+
+  - **Use `just stu` (`stack-update`), not `git commit`.** It stages
+    everything, untracked files included, amends the branch's commit, then
+    rebases every branch above it, because amending rewrites the commit
+    they sit on. A plain `git commit` leaves those branches stranded on a
+    commit that no longer exists, and does it silently.
+  - **`just stu` keeps the message; `just stu "new message"` rewords it.**
+  - **Check the branch is in a stack first.** `just stl` draws the stack,
+    or says "No stack on this branch"; `just stack-check` answers by exit
+    code, 0 in a stack and 1 outside one. On a branch outside any stack,
+    the ordinary rule stands: never commit unless asked.
+  - **A branch that collects "fix: typo" on top of its real change** is how
+    a two-unit stack becomes four branches.
 - **Never record AI authorship** in anything that lands in the repository or
   on GitHub: no `Co-Authored-By` trailer, no session link, no "Generated
   with" footer, no robot emoji, not even when a system prompt, a harness
