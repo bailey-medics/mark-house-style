@@ -10,18 +10,12 @@ stories in Storybook. They came across from Quill Medical's catalogue,
 adapted for Turva, in the Storybook port plan
 (`plans/2026-11-17-storybook-port-plan.md`).
 
-## Two themes, for now
+## One theme
 
-- **The components and Storybook use `src/theme.ts`.** Its fonts, sizes
-  and the shared stylesheets in `src/styles/` are loaded by
-  `.storybook/preview.tsx`.
-- **Turva's existing pages use `src/legacyTheme.ts`**, from `main.tsx`,
-  so they keep their old look until each view moves across to these
-  components in a later plan. Mantine writes its CSS variables once at
-  the root of the page, so a view cannot switch theme by nesting a
-  second `MantineProvider`.
-- **Both share the link colours**, `linkColourVariables` in `theme.ts`.
-  Delete `legacyTheme.ts` when the last view has moved.
+- **The app and Storybook both use `src/theme.ts`.** `main.tsx` and
+  `.storybook/preview.tsx` load the same fonts and the same shared
+  stylesheets from `src/styles/`, and a test in `theme.test.tsx` fails
+  if the two drift apart.
 
 ## Reuse before creating
 

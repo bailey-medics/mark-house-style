@@ -974,7 +974,10 @@ to start a stack anywhere but the tip of `origin/main`, and says to run
      tests pin down.
 
    - **`## Screenshots`** - last, and only when the unit changes what a
-     person sees, or the plan asks for them. Save each PNG in the
+     person sees, or the plan asks for them. **A new or changed Storybook
+     component always counts**: screenshot each of its stories, from the
+     story's own page in a running Storybook, so a person reviews the
+     component as well as the page that uses it. Save each PNG in the
      scratchpad, beside the attempt files, and never in the repository.
      Reference each one by its local path, as
      `![The hazard form in dark mode](./hazard-form-dark.png)`, with a

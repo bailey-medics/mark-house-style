@@ -8,13 +8,12 @@ paths:
 - Pages must **only use components from `components/`** (the Storybook
   catalogue). Do not place reusable UI inline in pages.
 - If a page needs a component that does not exist in `components/`,
-  build a new Storybook component first, following
-  `.claude-personal/mark/rules/components.md`, then use it in the page.
+  build a new Storybook component first, following the components
+  rule, `components.md`, then use it in the page.
 - **Turva's existing pages are moving across one view at a time.** Until
-  a view moves, it keeps Mantine's own components and `@mantine/form`,
-  and the app renders it with `src/legacyTheme.ts`. A page that moves
-  takes the shared components and their `react-hook-form` fields. Do not
-  restyle an existing page piecemeal on the way.
+  a view moves, it keeps Mantine's own components and `@mantine/form`. A
+  page that moves takes the shared components and their `react-hook-form`
+  fields. Do not restyle an existing page piecemeal on the way.
 - **A safety page fetches through `@/lib/safety`**, never with a bare
   `fetch` or a path written by hand, and hands the components what it
   read. Every write passes the `head_sha` the page read, as
