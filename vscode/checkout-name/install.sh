@@ -103,15 +103,12 @@ EOF
 EOF
 }
 
-# Fills a folder with the pictures the terminal tabs show: each project's
-# banner icon, then this folder's own icons over them. Those are the ones
-# made for a tab, where the banner's picture would not show on one.
+# Fills a folder with the pictures the terminal tabs show, from icons/
+# beside this file. tab-icons.sh makes those from the banner icons.
 copy_icons() {
     local target="$1"
-    local banners="${here}/../../scripts/notification/icons"
 
     mkdir "${target}"
-    cp "${banners}"/*.png "${target}/"
     cp "${here}"/icons/*.png "${target}/"
 }
 

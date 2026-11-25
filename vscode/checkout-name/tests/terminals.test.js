@@ -5,7 +5,7 @@
 // which colour its icon takes in each project.
 
 const assert = require("node:assert/strict");
-const { existsSync, readFileSync } = require("node:fs");
+const { existsSync, readdirSync, readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
 const {
@@ -25,7 +25,7 @@ const {
  * @property {{command: string, icon: string}[]} contributes.commands
  * @property {{activitybar: {id: string, icon: string}[]}} contributes.viewsContainers
  * @property {Record<string, {id: string}[]>} contributes.views
- * @property {Record<string, {command: string, group: string, alt?: string}[]>} contributes.menus
+ * @property {Record<string, {command: string, group?: string, alt?: string, when?: string}[]>} contributes.menus
  * @property {{profiles: {id: string, icon: string}[]}} contributes.terminal
  */
 
@@ -183,13 +183,33 @@ for (const [folder, image] of PICTURED) {
     });
 }
 
-test("every picture is one install.sh packs: a banner icon, or one of the extension's own", () => {
-    const banners = path.join(__dirname, "..", "..", "..", "scripts", "notification", "icons");
-    const own = path.join(__dirname, "..", "icons");
+const TAB_ICONS = path.join(__dirname, "..", "icons");
+const BANNER_ICONS = path.join(__dirname, "..", "..", "..", "scripts", "notification", "icons");
 
+test("every picture a tab shows is in icons/, which install.sh packs", () => {
     for (const image of [...PROJECT_IMAGES.values(), OTHER_IMAGE]) {
-        const packed = existsSync(path.join(banners, image)) || existsSync(path.join(own, image));
-
-        assert.ok(packed, `${image} is in neither icons folder`);
+        assert.ok(existsSync(path.join(TAB_ICONS, image)), `${image} is not in icons/`);
     }
+});
+
+test("every banner icon has a tab picture made from it", () => {
+    const banners = readdirSync(BANNER_ICONS).filter((file) => file.endsWith(".png"));
+
+    assert.ok(banners.length > 0);
+
+    for (const banner of banners) {
+        assert.ok(
+            existsSync(path.join(TAB_ICONS, banner)),
+            `${banner} has no tab picture: run just -g checkout-name-icons`,
+        );
+    }
+});
+
+test("no command is listed in the Command Palette", () => {
+    const hidden = manifest.contributes.menus.commandPalette.map((entry) => [entry.command, entry.when]);
+
+    assert.deepEqual(
+        hidden.sort(),
+        manifest.contributes.commands.map((command) => [command.command, "false"]).sort(),
+    );
 });

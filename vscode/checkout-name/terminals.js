@@ -61,11 +61,10 @@ const OTHER_COLOUR = "terminal.ansiWhite";
 
 /**
  * Each project's banner icon, by the folder checkoutProject gives: a file
- * in the installed extension's icons folder. install.sh fills that folder
- * from scripts/notification/icons, the banners' own pictures, and then from
- * icons/ beside this file, which holds a picture made for a tab where the
- * banner's would not show on one: Quill's feather is dark on a see-through
- * background, so its tab has it on white.
+ * in icons/ beside this file, which install.sh packs into the extension.
+ * tab-icons.sh makes those pictures from the banners' own, in
+ * scripts/notification/icons, each as the same rounded square so the tabs
+ * share one outline.
  * @type {ReadonlyMap<string, string>}
  */
 const PROJECT_IMAGES = new Map([

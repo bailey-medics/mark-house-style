@@ -11,9 +11,9 @@
 // tab. VS Code sets a
 // terminal's icon only as it opens and has no way to change it afterwards,
 // so a terminal has to be opened from here to carry one: from the panel
-// behind the icon in the activity bar, from the buttons above the editor
-// tabs, or from the Command Palette. Another tmux shell is the tmux button
-// clicked with Alt held down.
+// behind the icon in the activity bar, or from the buttons above the
+// editor tabs. Another tmux shell is the tmux button clicked with Alt held
+// down. package.json keeps the commands out of the Command Palette.
 
 const path = require("node:path");
 const vscode = require("vscode");

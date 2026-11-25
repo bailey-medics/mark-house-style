@@ -48,6 +48,13 @@ checkout-name-remove:
     @bash "{{checkout_name}}/install.sh" remove
 
 
+alias cnic := checkout-name-icons
+# Make the terminal tab icons again from the banner icons (then commit them and install)
+[no-cd]
+checkout-name-icons:
+    @bash "{{checkout_name}}/tab-icons.sh"
+
+
 alias cnt := checkout-name-test
 # Run the checkout name extension's tests
 [no-cd]

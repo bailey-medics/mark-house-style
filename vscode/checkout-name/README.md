@@ -41,7 +41,7 @@ tmux:
   whose tab was closed is come back to before a new one is made.
 
 Each opens as a tab in the editor area, and its tab reads as tmux titles
-it, such as `Quill-6` and a topic. There are four ways to open one:
+it, such as `Quill-6` and a topic. There are three ways to open one:
 
 - **The robot in the activity bar**, the strip of icons down the side of
   the window. It opens a panel, "Sessions", with a row for each kind.
@@ -49,10 +49,12 @@ it, such as `Quill-6` and a topic. There are four ways to open one:
 - **The two buttons above the editor tabs**, at the right, beside the split
   button. They show whenever an editor tab is open. Click the tmux button
   with Alt held down, Option on a Mac, for another tmux shell.
-- **The Command Palette**, as "Checkout: Open Claude session", "Checkout:
-  Open tmux shell" and "Checkout: Open another tmux shell", or a keyboard
-  shortcut of your own for any of them.
 - **The list beside the "+"** of the terminal panel, as "Claude" and "Tmux".
+
+The commands behind them are kept out of the Command Palette, which
+would only list them a third time. A keyboard shortcut can still be given
+to one by its id in `keybindings.json`: `checkoutName.openClaude`,
+`checkoutName.openTmux` or `checkoutName.openAnotherTmux`.
 
 A terminal has to be opened in one of these ways to carry its icon. VS Code
 sets a terminal's icon and colour only as the terminal opens, and has no
@@ -68,12 +70,25 @@ any other folder have the general one, a bell. A Claude tab and a tmux tab
 of one project look alike, and their titles tell them apart: `Quill-6` and
 a topic, against `Quill-6 Tmux`.
 
-The pictures are the banners' own, in `scripts/notification/icons/`.
-`install.sh` packs them into the extension, and then the pictures in
-`icons/` beside this file over them. Those are made for a tab, where the
-banner's would not show on one: Quill's feather is dark navy on a
-see-through background, so `icons/quill.png` has it on a white square.
-Which picture each project takes is in `terminals.js`.
+The pictures are in `icons/` beside this file, and `install.sh` packs
+them into the extension. `tab-icons.sh` makes them from the banners' own,
+in `scripts/notification/icons/`, each as the same small rounded square,
+so the tabs of different projects share one outline. A banner icon with a
+see-through background is set on white first: Quill's feather is dark
+navy, and a dark tab would hide it. Which picture each project takes is in
+`terminals.js`.
+
+After adding or changing a banner icon, make the tab pictures again,
+commit them and install:
+
+```bash
+just -g checkout-name-icons
+just -g checkout-name-install
+```
+
+Making them needs Pillow, which the script sets up once in
+`~/.venvs/notifier` when the machine's Python lacks it. Installing does
+not.
 
 ### The colour in the panel
 
@@ -132,7 +147,8 @@ just -g checkout-name-test
   that setting has been changed from VS Code's own, so the box shows the
   name. No setting is added by hand, and a `window.title` of your own in
   VS Code's settings still wins.
-- **`install.sh`** packs the folder and the banner icons as a `.vsix`,
+- **`tab-icons.sh`** makes the pictures in `icons/` from the banner icons.
+- **`install.sh`** packs the folder and those pictures as a `.vsix`,
   VS Code's package for an extension, in a scratch folder, and installs
   it.
 

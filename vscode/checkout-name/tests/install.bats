@@ -199,13 +199,15 @@ only_tools() {
     done
 }
 
-@test "the extension's own picture wins over the banner's of the same name" {
+@test "the packed pictures are the tab pictures, not the banners' own" {
     fake_tool "${SERVER}" server
 
     run "$SCRIPT"
 
     [ "$status" -eq 0 ]
-    unzip -p "${KEPT}" extension/icons/quill.png >"${BATS_TEST_TMPDIR}/packed-quill.png"
-    cmp "${BATS_TEST_TMPDIR}/packed-quill.png" "${BATS_TEST_DIRNAME}/../icons/quill.png"
-    run ! cmp -s "${BATS_TEST_TMPDIR}/packed-quill.png" "${BATS_TEST_DIRNAME}/../../../scripts/notification/icons/quill.png"
+    for icon in quill turva; do
+        unzip -p "${KEPT}" "extension/icons/${icon}.png" >"${BATS_TEST_TMPDIR}/packed.png"
+        cmp "${BATS_TEST_TMPDIR}/packed.png" "${BATS_TEST_DIRNAME}/../icons/${icon}.png"
+        run ! cmp -s "${BATS_TEST_TMPDIR}/packed.png" "${BATS_TEST_DIRNAME}/../../../scripts/notification/icons/${icon}.png"
+    done
 }
