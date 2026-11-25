@@ -8,13 +8,13 @@ The outcome wanted is a picture on every tab the extension opens, that survives 
 
 - [x] **Why is a newly opened tab blank in a tunnel window, when the same build draws it in a window on one machine?** - Its picture is fetched through the tunnel, and the request can stick open with no answer. A window on one machine reads the file from its own disk. Answered on 25 November 2026 by Claude on the Mac, from VS Code's web cache and process list, and confirmed to the second by the tunnel's log on the box. The trigger, a reused idle connection, was reproduced outside VS Code the same afternoon. Phase 2 has the detail.
 
-- [x] **Does VS Code take a `data:` address as a terminal's icon?** - Yes. In the lab on the box, VS Code 1.147.0, a new tab had both picture classes, a style rule whose address began `data:image/png;base64,`, and a 64 by 64 picture that loaded. Answered on 25 November 2026. It is not yet seen in a tunnel window on 1.144.1: Phase 3 has that step.
+- [x] **Does VS Code take a `data:` address as a terminal's icon?** - Yes. In the lab on the box, VS Code 1.147.0, a new tab had both picture classes, a style rule whose address began `data:image/png;base64,`, and a 64 by 64 picture that loaded. Answered on 25 November 2026. Seen in tunnel windows on the Mac the same evening: Phase 3 has that step.
 
-- [ ] **Should the tabs keep full-colour pictures, or fall back to a built-in icon in one of VS Code's eight terminal colours?** The built-in icons (a robot for Claude, 0s and 1s for tmux) drew in every window and survived reloads. Mark's to decide, if the `data:` address does not work.
+- [x] **Should the tabs keep full-colour pictures, or fall back to a built-in icon in one of VS Code's eight terminal colours?** - Keep the pictures. The `data:` address works through the tunnel, so there is nothing to fall back from. The built-in icons stay only for a picture whose file cannot be read. Settled on 25 November 2026 by the test in Phase 3.
 
 ## Before running /f
 
-- [ ] **This plan is not for `/f` as it stands.** Phase 3's first step has to be tried in a real tunnel window on the Mac, and somebody has to look at the tab. Tick this once that step is done and the steps after it are settled.
+- [x] **This plan is not for `/f`.** Its steps needed a window on the Mac and somebody to look at it, so each was built and tried by hand as the cause came to light, on 25 November 2026. Nothing is left for `/f` to build.
 
 ## Phase 1: What was built, and what was ruled out on the box
 
@@ -92,7 +92,7 @@ The outcome wanted is a picture on every tab the extension opens, that survives 
 
 - [x] Give the terminal its picture as a `data:` address, so nothing is fetched and nothing can stick. `extension.js` reads the picture's bytes from the file under `context.extensionUri.fsPath`, once for each picture, and `pictureAddress` in `terminals.js` turns them into `data:image/png;base64,...`, passed as `iconPath` through `vscode.Uri.parse`. `tab-icons.sh` now writes 64 pixel pictures in place of 256, each between 1.4 and 2.4 KB, and a test fails if one grows past 4 KB. Tried in the lab on the box, as in Phase 1: the tab had both classes, the rule's address came through `CSS.escape` intact at about 2,300 characters, and the picture loaded at 64 by 64. If a picture's file cannot be read, the tab opens with the built-in icon and the project's colour, and the reason is logged. Shipped as 0.7.0.
 
-- [ ] Try 0.7.0 in a tunnel window on the Mac, on 1.144.1. The test that counts is two tabs of different projects opened about a minute apart: with fetched pictures the second one sticks, as Phase 2 shows. Claude on the Mac can confirm that nothing was fetched, since VS Code's web cache there gains an entry for every picture it asks for. Write the result into the open question above.
+- [x] Try 0.7.0 in a tunnel window on the Mac. The test that counts is two tabs of different projects opened about a minute apart: with fetched pictures the second one sticks, as Phase 2 shows. Mark quit VS Code fully, opened windows on four different repositories on the box, two minutes between the first and the second, and opened sessions in each: every tab had its picture. Done on 25 November 2026. Still worth having: Claude on the Mac confirming that VS Code's web cache gained no entry for a picture, which would show that nothing was fetched and not merely that nothing stuck.
 
 - [x] If the pictures must stay fetched, bump the extension's version whenever a picture changes. Not needed: nothing is fetched now. The reason stands as a warning for anything else an extension has a window fetch. The server sends `Cache-Control: public, max-age=31536000` for an extension's files, and the address holds the version, so the Mac keeps each file for a year for each version, and installing the same version again shows nothing new there.
 
@@ -100,11 +100,11 @@ The outcome wanted is a picture on every tab the extension opens, that survives 
 
 - [x] Stop each click opening another tab onto a session that already has one in the window. The extension keeps the `Terminal` it made for each session and shows it on a second click. "Another tmux shell" is now the first number from 2 up that the window has no tab for, worked out in `nextShellKey`, where it used to run `just -g tmux-window next` and take whichever shell no terminal anywhere was showing. The extension has to know which shell a tab holds to open it again after a reload, and `next` did not say. `just tw next` is still there for a plain terminal. In the lab, a second click on Claude left one tab, and two clicks on "another" gave shells 2 and 3.
 
-- [ ] If a `data:` address is not accepted, go back to built-in icons. Version 0.5.0 gave Claude a robot and tmux the 0s and 1s (`robot` and `file-binary`), each in the project's colour from VS Code's eight terminal colours. Those drew in every window, need no fetch, and survived a reload. The colour table is still in `terminals.js`, used for the Sessions panel.
+- [x] If a `data:` address is not accepted, go back to built-in icons. Not needed: the address is accepted, in the lab and through the tunnel. The robot and the 0s and 1s, in the project's colour, remain as what a tab gets when its picture's file cannot be read.
 
 ## Phase 4: Tidy up
 
-- [ ] Quit VS Code fully on the Mac once the fix is installed, and open it again. The Juttu request from 16:12:06 is still stuck there and holds one of the six connections. Only a full quit clears it: "Reload Window" does not.
+- [x] Quit VS Code fully on the Mac once the fix is installed, and open it again. Done on 25 November 2026, before the test in Phase 3. It cleared the Juttu request stuck since 16:12:06, which only a full quit does.
 
 - [x] Install the repository's version on the box with a new version number, `just -g checkout-name-install`. Done as 0.7.0 on 25 November 2026. Each window still needs a reload to take it up. A window's tabs from 0.6.4 come back blank that once, since VS Code restores them: close them and open the sessions again from the buttons.
 
