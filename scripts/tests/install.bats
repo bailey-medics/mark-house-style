@@ -106,3 +106,14 @@ EOF
     [ "$status" -eq 0 ]
     [ -L "${HOME}/.claude/skills/somebody-else" ]
 }
+
+@test "the cp skill is linked, can only be run by hand and never force-pushes" {
+    house="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${HOME}/.claude/skills/cp")" = "${house}/claude/skills/cp" ]
+    grep -qx "disable-model-invocation: true" "${house}/claude/skills/cp/SKILL.md"
+    grep -q "^disallowed-tools:.*Bash(git push --force:\*)" "${house}/claude/skills/cp/SKILL.md"
+}

@@ -103,6 +103,12 @@ comes from that repository's "For the shared skills" section, in its
 `/m` commits and pushes this repository to `main` in the background, from
 any session, after reading the diff for secrets and home details.
 
+`/cp` commits and pushes the checkout it is run from straight to `main`,
+for the repositories that take direct commits, such as Arnie, Digest and
+this one. It checks the repository's own `CLAUDE.md` or `AGENTS.md` says
+so, that `main` is not behind GitHub, that the diff holds no secrets or
+home details, and that the tests pass; anywhere else it points to `/crpd`.
+
 A personal skill hides a repository's own skill of the same name, so a
 repository keeps no copy of these. `install.sh` links each one into
 `~/.claude/skills/`, and takes out any link left pointing at a skill that

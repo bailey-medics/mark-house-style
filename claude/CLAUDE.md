@@ -35,7 +35,7 @@ the word inside a sentence ("could you implement the guard?") all leave the
 conversation a discussion.
 
 - **A skill that exists to land work is the instruction too**, such as
-  `/crpd` and `/f`, or a repository's own equivalents. Running
+  `/crpd`, `/f` and `/cp`, or a repository's own equivalents. Running
   one is the go-ahead to change code for that run.
 - **Plan documents are the exception.** A plan in the repository's plans
   folder may be written
