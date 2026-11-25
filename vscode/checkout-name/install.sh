@@ -16,9 +16,18 @@
 # extension goes into VS Code's server there, because that is where the
 # extensions for those windows run. Anywhere else it goes into VS Code
 # itself, through its `code` command.
+#
+# On such a machine it also sets two settings in the settings VS Code's
+# server keeps for the machine itself, so that a terminal tab reads as its
+# shell titles it: see machine_tab_titles below. Removing takes them out.
 set -euo pipefail
 
 readonly EXTENSION_ID="local.checkout-name"
+
+# The settings VS Code's server keeps for this machine. They apply to every
+# window opened on it, and they outrank the settings of the person's own
+# VS Code, on whichever computer the window is drawn.
+readonly MACHINE_SETTINGS="${HOME}/.vscode-server/data/Machine/settings.json"
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -127,6 +136,78 @@ build_package() {
     echo "${build}/checkout-name.vsix"
 }
 
+# Sets, or with "unset" takes out, the two settings that make a terminal
+# tab read as its shell titles it, such as "Arnie" and a topic, in this
+# machine's settings.
+#
+# The extension makes both its defaults, but a default loses to the
+# settings of the person's own VS Code. Where those say to lead a tab with
+# the program's name, a tab reads "just Arnie ..." in any repository with
+# no settings file of its own to put it right. The machine's settings
+# outrank the person's, so setting them here covers every window on the
+# machine. A repository's own settings still outrank these.
+#
+# The file is left alone when it is not plain JSON, as one with comments in
+# it is not: the two lines are printed to be added by hand. "unset" takes
+# out only a value this put there.
+machine_tab_titles() {
+    local action="$1"
+    local status=0
+
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "The machine's settings were left alone: python3, which edits them, was not found." >&2
+        return 0
+    fi
+
+    python3 - "${MACHINE_SETTINGS}" "${action}" <<'EOF_PY' || status=$?
+import json
+import sys
+from pathlib import Path
+
+TAB_TITLES = {
+    "terminal.integrated.tabs.title": "${sequence}",
+    "terminal.integrated.tabs.description": "",
+}
+NOT_PLAIN_JSON = 3
+
+path, action = Path(sys.argv[1]), sys.argv[2]
+text = path.read_text() if path.exists() else ""
+
+try:
+    settings = json.loads(text) if text.strip() else {}
+except json.JSONDecodeError:
+    sys.exit(NOT_PLAIN_JSON)
+
+if not isinstance(settings, dict):
+    sys.exit(NOT_PLAIN_JSON)
+
+changed = dict(settings)
+
+for key, value in TAB_TITLES.items():
+    if action == "set":
+        changed[key] = value
+    elif changed.get(key) == value:
+        del changed[key]
+
+if changed != settings:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(changed, indent=2) + "\n")
+EOF_PY
+
+    if [ "${status}" -eq 3 ]; then
+        echo "The machine's settings, ${MACHINE_SETTINGS}, are not plain JSON, so they were left alone." >&2
+        if [ "${action}" = "set" ]; then
+            echo 'Add these two lines there by hand, for terminal tabs to read as their shell titles them:' >&2
+            # shellcheck disable=SC2016 # ${sequence} is VS Code's variable, printed as it is
+            echo '  "terminal.integrated.tabs.title": "${sequence}",' >&2
+            echo '  "terminal.integrated.tabs.description": "",' >&2
+        fi
+        return 0
+    fi
+
+    return "${status}"
+}
+
 main() {
     local action="${1:-install}"
 
@@ -148,8 +229,20 @@ main() {
         exit 1
     fi
 
+    # Only a machine with VS Code's server has settings of its own.
+    local on_server=""
+
+    if [ -n "$(newest_server)" ]; then
+        on_server="yes"
+    fi
+
     if [ "${action}" = "remove" ]; then
         "${installer}" --uninstall-extension "${EXTENSION_ID}"
+
+        if [ -n "${on_server}" ]; then
+            machine_tab_titles unset
+        fi
+
         echo "Removed ${EXTENSION_ID}. Run 'Developer: Reload Window' in each VS Code window."
         return 0
     fi
@@ -166,6 +259,11 @@ main() {
     package="$(build_package "${build}" "${version}")"
 
     "${installer}" --install-extension "${package}" --force
+
+    if [ -n "${on_server}" ]; then
+        machine_tab_titles set
+    fi
+
     echo "Installed ${EXTENSION_ID} ${version}. Run 'Developer: Reload Window' in each VS Code window."
 }
 

@@ -212,3 +212,95 @@ only_tools() {
         run ! cmp -s "${BATS_TEST_TMPDIR}/packed.png" "${BATS_TEST_DIRNAME}/../../../scripts/notification/icons/${icon}.png"
     done
 }
+
+# The settings VS Code's server keeps for the machine, under the test's HOME.
+machine_settings() {
+    echo "${HOME}/.vscode-server/data/Machine/settings.json"
+}
+
+# Prints one setting's value from the machine's settings, as JSON.
+setting() {
+    python3 -c 'import json, sys; print(json.dumps(json.load(open(sys.argv[1])).get(sys.argv[2])))' "$(machine_settings)" "$1"
+}
+
+@test "with a server, installing makes terminal tabs read as their shell titles them, for the whole machine" {
+    fake_tool "${SERVER}" server
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ "$(setting terminal.integrated.tabs.title)" = '"${sequence}"' ]
+    [ "$(setting terminal.integrated.tabs.description)" = '""' ]
+}
+
+@test "the machine's other settings are kept" {
+    fake_tool "${SERVER}" server
+    mkdir -p "$(dirname "$(machine_settings)")"
+    echo '{"python.terminal.activateEnvironment": false, "terminal.integrated.tabs.title": "${process}"}' >"$(machine_settings)"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ "$(setting python.terminal.activateEnvironment)" = "false" ]
+    [ "$(setting terminal.integrated.tabs.title)" = '"${sequence}"' ]
+}
+
+@test "installing again leaves the machine's settings as they are" {
+    fake_tool "${SERVER}" server
+
+    run "$SCRIPT"
+    cp "$(machine_settings)" "${BATS_TEST_TMPDIR}/first.json"
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    cmp "$(machine_settings)" "${BATS_TEST_TMPDIR}/first.json"
+}
+
+@test "remove takes the two settings out, and keeps the rest" {
+    fake_tool "${SERVER}" server
+    mkdir -p "$(dirname "$(machine_settings)")"
+    echo '{"python.terminal.activateEnvironment": false}' >"$(machine_settings)"
+
+    run "$SCRIPT"
+    run "$SCRIPT" remove
+
+    [ "$status" -eq 0 ]
+    [ "$(setting terminal.integrated.tabs.title)" = "null" ]
+    [ "$(setting terminal.integrated.tabs.description)" = "null" ]
+    [ "$(setting python.terminal.activateEnvironment)" = "false" ]
+}
+
+@test "remove leaves a tab title somebody set themselves" {
+    fake_tool "${SERVER}" server
+    mkdir -p "$(dirname "$(machine_settings)")"
+    echo '{"terminal.integrated.tabs.title": "${process}"}' >"$(machine_settings)"
+
+    run "$SCRIPT" remove
+
+    [ "$status" -eq 0 ]
+    [ "$(setting terminal.integrated.tabs.title)" = '"${process}"' ]
+}
+
+@test "settings with comments in them are left alone, and the two lines are printed" {
+    fake_tool "${SERVER}" server
+    mkdir -p "$(dirname "$(machine_settings)")"
+    printf '{\n  // my own note\n  "editor.fontSize": 14\n}\n' >"$(machine_settings)"
+    cp "$(machine_settings)" "${BATS_TEST_TMPDIR}/before.json"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    cmp "$(machine_settings)" "${BATS_TEST_TMPDIR}/before.json"
+    [[ "$output" == *"are not plain JSON, so they were left alone"* ]]
+    [[ "$output" == *'"terminal.integrated.tabs.title": "${sequence}",'* ]]
+    [[ "$output" == *"Installed local.checkout-name "* ]]
+}
+
+@test "without a server, no machine settings are written" {
+    fake_tool "${BIN}/code" code
+
+    PATH="${BIN}:${PATH}" run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ ! -e "$(machine_settings)" ]
+}

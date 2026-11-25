@@ -153,6 +153,24 @@ back to what it showed before.
 - **Anywhere else** it goes into VS Code itself, through its `code` command,
   and names the windows opened on that machine's own folders.
 
+On a machine with VS Code's server, installing also sets two settings in
+the settings the server keeps for that machine,
+`~/.vscode-server/data/Machine/settings.json`:
+
+```json
+"terminal.integrated.tabs.title": "${sequence}",
+"terminal.integrated.tabs.description": "",
+```
+
+They make a terminal tab read as its shell titles it. The extension makes
+both its defaults already, but a default loses to the settings of your own
+VS Code. Where those lead a tab with the program's name, a tab read "just
+Arnie ..." in any repository with no settings file of its own. The
+machine's settings outrank yours, for every window opened on the machine,
+and a repository's own still outrank these. Removing the extension takes
+the two out again. A settings file with comments in it is left alone, and
+the two lines are printed to add by hand.
+
 Installing needs `zip`. The tests need Node and bats:
 
 ```bash
