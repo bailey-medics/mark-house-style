@@ -89,7 +89,9 @@ The folder a banner came from picks its icon:
 - **`quillmedical` and `quillmedical-<anything>`** - Quill.
 - **`turva` and `turva-<anything>`** - Turva.
 - **`juttu-messaging` and `juttu-messaging-<anything>`** - Juttu.
-- **`arnie` and `arnie-<anything>`** - Arnie's bulb.
+- **Any other folder with a picture in `icons/` named after it** - that
+  picture, a worktree's number aside: `arnie` and `arnie-2` get Arnie's
+  bulb, `digest` a bold D and `mark-house-style` a bold MHS.
 - **Every other folder** - the general notifier, a bell, as is a project
   whose app has not been built yet.
 - **Before any notifier is built** - the plain banner, macOS's own. It
@@ -97,11 +99,14 @@ The folder a banner came from picks its icon:
   forward, such as Finder, rather than the folder's window. Run
   `just -g rfb` once to build the notifiers.
 
-`arnie.png` and `general.png` are drawn from SVG at 1024 by 1024, the first
-from Arnie's page icon.
+`arnie.png`, `digest.png`, `mark-house-style.png` and `general.png` are drawn
+at 1024 by 1024, solid to the edges so they are used whole; Arnie's matches
+its phone icon.
 
-To give another project an icon, add its picture to `icons/`, a line for its
-folders in `notification-show.sh`, and a test.
+To give another project an icon, add `icons/<folder>.png`: its logo, or
+bold white initials on a solid colour, 1024 by 1024 and solid to the edges.
+Then run `just -g rfb` on the Mac. Only a project whose folders don't carry
+its name, like Juttu's, needs a line in `notification-show.sh`.
 
 `juttu.png` is rendered from `juttu.svg`, the original, at 1024 by 1024. The
 builder reads PNG, so after changing the SVG, render it again, for example

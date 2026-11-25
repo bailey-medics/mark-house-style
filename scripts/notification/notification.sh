@@ -73,12 +73,18 @@ case "$worktree" in
 esac
 
 # The banner's title. Quill Medical's worktrees are titled the way they are
-# spoken, "Quill 6" rather than "quillmedical-6"; every other project keeps
-# its session name.
+# spoken, "Quill 6" rather than "quillmedical-6", and Arnie, Digest and Mark
+# House Style by their proper names; every other project keeps its session
+# name.
 case "$name" in
     quillmedical) label="Quill" ;;
     quillmedical-owl) label="Quill Owl" ;;
     quillmedical-[0-9]*) label="Quill ${name##*-}" ;;
+    arnie) label="Arnie" ;;
+    arnie-[0-9]*) label="Arnie ${name##*-}" ;;
+    digest) label="Digest" ;;
+    digest-[0-9]*) label="Digest ${name##*-}" ;;
+    mark-house-style) label="Mark House Style" ;;
     *) label="$name" ;;
 esac
 
@@ -135,6 +141,7 @@ case "$name" in
     turva) spoken="Turva" ;;
     juttu) spoken="Juttu" ;;
     turva-[0-9]*) spoken="Turva ${name##*-}" ;;
+    arnie | arnie-[0-9]* | digest | digest-[0-9]* | mark-house-style) spoken="$label" ;;
     juttu-[0-9]*) spoken="Juttu ${name##*-}" ;;
     *-[0-9]*) spoken="${name%-*} ${name##*-}" ;;
     *) spoken="$name" ;;

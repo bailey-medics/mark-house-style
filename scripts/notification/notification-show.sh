@@ -43,10 +43,12 @@ CHIME="${TURVA_NOTIFY_CHIME:-0}"
 # A branded notifier gives the banner its project's icon. Each is a copy of
 # terminal-notifier that build-notifier-app.sh makes from icons/<name>.png
 # into ~/Applications, or TURVA_NOTIFY_APP_DIR. The folder the banner came
-# from picks it: Quill Medical's, Turva's, Juttu's and Arnie's folders have
-# one each, Juttu's folders carrying its repository's full name,
-# juttu-messaging. Any other folder, or one whose app isn't built, gets the
-# general notifier, a bell. Only a notifier can run notification-focus.sh
+# from picks it: Quill Medical's, Turva's and Juttu's folders have one each,
+# Juttu's folders carrying its repository's full name, juttu-messaging. Any
+# other folder uses the app of its own name, less a worktree's number, such
+# as arnie-notifier.app for arnie or arnie-2, where icons/<name>.png has
+# made one: a logo, or bold initials for a repository without one. A folder
+# with no app built gets the general notifier, a bell. Only a notifier can run notification-focus.sh
 # when the banner is clicked: the plain banner below can't, and a click on
 # it only brings some application forward, such as Finder. An app named in
 # TURVA_NOTIFY_APP is used for every banner instead.
@@ -61,8 +63,8 @@ else
         quillmedical | quillmedical-*) NOTIFIER_APP="$NOTIFIER_DIR/quill-notifier.app" ;;
         turva | turva-*) NOTIFIER_APP="$NOTIFIER_DIR/turva-notifier.app" ;;
         juttu-messaging | juttu-messaging-*) NOTIFIER_APP="$NOTIFIER_DIR/juttu-notifier.app" ;;
-        arnie | arnie-*) NOTIFIER_APP="$NOTIFIER_DIR/arnie-notifier.app" ;;
-        *) NOTIFIER_APP="" ;;
+        *-[0-9]*) NOTIFIER_APP="$NOTIFIER_DIR/${folder%-[0-9]*}-notifier.app" ;;
+        *) NOTIFIER_APP="$NOTIFIER_DIR/${folder}-notifier.app" ;;
     esac
 
     if [ ! -x "$NOTIFIER_APP/Contents/MacOS/terminal-notifier" ]; then

@@ -121,6 +121,21 @@ make_quill() {
     printf "%s\n" "$output" | grep -qx "title=Quill Owl"
 }
 
+@test "Arnie, Digest and Mark House Style are titled and spoken by their proper names" {
+    local folder expected
+
+    for pair in "arnie:Arnie" "arnie-2:Arnie 2" "digest:Digest" "digest-3:Digest 3" "mark-house-style:Mark House Style"; do
+        folder="${BATS_TEST_TMPDIR}/${pair%%:*}"
+        expected="${pair#*:}"
+        mkdir -p "$folder"
+
+        run shown_for "$folder"
+
+        printf "%s\n" "$output" | grep -qx "title=${expected}"
+        printf "%s\n" "$output" | grep -qx "spoken=${expected}"
+    done
+}
+
 @test "other projects keep their session name as the title" {
     run shown_for "$OTHER"
 
@@ -187,13 +202,13 @@ make_juttu() {
 }
 
 @test "another numbered folder is spoken by its own name, not as Turva" {
-    other="${BATS_TEST_TMPDIR}/digest-2"
+    other="${BATS_TEST_TMPDIR}/ledger-2"
     mkdir -p "$other"
 
     run shown_for "$other"
 
     [ "$status" -eq 0 ]
-    [[ "$output" == *"spoken=digest 2"* ]]
+    [[ "$output" == *"spoken=ledger 2"* ]]
 }
 
 @test "the banner carries the bold lead of the closing TL;DR" {
@@ -520,7 +535,7 @@ stub_branded_apps() {
     export TURVA_NOTIFY_SPEAK=0
     unset TURVA_NOTIFY_APP
 
-    for name in quill turva juttu arnie general; do
+    for name in quill turva juttu arnie digest mark-house-style general; do
         mkdir -p "${HOME}/Applications/${name}-notifier.app/Contents/MacOS"
         cat >"${HOME}/Applications/${name}-notifier.app/Contents/MacOS/terminal-notifier" <<EOF
 #!/bin/bash
@@ -582,10 +597,21 @@ icon_for() {
     [ "$output" = "arnie" ]
 }
 
-@test "any other folder gets the general notifier, so a click still focuses" {
+@test "a folder with its own app built uses it, a worktree's number aside" {
     stub_branded_apps
 
     run icon_for mark-house-style
+    [ "$output" = "mark-house-style" ]
+
+    rm -f "${BATS_TEST_TMPDIR}/apps-used"
+    run icon_for digest-3
+    [ "$output" = "digest" ]
+}
+
+@test "any other folder gets the general notifier, so a click still focuses" {
+    stub_branded_apps
+
+    run icon_for ledger
 
     [ "$status" -eq 0 ]
     [ "$output" = "general" ]
