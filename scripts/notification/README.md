@@ -128,6 +128,7 @@ These are read from the environment, on the Mac unless it says otherwise:
 - **`TURVA_NOTIFY_BOX`** - the box's name, as `ssh` and VS Code know it. The default is `devbox`.
 - **`TURVA_NOTIFY_QUEUE`** - a different queue file, on the box.
 - **`TURVA_NOTIFY_DEBUG=1`** - on either machine, print the banner instead of showing it.
+- **`TURVA_NOTIFY_QUIET_HOURS=22-7`** - on the box, in a repository's hook command: from 22:00 until 07:00 the banner shows but nothing is spoken. Digest sets it for its nightly runs.
 
 A click on the banner needs Accessibility permission for the notifier, under System Settings, Privacy and Security, Accessibility.
 

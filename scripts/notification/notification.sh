@@ -49,6 +49,22 @@ fi
 root="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null || true)"
 [ -n "$root" ] && cwd="$root"
 
+# A run can also work inside a separate repository kept in the project, such
+# as one of Digest's subjects/<repo>. The banner is the project's, so climb
+# to the project. A worktree kept inside the project is the same repository,
+# so it keeps its own name.
+if [ -n "${CLAUDE_PROJECT_DIR:-}" ]; then
+    project="$(git -C "$CLAUDE_PROJECT_DIR" rev-parse --show-toplevel 2>/dev/null || true)"
+
+    case "$cwd" in
+        "$project"/*)
+            here="$(git -C "$cwd" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+            there="$(git -C "$project" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+            [ "$here" != "$there" ] && cwd="$project"
+            ;;
+    esac
+fi
+
 # While Quill Medical moves to these banners, a checkout whose committed
 # settings still call its own scripts/notification.sh keeps its banners from
 # that, so a session never gets two. This hook, from each checkout's own
@@ -143,6 +159,32 @@ case "$name" in
     *-[0-9]*) spoken="${name%-*} ${name##*-}" ;;
     *) spoken="$name" ;;
 esac
+
+# A repository whose runs carry on through the night, such as Digest's
+# nightly digest, sets TURVA_NOTIFY_QUIET_HOURS in its hook command, such as
+# "22-7": from 22:00 until 07:00 the banner still shows, but nothing is
+# spoken. TURVA_NOTIFY_HOUR stands in for the clock in the tests.
+quiet_now() {
+    local hours="${TURVA_NOTIFY_QUIET_HOURS:-}"
+    local start="${hours%-*}"
+    local end="${hours#*-}"
+    local hour="${TURVA_NOTIFY_HOUR:-$(date +%H)}"
+
+    [[ "$start" =~ ^[0-9]+$ && "$end" =~ ^[0-9]+$ && "$hour" =~ ^[0-9]+$ ]] || return 1
+    start=$((10#$start))
+    end=$((10#$end))
+    hour=$((10#$hour))
+
+    if [ "$start" -gt "$end" ]; then
+        [ "$hour" -ge "$start" ] || [ "$hour" -lt "$end" ]
+    else
+        [ "$hour" -ge "$start" ] && [ "$hour" -lt "$end" ]
+    fi
+}
+
+if quiet_now; then
+    spoken=""
+fi
 
 # Set TURVA_NOTIFY_DEBUG=1 to print what would be shown and stop; used by
 # the tests, and handy when a banner is not saying what you expected.

@@ -64,6 +64,45 @@ group_of() {
     [ "$(group_of "$output")" = "turva-claude-turva-4" ]
 }
 
+@test "a separate repository inside the project is titled as the project" {
+    local subject="${MAIN}/subjects/news"
+    git init -q "$subject"
+
+    run env CLAUDE_PROJECT_DIR="$MAIN" bash -c "printf '{\"cwd\": \"%s\"}' '$subject' | TURVA_NOTIFY_DEBUG=1 '$SCRIPT'"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"title=Turva"$'\n'* ]]
+}
+
+@test "a worktree inside the project keeps its own name" {
+    local inner="${MAIN}/.claude/worktrees/inner-2"
+    git -C "$MAIN" worktree add -q "$inner" -b inner
+
+    run env CLAUDE_PROJECT_DIR="$MAIN" bash -c "printf '{\"cwd\": \"%s\"}' '$inner' | TURVA_NOTIFY_DEBUG=1 '$SCRIPT'"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"title=Inner 2"$'\n'* ]]
+}
+
+@test "quiet hours keep the banner but say nothing, across midnight" {
+    for hour in 22 23 00 06; do
+        run env TURVA_NOTIFY_QUIET_HOURS=22-7 TURVA_NOTIFY_HOUR="$hour" bash -c "printf '{\"cwd\": \"%s\"}' '$MAIN' | TURVA_NOTIFY_DEBUG=1 '$SCRIPT'"
+        [[ "$output" == *"title=Turva"* ]]
+        [[ "$output" == *"spoken=" ]]
+    done
+
+    for hour in 07 12 21; do
+        run env TURVA_NOTIFY_QUIET_HOURS=22-7 TURVA_NOTIFY_HOUR="$hour" bash -c "printf '{\"cwd\": \"%s\"}' '$MAIN' | TURVA_NOTIFY_DEBUG=1 '$SCRIPT'"
+        [[ "$output" == *"spoken=Turva" ]]
+    done
+}
+
+@test "without quiet hours, a banner is spoken at any hour" {
+    run env TURVA_NOTIFY_HOUR=03 bash -c "printf '{\"cwd\": \"%s\"}' '$MAIN' | TURVA_NOTIFY_DEBUG=1 '$SCRIPT'"
+
+    [[ "$output" == *"spoken=Turva" ]]
+}
+
 @test "a question shares its worktree's group, so it replaces a finished banner" {
     run shown_for "$OTHER"
     finished_group="$(group_of "$output")"
