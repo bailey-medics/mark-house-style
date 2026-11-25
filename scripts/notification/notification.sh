@@ -73,19 +73,16 @@ case "$worktree" in
 esac
 
 # The banner's title. Quill Medical's worktrees are titled the way they are
-# spoken, "Quill 6" rather than "quillmedical-6", and Arnie, Digest and Mark
-# House Style by their proper names; every other project keeps its session
-# name.
+# spoken, "Quill 6" rather than "quillmedical-6". Every other session name
+# is titled as words with capitals, so "turva-4" is "Turva 4" and
+# "mark-house-style" is "Mark House Style". awk rather than sed's \u, which
+# the Mac's sed lacks.
 case "$name" in
     quillmedical) label="Quill" ;;
     quillmedical-owl) label="Quill Owl" ;;
     quillmedical-[0-9]*) label="Quill ${name##*-}" ;;
-    arnie) label="Arnie" ;;
-    arnie-[0-9]*) label="Arnie ${name##*-}" ;;
-    digest) label="Digest" ;;
-    digest-[0-9]*) label="Digest ${name##*-}" ;;
-    mark-house-style) label="Mark House Style" ;;
-    *) label="$name" ;;
+    *) label="$(printf '%s' "$name" | tr '-' ' ' \
+        | awk '{ for (i = 1; i <= NF; i++) $i = toupper(substr($i, 1, 1)) substr($i, 2); print }')" ;;
 esac
 
 # What the turn actually did, taken from `last_assistant_message` in the

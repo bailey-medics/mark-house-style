@@ -78,7 +78,7 @@ group_of() {
     run shown_for "$OTHER"
 
     [ "$status" -eq 0 ]
-    [[ "$output" == *"title=turva-4"* ]]
+    [[ "$output" == *"title=Turva 4"* ]]
 }
 
 @test "a numbered worktree is spoken by its number, and the main checkout by name alone" {
@@ -136,10 +136,17 @@ make_quill() {
     done
 }
 
-@test "other projects keep their session name as the title" {
-    run shown_for "$OTHER"
+@test "other projects are titled by their session name as capitalised words" {
+    local folder
 
-    printf "%s\n" "$output" | grep -qx "title=turva-4"
+    for pair in "turva-4:Turva 4" "ledger:Ledger" "big-old-thing-12:Big Old Thing 12"; do
+        folder="${BATS_TEST_TMPDIR}/${pair%%:*}"
+        mkdir -p "$folder"
+
+        run shown_for "$folder"
+
+        printf "%s\n" "$output" | grep -qx "title=${pair#*:}"
+    done
 }
 
 @test "Quill Medical's main checkout is Quill alone, and Owl's Quill Owl" {
@@ -171,13 +178,13 @@ make_juttu() {
 
     run shown_for "$JUTTU"
     [ "$status" -eq 0 ]
-    [[ "$output" == *"title=juttu"$'\n'* ]]
+    [[ "$output" == *"title=Juttu"$'\n'* ]]
 
     run shown_for "${JUTTU}-2"
-    [[ "$output" == *"title=juttu-2"$'\n'* ]]
+    [[ "$output" == *"title=Juttu 2"$'\n'* ]]
 
     run shown_for "${JUTTU}-3" needs-input
-    [[ "$output" == *"title=juttu-3"$'\n'* ]]
+    [[ "$output" == *"title=Juttu 3"$'\n'* ]]
 }
 
 @test "a Juttu worktree is spoken as Juttu and its number, never as Turva" {
@@ -227,7 +234,7 @@ make_juttu() {
 
     [ "$(wc -l <"$TURVA_NOTIFY_QUEUE")" -eq 1 ]
     line="$(cat "$TURVA_NOTIFY_QUEUE")"
-    [[ "$line" == *'"title": "turva-4"'* ]]
+    [[ "$line" == *'"title": "Turva 4"'* ]]
     [[ "$line" == *'"group": "turva-claude-turva-4"'* ]]
     [[ "$line" == *"\"cwd\": \"${OTHER}\""* ]]
 }
@@ -759,5 +766,5 @@ spoken_for() {
     run shown_for "$MAIN"
 
     [ "$status" -eq 0 ]
-    [[ "$output" == *"title=turva"* ]]
+    [[ "$output" == *"title=Turva"* ]]
 }
