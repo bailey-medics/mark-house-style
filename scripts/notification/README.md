@@ -89,8 +89,16 @@ The folder a banner came from picks its icon:
 - **`quillmedical` and `quillmedical-<anything>`** - Quill.
 - **`turva` and `turva-<anything>`** - Turva.
 - **`juttu-messaging` and `juttu-messaging-<anything>`** - Juttu.
-- **Every other folder** - the plain banner icon, as is a project whose app
-  has not been built yet.
+- **`arnie` and `arnie-<anything>`** - Arnie's bulb.
+- **Every other folder** - the general notifier, a bell, as is a project
+  whose app has not been built yet.
+- **Before any notifier is built** - the plain banner, macOS's own. It
+  can't run anything when clicked, so a click only brings some application
+  forward, such as Finder, rather than the folder's window. Run
+  `just -g rfb` once to build the notifiers.
+
+`arnie.png` and `general.png` are drawn from SVG at 1024 by 1024, the first
+from Arnie's page icon.
 
 To give another project an icon, add its picture to `icons/`, a line for its
 folders in `notification-show.sh`, and a test.

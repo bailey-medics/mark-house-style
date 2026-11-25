@@ -520,7 +520,7 @@ stub_branded_apps() {
     export TURVA_NOTIFY_SPEAK=0
     unset TURVA_NOTIFY_APP
 
-    for name in quill turva juttu; do
+    for name in quill turva juttu arnie general; do
         mkdir -p "${HOME}/Applications/${name}-notifier.app/Contents/MacOS"
         cat >"${HOME}/Applications/${name}-notifier.app/Contents/MacOS/terminal-notifier" <<EOF
 #!/bin/bash
@@ -573,13 +573,22 @@ icon_for() {
     [ "$output" = "juttu" ]
 }
 
-@test "any other folder keeps the plain icon, even with the apps built" {
+@test "Arnie's folder gets the Arnie icon" {
+    stub_branded_apps
+
+    run icon_for arnie
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "arnie" ]
+}
+
+@test "any other folder gets the general notifier, so a click still focuses" {
     stub_branded_apps
 
     run icon_for mark-house-style
 
     [ "$status" -eq 0 ]
-    [ "$output" = "plain" ]
+    [ "$output" = "general" ]
 }
 
 @test "a folder that only starts with a project's word is not that project's" {
@@ -588,12 +597,22 @@ icon_for() {
     run icon_for quilltest
 
     [ "$status" -eq 0 ]
-    [ "$output" = "plain" ]
+    [ "$output" = "general" ]
 }
 
-@test "a project whose app is not built yet falls back to the plain icon" {
+@test "a project whose app is not built yet falls back to the general notifier" {
     stub_branded_apps
     rm -rf "${HOME}/Applications/juttu-notifier.app"
+
+    run icon_for juttu-messaging
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "general" ]
+}
+
+@test "with no notifier built at all, the plain banner is used" {
+    stub_branded_apps
+    rm -rf "${HOME}/Applications/juttu-notifier.app" "${HOME}/Applications/general-notifier.app"
 
     run icon_for juttu-messaging
 

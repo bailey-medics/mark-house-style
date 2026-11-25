@@ -43,10 +43,13 @@ CHIME="${TURVA_NOTIFY_CHIME:-0}"
 # A branded notifier gives the banner its project's icon. Each is a copy of
 # terminal-notifier that build-notifier-app.sh makes from icons/<name>.png
 # into ~/Applications, or TURVA_NOTIFY_APP_DIR. The folder the banner came
-# from picks it: Quill Medical's, Turva's and Juttu's folders have one each,
-# Juttu's folders carrying its repository's full name, juttu-messaging. Any
-# other folder has none yet, so its banner keeps the plain icon. An app
-# named in TURVA_NOTIFY_APP is used for every banner instead.
+# from picks it: Quill Medical's, Turva's, Juttu's and Arnie's folders have
+# one each, Juttu's folders carrying its repository's full name,
+# juttu-messaging. Any other folder, or one whose app isn't built, gets the
+# general notifier, a bell. Only a notifier can run notification-focus.sh
+# when the banner is clicked: the plain banner below can't, and a click on
+# it only brings some application forward, such as Finder. An app named in
+# TURVA_NOTIFY_APP is used for every banner instead.
 NOTIFIER_DIR="${TURVA_NOTIFY_APP_DIR:-$HOME/Applications}"
 
 if [ -n "${TURVA_NOTIFY_APP:-}" ]; then
@@ -58,8 +61,13 @@ else
         quillmedical | quillmedical-*) NOTIFIER_APP="$NOTIFIER_DIR/quill-notifier.app" ;;
         turva | turva-*) NOTIFIER_APP="$NOTIFIER_DIR/turva-notifier.app" ;;
         juttu-messaging | juttu-messaging-*) NOTIFIER_APP="$NOTIFIER_DIR/juttu-notifier.app" ;;
+        arnie | arnie-*) NOTIFIER_APP="$NOTIFIER_DIR/arnie-notifier.app" ;;
         *) NOTIFIER_APP="" ;;
     esac
+
+    if [ ! -x "$NOTIFIER_APP/Contents/MacOS/terminal-notifier" ]; then
+        NOTIFIER_APP="$NOTIFIER_DIR/general-notifier.app"
+    fi
 fi
 
 NOTIFIER_BIN="$NOTIFIER_APP/Contents/MacOS/terminal-notifier"
@@ -77,7 +85,9 @@ NOTIFIER_BIN="$NOTIFIER_APP/Contents/MacOS/terminal-notifier"
 #      Turva has no recipe to build one yet, so this is absent unless
 #      built by hand.
 #
-#   2. `display notification`, which always shows the osascript icon.
+#   2. `display notification`, which always shows the osascript icon,
+#      and does nothing useful when clicked. Only used before any
+#      notifier is built.
 #      Addressing it to an application (System Events, Script Editor)
 #      changes nothing except to break it: System Events returns exit
 #      0 and shows nothing at all.
