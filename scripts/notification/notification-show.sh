@@ -146,14 +146,16 @@ fi
 # another, which reads the number in Finnish too: "Juttu kaksi". On a Mac
 # without that voice, English spellings the usual voice says close to the
 # Finnish stand in, with the number in English.
+#
+# The Finnish voice is simply tried, and the English spelling said only if
+# that fails, as say does for a voice that isn't installed. Asking first
+# with `say -v '?'`, which lists every voice on the Mac, held the Finnish
+# names back two or three seconds behind the English ones.
+#
+# A few English words the usual voice says wrongly have a spelling it says
+# right: Digest is the noun, "DYE-jest", not the verb, "di-JEST".
 # notification.sh on the box works out the words; this only picks the voice.
 FINNISH_VOICE="${TURVA_NOTIFY_FINNISH_VOICE:-Satu}"
-
-has_voice() {
-    local name="$1"
-
-    say -v '?' 2>/dev/null | grep -q "^${name}[[:space:]]"
-}
 
 say_in() {
     local voice="$1"
@@ -167,9 +169,7 @@ say_finnish() {
     local english="$2"
     local rest="$3"
 
-    if has_voice "$FINNISH_VOICE"; then
-        say_in "$FINNISH_VOICE" "${word}${rest:+ $rest}"
-    else
+    if ! say -v "$FINNISH_VOICE" "${word}${rest:+ $rest}" >/dev/null 2>&1; then
         say_in "$VOICE" "${english}${rest:+ $rest}"
     fi
 }
@@ -186,6 +186,7 @@ speak() {
     case "$first" in
         Turva | turva) say_finnish "Turva" "Toor-vah" "$rest" ;;
         Juttu | juttu) say_finnish "Juttu" "Yoot-too" "$rest" ;;
+        Digest | digest) say_in "$VOICE" "Dye-jest${rest:+ $rest}" ;;
         *) say_in "$VOICE" "$text" ;;
     esac
 }

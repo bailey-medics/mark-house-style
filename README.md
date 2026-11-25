@@ -59,6 +59,9 @@ points the tab-topic and notification hooks at the scripts here.
   the files it needs instead.
 - **`scripts/`** - the helper scripts the recipes and hooks call, with their
   tests.
+- **`vscode/`** - VS Code extensions of Mark's own. `vscode/checkout-name/`
+  shows a short name for each checkout, such as `Quill-2`, in the title
+  bar; `just -g checkout-name-install` installs it.
 - **`plans/`** - plans for this repository.
 
 ## Remote desktop

@@ -664,9 +664,10 @@ icon_for() {
     [ ! -e "${BATS_TEST_TMPDIR}/apps-used" ]
 }
 
-# A stand-in for say: it lists the voices in FAKE_VOICES when asked, laid
-# out as the real one lays them out, and
-# records each thing spoken as "<voice>|<text>", one a line.
+# A stand-in for say: it speaks only in the voices in FAKE_VOICES, failing
+# for any other as the real one does, and records each thing spoken as
+# "<voice>|<text>", one a line. A request for the list of voices is
+# recorded in "listed", as it is what made the Finnish names slow.
 stub_say() {
     local bin="${BATS_TEST_TMPDIR}/say-bin"
 
@@ -674,12 +675,13 @@ stub_say() {
     cat >"${bin}/say" <<'EOF'
 #!/bin/bash
 if [ "$1" = "-v" ] && [ "$2" = "?" ]; then
-    for voice in ${FAKE_VOICES:-}; do
-        printf '%-20s xx_XX    # Hello, my name is %s.\n' "$voice" "$voice"
-    done
+    echo listed >>"${BATS_TEST_TMPDIR}/listed"
     exit 0
 fi
-echo "$2|$3" >>"${BATS_TEST_TMPDIR}/spoken"
+case " ${FAKE_VOICES:-} " in
+    *" $2 "*) echo "$2|$3" >>"${BATS_TEST_TMPDIR}/spoken" ;;
+    *) echo "Voice \`$2' not found." >&2; exit 1 ;;
+esac
 EOF
     chmod +x "${bin}/say"
 
@@ -735,6 +737,26 @@ spoken_for() {
 
     [ "$status" -eq 0 ]
     [ "$output" = "Onni|Turva 3" ]
+}
+
+@test "the Finnish voice is tried at once, without listing every voice first" {
+    stub_say
+    export FAKE_VOICES="Karen Satu"
+
+    run spoken_for "Turva"
+
+    [ "$output" = "Satu|Turva" ]
+    [ ! -e "${BATS_TEST_TMPDIR}/listed" ]
+}
+
+@test "Digest is said as the noun, by its spoken spelling" {
+    stub_say
+    export FAKE_VOICES="Karen Satu"
+
+    run spoken_for "Digest 2"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "Karen|Dye-jest 2" ]
 }
 
 @test "any other name is said as it is, by the usual voice" {

@@ -1,0 +1,20 @@
+{
+  "name": "checkout-name",
+  "displayName": "Checkout name",
+  "description": "Shows a short name for the checkout a window has open, such as Quill-2, in the title bar.",
+  "publisher": "local",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "configurationDefaults": {
+      "window.title": "${checkoutName}"
+    }
+  }
+}

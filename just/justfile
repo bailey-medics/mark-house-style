@@ -26,6 +26,36 @@ import '~/github/mark-house-style/just/session.just'
 import '~/github/mark-house-style/just/stack.just'
 
 
+# VS Code checkout names
+#
+# The VS Code extension that shows a short name for the checkout a window
+# has open, such as Quill-2, in the title bar. Its code is in
+# mark-house-style/vscode/checkout-name/; see the README there.
+checkout_name := house / "vscode" / "checkout-name"
+
+
+alias cni := checkout-name-install
+# Install the VS Code extension that names each window after its checkout (then reload the window)
+[no-cd]
+checkout-name-install:
+    @bash "{{checkout_name}}/install.sh"
+
+
+alias cnr := checkout-name-remove
+# Take the checkout name extension out of VS Code again (then reload the window)
+[no-cd]
+checkout-name-remove:
+    @bash "{{checkout_name}}/install.sh" remove
+
+
+alias cnt := checkout-name-test
+# Run the checkout name extension's tests
+[no-cd]
+checkout-name-test:
+    node --test "{{checkout_name}}/tests/names.test.js"
+    bats "{{checkout_name}}/tests"
+
+
 alias tl := turva-link
 # Point this Turva checkout or worktree at mark-house-style (safe to run again)
 [no-cd]
