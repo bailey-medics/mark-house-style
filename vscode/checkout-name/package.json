@@ -3,7 +3,7 @@
   "displayName": "Checkout name",
   "description": "Shows a short name for the checkout a window has open, such as Quill-2, in the title bar, and opens Claude and tmux terminals with the project's icon on their tabs.",
   "publisher": "local",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "engines": {
     "vscode": "^1.95.0"
@@ -56,13 +56,13 @@
     "menus": {
       "editor/title": [
         {
-          "command": "checkoutName.openClaude",
-          "group": "navigation@1"
+          "command": "checkoutName.openTmux",
+          "group": "navigation@1",
+          "alt": "checkoutName.openAnotherTmux"
         },
         {
-          "command": "checkoutName.openTmux",
-          "group": "navigation@2",
-          "alt": "checkoutName.openAnotherTmux"
+          "command": "checkoutName.openClaude",
+          "group": "navigation@2"
         }
       ]
     },

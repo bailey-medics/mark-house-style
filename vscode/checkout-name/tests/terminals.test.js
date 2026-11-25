@@ -25,7 +25,7 @@ const {
  * @property {{command: string, icon: string}[]} contributes.commands
  * @property {{activitybar: {id: string, icon: string}[]}} contributes.viewsContainers
  * @property {Record<string, {id: string}[]>} contributes.views
- * @property {Record<string, {command: string, alt?: string}[]>} contributes.menus
+ * @property {Record<string, {command: string, group: string, alt?: string}[]>} contributes.menus
  * @property {{profiles: {id: string, icon: string}[]}} contributes.terminal
  */
 
@@ -128,8 +128,17 @@ test("the tmux button opens another shell when clicked with Alt held", () => {
     const alts = manifest.contributes.menus["editor/title"].map((button) => [button.command, button.alt]);
 
     assert.deepEqual(alts, [
-        ["checkoutName.openClaude", undefined],
         ["checkoutName.openTmux", "checkoutName.openAnotherTmux"],
+        ["checkoutName.openClaude", undefined],
+    ]);
+});
+
+test("the tmux button sits to the left of the Claude one", () => {
+    const placed = manifest.contributes.menus["editor/title"].map((button) => [button.command, button.group]);
+
+    assert.deepEqual(placed, [
+        ["checkoutName.openTmux", "navigation@1"],
+        ["checkoutName.openClaude", "navigation@2"],
     ]);
 });
 
