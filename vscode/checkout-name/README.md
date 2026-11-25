@@ -41,7 +41,9 @@ tmux:
   whose tab was closed is come back to before a new one is made.
 
 Each opens as a tab in the editor area, and its tab reads as tmux titles
-it, such as `Quill-6` and a topic. There are three ways to open one:
+it, such as `Quill-6` and a topic. The extension sets that up for every
+window: by default VS Code leads a tab with the name of the program
+running in it, which for these is `just`. There are three ways to open one:
 
 - **The robot in the activity bar**, the strip of icons down the side of
   the window. It opens a panel, "Sessions", with a row for each kind.
@@ -140,7 +142,12 @@ just -g checkout-name-test
   runs. A terminal is given
   no name, because VS Code shows a name it was given in place of the title
   tmux sends.
-- **`package.json`** declares the activity bar icon and its panel,
+- **`package.json`** makes `${sequence}`, the title a shell sends, the
+  default of VS Code's `terminal.integrated.tabs.title` setting, and
+  empties `terminal.integrated.tabs.description`, so no repository needs
+  those lines in a `.vscode/settings.json` of its own. A repository's or
+  your own setting still wins.
+- **`package.json`** also declares the activity bar icon and its panel,
   and the buttons above the editor tabs. It makes
   `${checkoutName}` the default of VS Code's
   `window.title` setting. The search box shows the window's title whenever

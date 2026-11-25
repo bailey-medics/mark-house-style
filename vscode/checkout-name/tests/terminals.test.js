@@ -22,6 +22,7 @@ const {
 /**
  * @typedef {object} Manifest
  * @property {object} contributes
+ * @property {Record<string, string>} contributes.configurationDefaults
  * @property {{command: string, icon: string}[]} contributes.commands
  * @property {{activitybar: {id: string, icon: string}[]}} contributes.viewsContainers
  * @property {Record<string, {id: string}[]>} contributes.views
@@ -212,4 +213,11 @@ test("no command is listed in the Command Palette", () => {
         hidden.sort(),
         manifest.contributes.commands.map((command) => [command.command, "false"]).sort(),
     );
+});
+
+test("a terminal tab reads as its shell titles it, and nothing else, in every window", () => {
+    const defaults = manifest.contributes.configurationDefaults;
+
+    assert.equal(defaults["terminal.integrated.tabs.title"], "${sequence}");
+    assert.equal(defaults["terminal.integrated.tabs.description"], "");
 });
