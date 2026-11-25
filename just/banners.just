@@ -38,7 +38,7 @@ notifier-app name="quill":
 
 
 alias rfb := refresh-banners
-# Rebuild every banner icon and refresh the Mac's banner scripts, after pulling a banner change (macOS only)
+# Pull mark-house-style, then rebuild every banner icon and refresh the Mac's banner scripts (macOS only)
 [no-cd]
 refresh-banners:
     "{{banner_scripts}}"/refresh-banners.sh

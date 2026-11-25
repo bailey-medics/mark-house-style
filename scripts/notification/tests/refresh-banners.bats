@@ -31,6 +31,73 @@ EOF
     chmod +x "${STUBS}"/*
 
     export PATH="${STUBS}:${PATH}"
+
+    # A checkout to pull, with its own pretend GitHub, so the real one is
+    # never touched.
+    export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com
+    ORIGIN="${BATS_TEST_TMPDIR}/origin.git"
+    export TURVA_NOTIFY_HOUSE="${BATS_TEST_TMPDIR}/house"
+    git init -q --bare -b main "${ORIGIN}"
+    git clone -q "${ORIGIN}" "${TURVA_NOTIFY_HOUSE}" 2>/dev/null
+    echo one >"${TURVA_NOTIFY_HOUSE}/file"
+    git -C "${TURVA_NOTIFY_HOUSE}" add file
+    git -C "${TURVA_NOTIFY_HOUSE}" commit -q -m one
+    git -C "${TURVA_NOTIFY_HOUSE}" push -q -u origin main 2>/dev/null
+}
+
+# A commit on the pretend GitHub that the checkout hasn't got.
+commit_on_github() {
+    local other="${BATS_TEST_TMPDIR}/other"
+
+    git clone -q "${ORIGIN}" "${other}" 2>/dev/null
+    echo "$1" >"${other}/file"
+    git -C "${other}" commit -q -am "$1"
+    git -C "${other}" push -q 2>/dev/null
+}
+
+@test "it pulls first, then rebuilds from the new copy" {
+    commit_on_github two
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ "$(cat "${TURVA_NOTIFY_HOUSE}/file")" = "two" ]
+    [[ "$output" == *"mark-house-style is at: "*" two"* ]]
+    grep -qx "build quill" "$CALLS"
+}
+
+@test "with changes made here, nothing is pulled or rebuilt" {
+    commit_on_github two
+    echo mine >"${TURVA_NOTIFY_HOUSE}/file"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"changes here that aren't committed"* ]]
+    [ "$(cat "${TURVA_NOTIFY_HOUSE}/file")" = "mine" ]
+    [ ! -e "$CALLS" ]
+}
+
+@test "gone a different way from GitHub, nothing is pulled or rebuilt" {
+    commit_on_github two
+    echo local >"${TURVA_NOTIFY_HOUSE}/file"
+    git -C "${TURVA_NOTIFY_HOUSE}" commit -q -am local
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"gone a different way from GitHub"* ]]
+    [ ! -e "$CALLS" ]
+}
+
+@test "with GitHub out of reach, it rebuilds from the copy it has" {
+    git -C "${TURVA_NOTIFY_HOUSE}" remote set-url origin "${BATS_TEST_TMPDIR}/nowhere.git"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Couldn't reach GitHub"* ]]
+    grep -qx "build quill" "$CALLS"
 }
 
 @test "every icon in the repository is rebuilt" {

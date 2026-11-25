@@ -69,10 +69,13 @@ copy of terminal-notifier. `build-notifier-app.sh <name>` makes
 solid background is used as the whole icon; one with a see-through
 background is set on white, inset so the rounded corners do not clip it.
 
-**After pulling any banner change, run `just -g refresh-banners` (`just -g rfb`)
-on the Mac.** It rebuilds every icon's app, copies the current banner
-scripts into the relay's and the listener's installed folders, and restarts
-macOS's notification services. `just -g nap <name>` rebuilds one app on its own.
+**After any banner change, run `just rfb` on the Mac**, in mark-house-style
+or a repository that imports its recipes, or `just -g rfb` anywhere. It
+pulls mark-house-style first, forward only, and stops without building if
+the Mac's copy has changes or has gone a different way from GitHub. Then it
+rebuilds every icon's app, copies the current banner scripts into the
+relay's and the listener's installed folders, and restarts macOS's
+notification services. `just -g nap <name>` rebuilds one app on its own.
 
 - **Pillow is set up for you.** The builder needs it to prepare an icon.
   When the Mac's `python3` lacks it, the builder makes a private
