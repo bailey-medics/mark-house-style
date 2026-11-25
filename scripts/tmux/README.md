@@ -40,8 +40,10 @@ Digest's "Digest". A shell reads "Tmux
 turva-1-2", "Tmux juttu-1" or "Tmux T3".
 
 The topic is the `@topic` session option, which the tab-topic hook
-(`claude/hooks/tab-topic.sh`) keeps. Until it is set, Claude Code's own
-pane title stands in.
+(`claude/hooks/tab-topic.sh`) keeps. Until it is set, a Quill, Turva or
+Juttu tab reads "---" in its place, such as "Quill-6 ---". Owl, Arnie and
+Digest never get a topic from the hook, so Claude Code's own pane title
+stands in for theirs.
 
 `install.sh` loads the file with one line at the end of `~/.tmux.conf`,
 so it wins over any older title rule above it:

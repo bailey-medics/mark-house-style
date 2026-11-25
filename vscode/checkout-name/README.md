@@ -6,6 +6,9 @@ where it used to read the folder's name and the name of the connection.
 The window's own title, in the operating system's list of windows, reads
 the same.
 
+It also opens two kinds of terminal, a Claude session and a plain tmux
+shell, each with an icon of its own, coloured for the project.
+
 ## The names
 
 A repository's folder shows as its short name. A worktree, whose folder is
@@ -23,6 +26,54 @@ the repository's with a hyphen and more after it, keeps what follows.
 The names are in `names.js`. To add one, add a line to `SHORT_NAMES` there,
 or to `OWN_NAMES` for a checkout with a name all of its own, add a test to
 `tests/names.test.js`, and install again.
+
+## The terminals
+
+The icon's shape says which kind of terminal it is, and its colour says
+which project:
+
+- **Claude**, with a robot icon, runs `just -g claude-session`.
+- **Tmux**, with a binary icon of 0s and 1s, runs `just -g tmux-window`.
+
+Each opens as a tab in the editor area, and its tab reads as tmux titles
+it, such as `Quill-6` and a topic. There are four ways to open one:
+
+- **The robot in the activity bar**, the strip of icons down the side of
+  the window. It opens a panel, "Sessions", with a row for each kind.
+  Click a row.
+- **The two buttons above the editor tabs**, at the right, beside the split
+  button. They show whenever an editor tab is open.
+- **The Command Palette**, as "Checkout: Open Claude session" and
+  "Checkout: Open tmux shell", or a keyboard shortcut of your own for
+  either.
+- **The list beside the "+"** of the terminal panel, as "Claude" and "Tmux".
+
+A terminal has to be opened in one of these ways to carry its icon. VS Code
+sets a terminal's icon and colour only as the terminal opens, and has no
+way to change them afterwards. So `just cc` or `just tw` typed into a plain
+terminal still works, but keeps that terminal's own icon.
+
+Each project takes the terminal colour nearest its banner icon. The
+colour shows on the icon in the terminal's tab and on the rows of the
+Sessions panel. Worktrees share their project's colour, and Owl and any
+other folder are white.
+
+| Project | Colour |
+| --- | --- |
+| Quill | blue |
+| Turva | magenta |
+| Juttu | yellow |
+| Arnie | cyan |
+| Digest | green |
+| Mark House Style | red |
+| Owl and others | white |
+
+VS Code paints a terminal tab's icon in its eight basic terminal colours
+only: black, red, green, yellow, blue, magenta, cyan and white. It takes
+any other colour without complaint and leaves the icon plain, so a
+project cannot have a shade of its own. The shade of each is the theme's,
+the same one text in the terminal is drawn in. The colour each project
+takes is in `terminals.js`.
 
 ## Installing
 
@@ -52,8 +103,15 @@ just -g checkout-name-test
 - **`extension.js`** runs as a window starts. It works out the name from the
   first folder the window has open, and gives VS Code a title variable,
   `${checkoutName}`, through VS Code's `registerWindowTitleVariable`
-  command.
-- **`package.json`** makes `${checkoutName}` the default of VS Code's
+  command. It also registers the two terminal profiles, the two commands
+  that open them, and the rows of the Sessions panel.
+- **`terminals.js`** says what each kind of terminal opens with: its icon,
+  its colour for the project, and the command it runs. A terminal is given
+  no name, because VS Code shows a name it was given in place of the title
+  tmux sends.
+- **`package.json`** declares the activity bar icon and its panel,
+  and the buttons above the editor tabs. It makes
+  `${checkoutName}` the default of VS Code's
   `window.title` setting. The search box shows the window's title whenever
   that setting has been changed from VS Code's own, so the box shows the
   name. No setting is added by hand, and a `window.title` of your own in

@@ -109,7 +109,7 @@ build_package() {
     local version="$2"
 
     mkdir "${build}/extension"
-    cp "${here}/package.json" "${here}/extension.js" "${here}/names.js" "${build}/extension/"
+    cp "${here}/package.json" "${here}/extension.js" "${here}/names.js" "${here}/terminals.js" "${build}/extension/"
     write_manifests "${build}" "${version}"
 
     (cd "${build}" && zip -q -r checkout-name.vsix "[Content_Types].xml" extension.vsixmanifest extension)

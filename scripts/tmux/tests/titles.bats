@@ -42,8 +42,8 @@ title_for() {
 }
 
 @test "a two-digit Quill worktree keeps both digits" {
-    run title_for q12
-    [ "$output" = "Quill-12" ]
+    run title_for q12 "Tab names"
+    [ "$output" = "Quill-12 Tab names" ]
 }
 
 @test "Turva's main checkout is the bare name" {
@@ -57,8 +57,8 @@ title_for() {
 }
 
 @test "Juttu's main checkout is the bare name" {
-    run title_for juttu
-    [ "$output" = "Juttu" ]
+    run title_for juttu "Inbox"
+    [ "$output" = "Juttu Inbox" ]
 }
 
 @test "a Juttu worktree carries its number" {
@@ -83,13 +83,38 @@ title_for() {
     [ "$output" = "Tmux arnie" ]
 }
 
-@test "with no topic, Claude Code's working title stands in" {
+@test "with no topic, a Quill, Turva or Juttu tab shows ---" {
     tmux -L "${SOCKET}" new-session -d -s q6
-    tmux -L "${SOCKET}" select-pane -t q6 -T "⠂ Fixing the tests"
+    tmux -L "${SOCKET}" select-pane -t q6 -T "✳ quill-6"
 
     run tmux -L "${SOCKET}" display-message -p -t q6 '#{T:set-titles-string}'
+    [ "$output" = "Quill-6 ---" ]
 
-    [ "$output" = "Quill-6 Fixing the tests" ]
+    run title_for turva-2
+    [ "$output" = "Turva-2 ---" ]
+
+    run title_for juttu
+    [ "$output" = "Juttu ---" ]
+}
+
+@test "with no topic, Owl's working title stands in" {
+    tmux -L "${SOCKET}" new-session -d -s owl
+    tmux -L "${SOCKET}" select-pane -t owl -T "⠂ Fixing the tests"
+
+    run tmux -L "${SOCKET}" display-message -p -t owl '#{T:set-titles-string}'
+
+    [ "$output" = "Owl Fixing the tests" ]
+}
+
+@test "with no topic, an idle Owl, Arnie or Digest is the label alone" {
+    run title_for owl
+    [ "$output" = "Owl" ]
+
+    run title_for arnie
+    [ "$output" = "Arnie" ]
+
+    run title_for digest
+    [ "$output" = "Digest" ]
 }
 
 @test "a plain t shell keeps its Tmux name" {

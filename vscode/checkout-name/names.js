@@ -27,6 +27,32 @@ const SHORT_NAMES = new Map([
 ]);
 
 /**
+ * The repository a folder is a checkout of, or "" for a folder that is no
+ * known repository's. A checkout with a name of its own, such as Owl's, is
+ * its own project, so its folder comes back whole.
+ * @param {string} folder
+ * @returns {string}
+ */
+function checkoutProject(folder) {
+    if (OWN_NAMES.has(folder)) {
+        return folder;
+    }
+
+    // The longest repository that fits, so a repository whose folder starts
+    // with another's name is never taken for a worktree of it.
+    let repository = "";
+
+    for (const candidate of SHORT_NAMES.keys()) {
+        const isCheckout = folder === candidate || folder.startsWith(`${candidate}-`);
+        if (isCheckout && candidate.length > repository.length) {
+            repository = candidate;
+        }
+    }
+
+    return repository;
+}
+
+/**
  * The name a checkout shows, from the name of its folder. A folder that is
  * no known repository's keeps its own name.
  * @param {string} folder
@@ -39,24 +65,14 @@ function checkoutName(folder) {
         return own;
     }
 
-    // The longest repository that fits, so a repository whose folder starts
-    // with another's name is never taken for a worktree of it.
-    let repository = "";
-    let shortName = "";
+    const repository = checkoutProject(folder);
+    const shortName = SHORT_NAMES.get(repository);
 
-    for (const [candidate, name] of SHORT_NAMES) {
-        const isCheckout = folder === candidate || folder.startsWith(`${candidate}-`);
-        if (isCheckout && candidate.length > repository.length) {
-            repository = candidate;
-            shortName = name;
-        }
-    }
-
-    if (repository === "") {
+    if (shortName === undefined) {
         return folder;
     }
 
     return shortName + folder.slice(repository.length);
 }
 
-module.exports = { checkoutName };
+module.exports = { checkoutName, checkoutProject };

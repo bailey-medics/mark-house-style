@@ -1,9 +1,9 @@
 {
   "name": "checkout-name",
   "displayName": "Checkout name",
-  "description": "Shows a short name for the checkout a window has open, such as Quill-2, in the title bar.",
+  "description": "Shows a short name for the checkout a window has open, such as Quill-2, in the title bar, and opens Claude and tmux terminals coloured for the project.",
   "publisher": "local",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "private": true,
   "engines": {
     "vscode": "^1.95.0"
@@ -15,6 +15,63 @@
   "contributes": {
     "configurationDefaults": {
       "window.title": "${checkoutName}"
+    },
+    "commands": [
+      {
+        "command": "checkoutName.openClaude",
+        "title": "Open Claude session",
+        "category": "Checkout",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "checkoutName.openTmux",
+        "title": "Open tmux shell",
+        "category": "Checkout",
+        "icon": "$(file-binary)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "checkoutName",
+          "title": "Sessions",
+          "icon": "$(robot)"
+        }
+      ]
+    },
+    "views": {
+      "checkoutName": [
+        {
+          "id": "checkoutName.sessions",
+          "name": "Open a session"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "checkoutName.openClaude",
+          "group": "navigation@1"
+        },
+        {
+          "command": "checkoutName.openTmux",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "terminal": {
+      "profiles": [
+        {
+          "id": "checkoutName.claude",
+          "title": "Claude",
+          "icon": "robot"
+        },
+        {
+          "id": "checkoutName.tmux",
+          "title": "Tmux",
+          "icon": "file-binary"
+        }
+      ]
     }
   }
 }

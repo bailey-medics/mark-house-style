@@ -6,7 +6,7 @@
 
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
-const { checkoutName } = require("../names");
+const { checkoutName, checkoutProject } = require("../names");
 
 /** @type {ReadonlyArray<readonly [string, string]>} */
 const SHOWN = [
@@ -40,4 +40,18 @@ test("a folder that only starts with a repository's letters keeps its own name",
 
 test("a folder that only ends with a repository's name keeps its own name", () => {
     assert.equal(checkoutName("clinical-safety-digest"), "clinical-safety-digest");
+});
+
+test("each checkout's project is the repository it is a checkout of", () => {
+    assert.equal(checkoutProject("quillmedical"), "quillmedical");
+    assert.equal(checkoutProject("quillmedical-6"), "quillmedical");
+    assert.equal(checkoutProject("juttu-messaging-3"), "juttu-messaging");
+});
+
+test("Owl's checkout is a project of its own, not Quill's", () => {
+    assert.equal(checkoutProject("quillmedical-owl"), "quillmedical-owl");
+});
+
+test("a folder that is no known repository's has no project", () => {
+    assert.equal(checkoutProject("digestive"), "");
 });
