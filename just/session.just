@@ -25,7 +25,7 @@ session-test:
 
 
 alias tw := tmux-window
-# Go to a plain shell in tmux for this checkout, starting it if needed; `just tw 2` for a second
+# Go to a plain shell in tmux for this checkout, starting it if needed; `just tw 2` for a second, `just tw next` for the first not showing
 [no-cd]
 tmux-window NUMBER="":
     @bash "{{session_scripts}}/tmux-window.sh" {{quote(NUMBER)}}

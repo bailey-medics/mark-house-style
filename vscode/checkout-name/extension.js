@@ -6,12 +6,14 @@
 // variable the window's title, and the search box in the title bar shows the
 // title whenever it has been changed from VS Code's own.
 //
-// It also opens two kinds of terminal, a Claude session and a plain tmux
-// shell, each with its own icon and coloured for the project. VS Code sets a
+// It also opens a Claude session, the checkout's plain tmux shell, or
+// another tmux shell beside it, each with the project's banner icon on its
+// tab. VS Code sets a
 // terminal's icon only as it opens and has no way to change it afterwards,
 // so a terminal has to be opened from here to carry one: from the panel
 // behind the icon in the activity bar, from the buttons above the editor
-// tabs, or from the Command Palette.
+// tabs, or from the Command Palette. Another tmux shell is the tmux button
+// clicked with Alt held down.
 
 const path = require("node:path");
 const vscode = require("vscode");
@@ -21,16 +23,21 @@ const { KINDS, terminalSpec } = require("./terminals");
 /** The variable's name in `window.title`, and the context key behind it. */
 const VARIABLE = "checkoutName";
 
+/** The folder of banner icons in the installed extension. */
+const ICONS_FOLDER = "icons";
+
 /** The panel behind the activity bar icon. The id matches package.json. */
 const SESSIONS_VIEW = "checkoutName.sessions";
 
 /**
- * The terminal profiles and commands, by kind. The ids match package.json.
- * @type {ReadonlyArray<{kind: import("./terminals").TerminalKind, profile: string, command: string}>}
+ * Each kind's command, and its terminal profile where it has one. The ids
+ * match package.json.
+ * @type {ReadonlyArray<{kind: import("./terminals").TerminalKind, command: string, profile?: string}>}
  */
 const TERMINALS = [
-    { kind: "claude", profile: "checkoutName.claude", command: "checkoutName.openClaude" },
-    { kind: "tmux", profile: "checkoutName.tmux", command: "checkoutName.openTmux" },
+    { kind: "claude", command: "checkoutName.openClaude", profile: "checkoutName.claude" },
+    { kind: "tmux", command: "checkoutName.openTmux", profile: "checkoutName.tmux" },
+    { kind: "anotherTmux", command: "checkoutName.openAnotherTmux" },
 ];
 
 /**
@@ -64,29 +71,32 @@ async function update() {
 
 /**
  * The options a terminal of one kind opens with, for the window's checkout.
+ * Its tab's icon is the project's banner icon, from the installed
+ * extension's icons folder.
  * @param {import("./terminals").TerminalKind} kind
+ * @param {import("vscode").Uri} extensionUri
  * @returns {import("vscode").TerminalOptions}
  */
-function terminalOptions(kind) {
+function terminalOptions(kind, extensionUri) {
     const spec = terminalSpec(kind, openFolder());
 
     return {
         shellPath: spec.shellPath,
         shellArgs: spec.shellArgs,
         cwd: firstFolder()?.uri,
-        iconPath: new vscode.ThemeIcon(spec.icon),
-        color: new vscode.ThemeColor(spec.colour),
+        iconPath: vscode.Uri.joinPath(extensionUri, ICONS_FOLDER, spec.image),
     };
 }
 
 /**
  * Opens a terminal of one kind as a tab in the editor area, beside the files.
  * @param {import("./terminals").TerminalKind} kind
+ * @param {import("vscode").Uri} extensionUri
  * @returns {void}
  */
-function openInEditor(kind) {
+function openInEditor(kind, extensionUri) {
     const terminal = vscode.window.createTerminal({
-        ...terminalOptions(kind),
+        ...terminalOptions(kind, extensionUri),
         location: vscode.TerminalLocation.Editor,
     });
 
@@ -134,13 +144,21 @@ async function activate(context) {
         vscode.window.registerTreeDataProvider(SESSIONS_VIEW, sessionRows),
     );
 
+    const { extensionUri } = context;
+
     for (const { kind, profile, command } of TERMINALS) {
         context.subscriptions.push(
-            vscode.window.registerTerminalProfileProvider(profile, {
-                provideTerminalProfile: () => new vscode.TerminalProfile(terminalOptions(kind)),
-            }),
-            vscode.commands.registerCommand(command, () => openInEditor(kind)),
+            vscode.commands.registerCommand(command, () => openInEditor(kind, extensionUri)),
         );
+
+        if (profile !== undefined) {
+            context.subscriptions.push(
+                vscode.window.registerTerminalProfileProvider(profile, {
+                    provideTerminalProfile: () =>
+                        new vscode.TerminalProfile(terminalOptions(kind, extensionUri)),
+                }),
+            );
+        }
     }
 }
 

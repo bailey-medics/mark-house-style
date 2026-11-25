@@ -23,7 +23,7 @@
 # `juttu` and `juttu-<number>` (the ones `just -g cc` makes), in
 # Quill Medical's `q` sessions (`q1` to `q99`) and in Owl's `owl` session. Owl's alerts arrive as `/clear` then `/alert`,
 # and a slash command is skipped, so during an alert the tab shows Claude
-# Code's own title instead. A plain shell, Owl's `towl` and a web session
+# Code's own title instead. A plain shell, Owl's `owl-tmux` and a web session
 # are never touched. Always exits 0 and prints nothing: a UserPromptSubmit hook that
 # exits 2 blocks the prompt, and one that prints adds to the context.
 set -uo pipefail

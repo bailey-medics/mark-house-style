@@ -6,14 +6,17 @@ sessions use the short name `juttu`:
 
 - **`turva`, `turva-2`, `juttu`, `juttu-2`** - the Claude session for the
   main checkout and for each worktree.
-- **`tmux-turva-1`, `tmux-turva-1-2`, `tmux-turva-2`, `tmux-juttu-1`** - the
-  plain shells, numbered by worktree and then by shell.
+- **`turva-tmux`, `turva-tmux-2`, `turva-2-tmux`, `juttu-tmux`** - the
+  plain shells: the checkout, then `-tmux`, then a number for a second
+  shell.
 
 Quill Medical's `just cc` names its sessions `q1` to `q99`, where `q1` is
-the main checkout, and Owl's session is `owl`.
+the main checkout, and Owl's session is `owl`. Their shells are
+`quill-tmux` for the main checkout, `quill-6-tmux` for a worktree and
+`owl-tmux` for Owl.
 
 Arnie and Digest have one checkout each, so their sessions are `arnie` and
-`digest`, and their shells `t-arnie` and `t-digest`. Each has its own
+`digest`, and their shells `arnie-tmux` and `digest-tmux`. Each has its own
 `scripts/<session>-session`, which starts its session at boot, so
 `just cc` starts a missing session with it too. Digest's starter gives
 the session `DIGEST_SESSION=true`, which its nightly runner needs, and
@@ -36,8 +39,14 @@ titles. A Claude tab reads the project, the worktree number and the
 conversation's topic: "Quill-6 Passport sign-off page", "Turva-2 Hazard
 log", "Juttu-3 Inbox". The main checkout has no number, so it reads
 "Quill", "Turva" or "Juttu". Owl's reads "Owl", Arnie's "Arnie" and
-Digest's "Digest". A shell reads "Tmux
-turva-1-2", "Tmux juttu-1" or "Tmux T3".
+Digest's "Digest".
+
+A shell reads the same label, then "Tmux", and its number when it is not
+the checkout's first: "Quill-6 Tmux" for `just tw`, "Quill-6 Tmux-2" for
+`just tw 2`, and "Turva Tmux" or "Owl Tmux-3" likewise. `just tw next`
+goes to the first shell from 2 up that no terminal is showing, and starts
+it when there is none. Any other session
+shows its own name.
 
 The topic is the `@topic` session option, which the tab-topic hook
 (`claude/hooks/tab-topic.sh`) keeps. Until it is set, a Quill, Turva or

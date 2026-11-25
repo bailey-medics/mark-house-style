@@ -196,7 +196,7 @@ prompt() {
 }
 
 @test "a turva shell session is left alone" {
-    export SESSION="tmux-turva-1-2"
+    export SESSION="turva-tmux-2"
     answer "Should not be used"
 
     run prompt "first"
@@ -232,7 +232,7 @@ prompt() {
 }
 
 @test "a juttu shell session is left alone" {
-    export SESSION="tmux-juttu-1"
+    export SESSION="juttu-tmux"
     answer "Should not be used"
 
     run prompt "first"
@@ -259,7 +259,7 @@ prompt() {
 }
 
 @test "outside a q session or Owl's it does nothing" {
-    export SESSION="towl"
+    export SESSION="owl-tmux"
     answer "Should not be used"
 
     run prompt "first"

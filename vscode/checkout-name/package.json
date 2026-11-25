@@ -1,9 +1,9 @@
 {
   "name": "checkout-name",
   "displayName": "Checkout name",
-  "description": "Shows a short name for the checkout a window has open, such as Quill-2, in the title bar, and opens Claude and tmux terminals coloured for the project.",
+  "description": "Shows a short name for the checkout a window has open, such as Quill-2, in the title bar, and opens Claude and tmux terminals with the project's icon on their tabs.",
   "publisher": "local",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "private": true,
   "engines": {
     "vscode": "^1.95.0"
@@ -26,6 +26,12 @@
       {
         "command": "checkoutName.openTmux",
         "title": "Open tmux shell",
+        "category": "Checkout",
+        "icon": "$(file-binary)"
+      },
+      {
+        "command": "checkoutName.openAnotherTmux",
+        "title": "Open another tmux shell",
         "category": "Checkout",
         "icon": "$(file-binary)"
       }
@@ -55,7 +61,8 @@
         },
         {
           "command": "checkoutName.openTmux",
-          "group": "navigation@2"
+          "group": "navigation@2",
+          "alt": "checkoutName.openAnotherTmux"
         }
       ]
     },

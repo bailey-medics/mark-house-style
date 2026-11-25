@@ -78,11 +78,6 @@ title_for() {
     [ "$output" = "Digest Nightly run" ]
 }
 
-@test "Arnie's shell is Tmux arnie" {
-    run title_for t-arnie
-    [ "$output" = "Tmux arnie" ]
-}
-
 @test "with no topic, a Quill, Turva or Juttu tab shows ---" {
     tmux -L "${SOCKET}" new-session -d -s q6
     tmux -L "${SOCKET}" select-pane -t q6 -T "✳ quill-6"
@@ -117,19 +112,94 @@ title_for() {
     [ "$output" = "Digest" ]
 }
 
-@test "a plain t shell keeps its Tmux name" {
-    run title_for t3
-    [ "$output" = "Tmux T3" ]
+@test "a checkout's first shell is its label and Tmux, with no number" {
+    run title_for quill-6-tmux
+    [ "$output" = "Quill-6 Tmux" ]
+
+    run title_for turva-2-tmux
+    [ "$output" = "Turva-2 Tmux" ]
+
+    run title_for juttu-3-tmux
+    [ "$output" = "Juttu-3 Tmux" ]
 }
 
-@test "a tmux- shell drops the prefix" {
-    run title_for tmux-turva-1-2
-    [ "$output" = "Tmux turva-1-2" ]
+@test "a later shell carries its number" {
+    run title_for quill-6-tmux-2
+    [ "$output" = "Quill-6 Tmux-2" ]
+
+    run title_for turva-2-tmux-3
+    [ "$output" = "Turva-2 Tmux-3" ]
+
+    run title_for juttu-3-tmux-12
+    [ "$output" = "Juttu-3 Tmux-12" ]
 }
 
-@test "Owl's shell is Tmux Owl" {
-    run title_for towl
-    [ "$output" = "Tmux Owl" ]
+@test "a main checkout's shell has the bare label" {
+    run title_for quill-tmux
+    [ "$output" = "Quill Tmux" ]
+
+    run title_for quill-tmux-2
+    [ "$output" = "Quill Tmux-2" ]
+
+    run title_for turva-tmux
+    [ "$output" = "Turva Tmux" ]
+
+    run title_for turva-tmux-2
+    [ "$output" = "Turva Tmux-2" ]
+
+    run title_for juttu-tmux
+    [ "$output" = "Juttu Tmux" ]
+}
+
+@test "a two-digit worktree's shell keeps both digits" {
+    run title_for quill-12-tmux
+    [ "$output" = "Quill-12 Tmux" ]
+
+    run title_for quill-12-tmux-2
+    [ "$output" = "Quill-12 Tmux-2" ]
+
+    run title_for turva-12-tmux
+    [ "$output" = "Turva-12 Tmux" ]
+}
+
+@test "Owl's, Arnie's and Digest's shells read the same way" {
+    run title_for owl-tmux
+    [ "$output" = "Owl Tmux" ]
+
+    run title_for owl-tmux-2
+    [ "$output" = "Owl Tmux-2" ]
+
+    run title_for arnie-tmux
+    [ "$output" = "Arnie Tmux" ]
+
+    run title_for arnie-tmux-2
+    [ "$output" = "Arnie Tmux-2" ]
+
+    run title_for digest-tmux
+    [ "$output" = "Digest Tmux" ]
+}
+
+@test "a shell's tab ignores what runs in it" {
+    tmux -L "${SOCKET}" new-session -d -s quill-6-tmux
+    tmux -L "${SOCKET}" select-pane -t quill-6-tmux -T "vim README.md"
+
+    run tmux -L "${SOCKET}" display-message -p -t quill-6-tmux '#{T:set-titles-string}'
+
+    [ "$output" = "Quill-6 Tmux" ]
+}
+
+@test "a shell lookalike shows its own name" {
+    run title_for arnie-tmuxer
+    [ "$output" = "arnie-tmuxer" ]
+
+    run title_for quill-six-tmux
+    [ "$output" = "quill-six-tmux" ]
+
+    run title_for quill-6-tmux-two
+    [ "$output" = "quill-6-tmux-two" ]
+
+    run title_for owl-2-tmux
+    [ "$output" = "owl-2-tmux" ]
 }
 
 @test "a turva lookalike is not a Claude tab" {

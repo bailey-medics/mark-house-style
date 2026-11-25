@@ -186,3 +186,26 @@ only_tools() {
     [[ "$output" == *"'zip' command was not found"* ]]
     [ ! -e "${CALLS}" ]
 }
+
+@test "the package holds every project's banner icon for the terminal tabs" {
+    fake_tool "${SERVER}" server
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    run unzip -Z1 "${KEPT}"
+    for icon in quill turva juttu arnie digest mark-house-style general; do
+        [[ "$output" == *"extension/icons/${icon}.png"* ]]
+    done
+}
+
+@test "the extension's own picture wins over the banner's of the same name" {
+    fake_tool "${SERVER}" server
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    unzip -p "${KEPT}" extension/icons/quill.png >"${BATS_TEST_TMPDIR}/packed-quill.png"
+    cmp "${BATS_TEST_TMPDIR}/packed-quill.png" "${BATS_TEST_DIRNAME}/../icons/quill.png"
+    run ! cmp -s "${BATS_TEST_TMPDIR}/packed-quill.png" "${BATS_TEST_DIRNAME}/../../../scripts/notification/icons/quill.png"
+}

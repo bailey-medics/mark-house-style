@@ -81,7 +81,7 @@ write_manifests() {
 
     cat >"${build}/[Content_Types].xml" <<'EOF'
 <?xml version="1.0" encoding="utf-8"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension=".json" ContentType="application/json"/><Default Extension=".js" ContentType="application/javascript"/><Default Extension=".vsixmanifest" ContentType="text/xml"/></Types>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension=".json" ContentType="application/json"/><Default Extension=".js" ContentType="application/javascript"/><Default Extension=".png" ContentType="image/png"/><Default Extension=".vsixmanifest" ContentType="text/xml"/></Types>
 EOF
 
     cat >"${build}/extension.vsixmanifest" <<EOF
@@ -103,6 +103,18 @@ EOF
 EOF
 }
 
+# Fills a folder with the pictures the terminal tabs show: each project's
+# banner icon, then this folder's own icons over them. Those are the ones
+# made for a tab, where the banner's picture would not show on one.
+copy_icons() {
+    local target="$1"
+    local banners="${here}/../../scripts/notification/icons"
+
+    mkdir "${target}"
+    cp "${banners}"/*.png "${target}/"
+    cp "${here}"/icons/*.png "${target}/"
+}
+
 # Packs the extension in the scratch folder, and prints the package's path.
 build_package() {
     local build="$1"
@@ -110,6 +122,7 @@ build_package() {
 
     mkdir "${build}/extension"
     cp "${here}/package.json" "${here}/extension.js" "${here}/names.js" "${here}/terminals.js" "${build}/extension/"
+    copy_icons "${build}/extension/icons"
     write_manifests "${build}" "${version}"
 
     (cd "${build}" && zip -q -r checkout-name.vsix "[Content_Types].xml" extension.vsixmanifest extension)

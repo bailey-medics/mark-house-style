@@ -6,8 +6,8 @@ where it used to read the folder's name and the name of the connection.
 The window's own title, in the operating system's list of windows, reads
 the same.
 
-It also opens two kinds of terminal, a Claude session and a plain tmux
-shell, each with an icon of its own, coloured for the project.
+It also opens a Claude session or a plain tmux shell as a terminal, with
+the project's banner icon on its tab.
 
 ## The names
 
@@ -29,11 +29,16 @@ or to `OWN_NAMES` for a checkout with a name all of its own, add a test to
 
 ## The terminals
 
-The icon's shape says which kind of terminal it is, and its colour says
-which project:
+There are three kinds. Where one is chosen, in the panel and on the
+buttons, a robot stands for Claude and a binary icon of 0s and 1s for
+tmux:
 
-- **Claude**, with a robot icon, runs `just -g claude-session`.
-- **Tmux**, with a binary icon of 0s and 1s, runs `just -g tmux-window`.
+- **Claude** runs `just -g claude-session`.
+- **Tmux** runs `just -g tmux-window`, the checkout's first shell.
+- **Another tmux shell** runs
+  `just -g tmux-window next`. That is the first shell from 2 up that no
+  terminal is showing: `Quill-6 Tmux-2`, then `Quill-6 Tmux-3`. A shell
+  whose tab was closed is come back to before a new one is made.
 
 Each opens as a tab in the editor area, and its tab reads as tmux titles
 it, such as `Quill-6` and a topic. There are four ways to open one:
@@ -42,10 +47,11 @@ it, such as `Quill-6` and a topic. There are four ways to open one:
   the window. It opens a panel, "Sessions", with a row for each kind.
   Click a row.
 - **The two buttons above the editor tabs**, at the right, beside the split
-  button. They show whenever an editor tab is open.
-- **The Command Palette**, as "Checkout: Open Claude session" and
-  "Checkout: Open tmux shell", or a keyboard shortcut of your own for
-  either.
+  button. They show whenever an editor tab is open. Click the tmux button
+  with Alt held down, Option on a Mac, for another tmux shell.
+- **The Command Palette**, as "Checkout: Open Claude session", "Checkout:
+  Open tmux shell" and "Checkout: Open another tmux shell", or a keyboard
+  shortcut of your own for any of them.
 - **The list beside the "+"** of the terminal panel, as "Claude" and "Tmux".
 
 A terminal has to be opened in one of these ways to carry its icon. VS Code
@@ -53,10 +59,26 @@ sets a terminal's icon and colour only as the terminal opens, and has no
 way to change them afterwards. So `just cc` or `just tw` typed into a plain
 terminal still works, but keeps that terminal's own icon.
 
-Each project takes the terminal colour nearest its banner icon. The
-colour shows on the icon in the terminal's tab and on the rows of the
-Sessions panel. Worktrees share their project's colour, and Owl and any
-other folder are white.
+### The icon on the tab
+
+A terminal's tab carries its project's banner icon, the picture its
+notification banners show, so a tab says which project it belongs to
+wherever it is dragged. Worktrees share their project's icon, and Owl and
+any other folder have the general one, a bell. A Claude tab and a tmux tab
+of one project look alike, and their titles tell them apart: `Quill-6` and
+a topic, against `Quill-6 Tmux`.
+
+The pictures are the banners' own, in `scripts/notification/icons/`.
+`install.sh` packs them into the extension, and then the pictures in
+`icons/` beside this file over them. Those are made for a tab, where the
+banner's would not show on one: Quill's feather is dark navy on a
+see-through background, so `icons/quill.png` has it on a white square.
+Which picture each project takes is in `terminals.js`.
+
+### The colour in the panel
+
+In the Sessions panel, each row's icon is in the terminal colour nearest
+the project's banner icon:
 
 | Project | Colour |
 | --- | --- |
@@ -67,13 +89,6 @@ other folder are white.
 | Digest | green |
 | Mark House Style | red |
 | Owl and others | white |
-
-VS Code paints a terminal tab's icon in its eight basic terminal colours
-only: black, red, green, yellow, blue, magenta, cyan and white. It takes
-any other colour without complaint and leaves the icon plain, so a
-project cannot have a shade of its own. The shade of each is the theme's,
-the same one text in the terminal is drawn in. The colour each project
-takes is in `terminals.js`.
 
 ## Installing
 
@@ -105,8 +120,9 @@ just -g checkout-name-test
   `${checkoutName}`, through VS Code's `registerWindowTitleVariable`
   command. It also registers the two terminal profiles, the two commands
   that open them, and the rows of the Sessions panel.
-- **`terminals.js`** says what each kind of terminal opens with: its icon,
-  its colour for the project, and the command it runs. A terminal is given
+- **`terminals.js`** says what each kind of terminal opens with: the
+  picture on its tab, its icon and colour in the panel, and the command it
+  runs. A terminal is given
   no name, because VS Code shows a name it was given in place of the title
   tmux sends.
 - **`package.json`** declares the activity bar icon and its panel,
@@ -116,8 +132,9 @@ just -g checkout-name-test
   that setting has been changed from VS Code's own, so the box shows the
   name. No setting is added by hand, and a `window.title` of your own in
   VS Code's settings still wins.
-- **`install.sh`** packs the folder as a `.vsix`, VS Code's package for an
-  extension, in a scratch folder, and installs it.
+- **`install.sh`** packs the folder and the banner icons as a `.vsix`,
+  VS Code's package for an extension, in a scratch folder, and installs
+  it.
 
 ## What to expect
 

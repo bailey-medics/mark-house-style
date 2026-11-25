@@ -61,8 +61,8 @@ points the tab-topic and notification hooks at the scripts here.
   tests.
 - **`vscode/`** - VS Code extensions of Mark's own. `vscode/checkout-name/`
   shows a short name for each checkout, such as `Quill-2`, in the title
-  bar, and opens Claude and tmux terminals with their own icons, coloured
-  for the project; `just -g checkout-name-install` installs it.
+  bar, and opens Claude and tmux terminals with the project's banner icon
+  on their tabs; `just -g checkout-name-install` installs it.
 - **`plans/`** - plans for this repository.
 
 ## Remote desktop

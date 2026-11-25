@@ -5,10 +5,19 @@
 // which colour its icon takes in each project.
 
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+const { existsSync, readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
-const { KINDS, OTHER_COLOUR, PROJECT_COLOURS, projectColour, terminalSpec } = require("../terminals");
+const {
+    KINDS,
+    OTHER_COLOUR,
+    OTHER_IMAGE,
+    PROJECT_COLOURS,
+    PROJECT_IMAGES,
+    projectColour,
+    projectImage,
+    terminalSpec,
+} = require("../terminals");
 
 /**
  * @typedef {object} Manifest
@@ -16,7 +25,7 @@ const { KINDS, OTHER_COLOUR, PROJECT_COLOURS, projectColour, terminalSpec } = re
  * @property {{command: string, icon: string}[]} contributes.commands
  * @property {{activitybar: {id: string, icon: string}[]}} contributes.viewsContainers
  * @property {Record<string, {id: string}[]>} contributes.views
- * @property {Record<string, {command: string}[]>} contributes.menus
+ * @property {Record<string, {command: string, alt?: string}[]>} contributes.menus
  * @property {{profiles: {id: string, icon: string}[]}} contributes.terminal
  */
 
@@ -87,7 +96,15 @@ test("the extension declares no colours of its own", () => {
 test("each profile in package.json shows the icon its kind opens with", () => {
     const icons = manifest.contributes.terminal.profiles.map((profile) => profile.icon).sort();
 
-    assert.deepEqual(icons, Object.values(KINDS).map((kind) => kind.icon).sort());
+    assert.deepEqual(icons, [KINDS.claude.icon, KINDS.tmux.icon].sort());
+});
+
+test("another tmux shell has the binary icon and runs the next shell not showing", () => {
+    const spec = terminalSpec("anotherTmux", "quillmedical-6");
+
+    assert.equal(spec.icon, "file-binary");
+    assert.equal(spec.colour, "terminal.ansiBlue");
+    assert.deepEqual([spec.shellPath, ...spec.shellArgs], ["bash", "-lc", "just -g tmux-window next"]);
 });
 
 test("a terminal is given no name, so its tab reads as tmux titles it", () => {
@@ -101,10 +118,29 @@ test("each command's button shows the icon its kind opens with", () => {
     assert.deepEqual(icons, Object.values(KINDS).map((kind) => `$(${kind.icon})`).sort());
 });
 
-test("both commands have a button above the editor tabs", () => {
+test("Claude and tmux each have a button above the editor tabs", () => {
     const buttons = manifest.contributes.menus["editor/title"].map((button) => button.command).sort();
 
-    assert.deepEqual(buttons, manifest.contributes.commands.map((command) => command.command).sort());
+    assert.deepEqual(buttons, ["checkoutName.openClaude", "checkoutName.openTmux"]);
+});
+
+test("the tmux button opens another shell when clicked with Alt held", () => {
+    const alts = manifest.contributes.menus["editor/title"].map((button) => [button.command, button.alt]);
+
+    assert.deepEqual(alts, [
+        ["checkoutName.openClaude", undefined],
+        ["checkoutName.openTmux", "checkoutName.openAnotherTmux"],
+    ]);
+});
+
+test("every command in package.json is one a kind opens", () => {
+    const commands = manifest.contributes.commands.map((command) => command.command).sort();
+
+    assert.deepEqual(commands, [
+        "checkoutName.openAnotherTmux",
+        "checkoutName.openClaude",
+        "checkoutName.openTmux",
+    ]);
 });
 
 test("the activity bar icon opens a panel with the sessions view in it", () => {
@@ -114,4 +150,37 @@ test("the activity bar icon opens a panel with the sessions view in it", () => {
     assert.deepEqual(manifest.contributes.views[container.id], [
         { id: "checkoutName.sessions", name: "Open a session" },
     ]);
+});
+
+/** @type {ReadonlyArray<readonly [string, string]>} */
+const PICTURED = [
+    ["quillmedical", "quill.png"],
+    ["quillmedical-6", "quill.png"],
+    ["turva-2", "turva.png"],
+    ["juttu-messaging-3", "juttu.png"],
+    ["arnie", "arnie.png"],
+    ["digest", "digest.png"],
+    ["mark-house-style", "mark-house-style.png"],
+    ["quillmedical-owl", "general.png"],
+    ["some-other-project", "general.png"],
+    ["", "general.png"],
+];
+
+for (const [folder, image] of PICTURED) {
+    test(`a terminal in ${folder || "a window with no folder"} has ${image} on its tab`, () => {
+        assert.equal(projectImage(folder), image);
+        assert.equal(terminalSpec("claude", folder).image, image);
+        assert.equal(terminalSpec("tmux", folder).image, image);
+    });
+}
+
+test("every picture is one install.sh packs: a banner icon, or one of the extension's own", () => {
+    const banners = path.join(__dirname, "..", "..", "..", "scripts", "notification", "icons");
+    const own = path.join(__dirname, "..", "icons");
+
+    for (const image of [...PROJECT_IMAGES.values(), OTHER_IMAGE]) {
+        const packed = existsSync(path.join(banners, image)) || existsSync(path.join(own, image));
+
+        assert.ok(packed, `${image} is in neither icons folder`);
+    }
 });
