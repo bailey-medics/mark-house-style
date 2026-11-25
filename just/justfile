@@ -59,7 +59,7 @@ alias cnt := checkout-name-test
 # Run the checkout name extension's tests
 [no-cd]
 checkout-name-test:
-    node --test "{{checkout_name}}/tests/names.test.js" "{{checkout_name}}/tests/terminals.test.js"
+    node --test "{{checkout_name}}/tests/names.test.js" "{{checkout_name}}/tests/sessions.test.js" "{{checkout_name}}/tests/terminals.test.js"
     bats "{{checkout_name}}/tests"
 
 

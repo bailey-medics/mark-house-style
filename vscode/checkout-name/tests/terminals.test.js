@@ -1,8 +1,8 @@
 // @ts-check
 "use strict";
 
-// Tests for terminals.js, which says how each kind of terminal opens and
-// which colour its icon takes in each project.
+// Tests for terminals.js, which says what each session's terminal opens
+// with, and for what package.json declares beside it.
 
 const assert = require("node:assert/strict");
 const { existsSync, readdirSync, readFileSync } = require("node:fs");
@@ -14,6 +14,7 @@ const {
     OTHER_IMAGE,
     PROJECT_COLOURS,
     PROJECT_IMAGES,
+    pictureAddress,
     projectColour,
     projectImage,
     terminalSpec,
@@ -27,7 +28,6 @@ const {
  * @property {{activitybar: {id: string, icon: string}[]}} contributes.viewsContainers
  * @property {Record<string, {id: string}[]>} contributes.views
  * @property {Record<string, {command: string, group?: string, alt?: string, when?: string}[]>} contributes.menus
- * @property {{profiles: {id: string, icon: string}[]}} contributes.terminal
  */
 
 /** @type {Manifest} */
@@ -94,18 +94,39 @@ test("the extension declares no colours of its own", () => {
     assert.equal("colors" in manifest.contributes, false);
 });
 
-test("each profile in package.json shows the icon its kind opens with", () => {
-    const icons = manifest.contributes.terminal.profiles.map((profile) => profile.icon).sort();
-
-    assert.deepEqual(icons, [KINDS.claude.icon, KINDS.tmux.icon].sort());
-});
-
-test("another tmux shell has the binary icon and runs the next shell not showing", () => {
-    const spec = terminalSpec("anotherTmux", "quillmedical-6");
+test("a later tmux shell has the binary icon and runs that shell by its number", () => {
+    const spec = terminalSpec("tmux-3", "quillmedical-6");
 
     assert.equal(spec.icon, "file-binary");
     assert.equal(spec.colour, "terminal.ansiBlue");
-    assert.deepEqual([spec.shellPath, ...spec.shellArgs], ["bash", "-lc", "just -g tmux-window next"]);
+    assert.deepEqual([spec.shellPath, ...spec.shellArgs], ["bash", "-lc", "just -g tmux-window 3"]);
+});
+
+test("a terminal is refused for anything that is not a session", () => {
+    for (const session of ["anotherTmux", "tmux-1", "tmux-100", "tmux-2; rm -rf ~", ""]) {
+        assert.throws(() => terminalSpec(session, "quillmedical"), /is not a session/);
+    }
+});
+
+test("the extension offers no terminal profiles, which could not come back after a reload", () => {
+    assert.equal("terminal" in manifest.contributes, false);
+});
+
+test("a picture's address holds the picture itself, so the window fetches nothing", () => {
+    const bytes = readFileSync(path.join(__dirname, "..", "icons", "quill.png"));
+    const address = pictureAddress(bytes);
+    const prefix = "data:image/png;base64,";
+
+    assert.ok(address.startsWith(prefix));
+    assert.deepEqual(Buffer.from(address.slice(prefix.length), "base64"), bytes);
+});
+
+test("every tab picture is small enough to carry in its address", () => {
+    for (const image of readdirSync(path.join(__dirname, "..", "icons"))) {
+        const size = readFileSync(path.join(__dirname, "..", "icons", image)).length;
+
+        assert.ok(size < 4096, `${image} is ${size} bytes: make it again with just -g checkout-name-icons`);
+    }
 });
 
 test("a terminal is given no name, so its tab reads as tmux titles it", () => {

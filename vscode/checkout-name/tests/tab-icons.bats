@@ -53,7 +53,7 @@ EOF_PY
 
     for icon in turva quill; do
         run measure "${MADE}/${icon}.png"
-        [ "${lines[0]}" = "256x256" ]
+        [ "${lines[0]}" = "64x64" ]
         [ "${lines[1]}" = "0" ]
         [ "${lines[2]}" = "255" ]
     done

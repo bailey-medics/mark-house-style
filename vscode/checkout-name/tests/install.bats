@@ -106,6 +106,7 @@ only_tools() {
     [[ "$output" == *"extension/package.json"* ]]
     [[ "$output" == *"extension/extension.js"* ]]
     [[ "$output" == *"extension/names.js"* ]]
+    [[ "$output" == *"extension/sessions.js"* ]]
     [[ "$output" == *"extension/terminals.js"* ]]
 }
 

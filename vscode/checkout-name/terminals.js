@@ -1,25 +1,26 @@
 // @ts-check
 "use strict";
 
-// The kinds of terminal the extension opens: a Claude session, the
-// checkout's plain tmux shell, and another tmux shell beside it. A
-// terminal's tab carries its project's banner icon. In the panel and on the
-// buttons, the icon's shape says whether it is Claude or tmux, and in the
-// panel its colour says which project. Kept apart from extension.js so it can be tested without
-// VS Code.
+// What each terminal the extension opens is opened with: the picture on its
+// tab, and the command it runs. A terminal's tab carries its project's banner
+// icon. In the panel and on the buttons, the icon's shape says whether it is
+// Claude or tmux, and in the panel its colour says which project. Kept apart
+// from extension.js so it can be tested without VS Code.
 
 const { checkoutProject } = require("./names");
+const { CLAUDE, sessionRecipe } = require("./sessions");
 
 /**
+ * The three things a row in the panel or a button can open.
  * @typedef {"claude" | "tmux" | "anotherTmux"} TerminalKind
  */
 
 /**
- * What a terminal is opened with: the picture on its tab, the VS Code icon
- * name and colour id of its row in the panel, and the command it runs. It
- * has no name: VS Code shows a name it was given in place of the title tmux
- * sends, and the tab is to read as tmux titles it, such as "Quill-6" and a
- * topic.
+ * What a session's terminal is opened with: the picture on its tab, the
+ * built-in icon and colour that stand in if the picture cannot be read, and
+ * the command it runs. It has no name: VS Code shows a name it was given in
+ * place of the title tmux sends, and the tab is to read as tmux titles it,
+ * such as "Quill-6" and a topic.
  * @typedef {object} TerminalSpec
  * @property {string} image
  * @property {string} icon
@@ -28,17 +29,18 @@ const { checkoutProject } = require("./names");
  * @property {string[]} shellArgs
  */
 
+/** The built-in icons: a robot for Claude, 0s and 1s for a tmux shell. */
+const CLAUDE_ICON = "robot";
+const SHELL_ICON = "file-binary";
+
 /**
- * Each kind's label in the panel, its icon and the global just recipe it
- * runs. "next" takes another tmux shell to the first one, from 2 up, that
- * no terminal is showing, so a shell whose tab was closed is come back to
- * before a new one is made.
- * @type {Readonly<Record<TerminalKind, {label: string, icon: string, recipe: string}>>}
+ * Each kind's label in the panel, and its icon there and on its button.
+ * @type {Readonly<Record<TerminalKind, {label: string, icon: string}>>}
  */
 const KINDS = {
-    claude: { label: "Claude session", icon: "robot", recipe: "claude-session" },
-    tmux: { label: "Tmux shell", icon: "file-binary", recipe: "tmux-window" },
-    anotherTmux: { label: "Another tmux shell", icon: "file-binary", recipe: "tmux-window next" },
+    claude: { label: "Claude session", icon: CLAUDE_ICON },
+    tmux: { label: "Tmux shell", icon: SHELL_ICON },
+    anotherTmux: { label: "Another tmux shell", icon: SHELL_ICON },
 };
 
 /**
@@ -98,17 +100,31 @@ function projectImage(folder) {
 }
 
 /**
- * How to open a terminal of one kind for a checkout.
- * @param {TerminalKind} kind
+ * A picture's bytes as an address that holds the picture itself. A window
+ * reached through a VS Code tunnel fetches a picture file from the dev box,
+ * and such a fetch can stick open for ever: a connection left idle for a few
+ * seconds is closed at the box, the window reuses it, and no answer comes.
+ * Six stuck fetches use up the window's connections, and then no picture
+ * loads anywhere. An address that carries the picture is never fetched.
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
+function pictureAddress(bytes) {
+    return `data:image/png;base64,${Buffer.from(bytes).toString("base64")}`;
+}
+
+/**
+ * How to open a session's terminal for a checkout.
+ * @param {string} session a session's key, as sessions.js sets out
  * @param {string} folder
  * @returns {TerminalSpec}
  */
-function terminalSpec(kind, folder) {
-    const { icon, recipe } = KINDS[kind];
+function terminalSpec(session, folder) {
+    const recipe = sessionRecipe(session);
 
     return {
         image: projectImage(folder),
-        icon,
+        icon: session === CLAUDE ? CLAUDE_ICON : SHELL_ICON,
         colour: projectColour(folder),
         shellPath: "bash",
         shellArgs: ["-lc", `just -g ${recipe}`],
@@ -121,6 +137,7 @@ module.exports = {
     OTHER_IMAGE,
     PROJECT_COLOURS,
     PROJECT_IMAGES,
+    pictureAddress,
     projectColour,
     projectImage,
     terminalSpec,

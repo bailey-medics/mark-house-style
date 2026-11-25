@@ -118,7 +118,7 @@ build_package() {
     local version="$2"
 
     mkdir "${build}/extension"
-    cp "${here}/package.json" "${here}/extension.js" "${here}/names.js" "${here}/terminals.js" "${build}/extension/"
+    cp "${here}/package.json" "${here}/extension.js" "${here}/names.js" "${here}/sessions.js" "${here}/terminals.js" "${build}/extension/"
     copy_icons "${build}/extension/icons"
     write_manifests "${build}" "${version}"
 

@@ -35,15 +35,19 @@ tmux:
 
 - **Claude** runs `just -g claude-session`.
 - **Tmux** runs `just -g tmux-window`, the checkout's first shell.
-- **Another tmux shell** runs
-  `just -g tmux-window next`. That is the first shell from 2 up that no
-  terminal is showing: `Quill-6 Tmux-2`, then `Quill-6 Tmux-3`. A shell
-  whose tab was closed is come back to before a new one is made.
+- **Another tmux shell** runs `just -g tmux-window 2`, or the first
+  number from 2 up that the window has no tab for: `Quill-6 Tmux-2`, then
+  `Quill-6 Tmux-3`. A shell whose tab was closed is come back to before a
+  new one is made.
+
+A session has one tab in a window. Opening a session that already has a
+tab shows that tab, so clicking a button twice does not stack two tabs on
+one session.
 
 Each opens as a tab in the editor area, and its tab reads as tmux titles
 it, such as `Quill-6` and a topic. The extension sets that up for every
 window: by default VS Code leads a tab with the name of the program
-running in it, which for these is `just`. There are three ways to open one:
+running in it, which for these is `just`. There are two ways to open one:
 
 - **The robot in the activity bar**, the strip of icons down the side of
   the window. It opens a panel, "Sessions", with a row for each kind.
@@ -51,7 +55,6 @@ running in it, which for these is `just`. There are three ways to open one:
 - **The two buttons above the editor tabs**, at the right, beside the split
   button. They show whenever an editor tab is open. Click the tmux button
   with Alt held down, Option on a Mac, for another tmux shell.
-- **The list beside the "+"** of the terminal panel, as "Claude" and "Tmux".
 
 The commands behind them are kept out of the Command Palette, which
 would only list them a third time. A keyboard shortcut can still be given
@@ -62,6 +65,19 @@ A terminal has to be opened in one of these ways to carry its icon. VS Code
 sets a terminal's icon and colour only as the terminal opens, and has no
 way to change them afterwards. So `just cc` or `just tw` typed into a plain
 terminal still works, but keeps that terminal's own icon.
+
+### After a reload
+
+The tabs come back after "Developer: Reload Window", each with its
+picture. VS Code cannot do that itself: it restores a terminal without its
+icon, and gives an extension no way to set one afterwards. So the tabs are
+opened as ones VS Code does not restore, and the extension keeps which
+sessions were open in the window's saved state and opens them again as the
+window starts, one at a time. tmux holds each session, so a tab comes back
+where it left off.
+
+A tab closed by hand stays closed: its session leaves the list. A tab
+closed by the reload itself does not.
 
 ### The icon on the tab
 
@@ -74,7 +90,7 @@ a topic, against `Quill-6 Tmux`.
 
 The pictures are in `icons/` beside this file, and `install.sh` packs
 them into the extension. `tab-icons.sh` makes them from the banners' own,
-in `scripts/notification/icons/`, each as the same small rounded square,
+in `scripts/notification/icons/`, each as the same 64 pixel rounded square,
 so the tabs of different projects share one outline. A banner icon with a
 see-through background is set on white first: Quill's feather is dark
 navy, and a dark tab would hide it. Which picture each project takes is in
@@ -91,6 +107,19 @@ just -g checkout-name-install
 Making them needs Pillow, which the script sets up once in
 `~/.venvs/notifier` when the machine's Python lacks it. Installing does
 not.
+
+The window is never asked to fetch a picture. The extension reads the
+file itself and hands VS Code an address that holds the picture, a
+`data:` address. A window reached through a VS Code tunnel fetched the
+file from the dev box, and that fetch could stick open for ever: the box
+closes a connection left idle for about five seconds, the window reuses
+it, and no answer comes. Six stuck fetches used up the window's
+connections, and then no picture loaded in any window until VS Code was
+quit. The pictures are small for the same reason: each one travels in its
+address. `plans/2026-11-25-terminal-tab-icons-plan.md` has the evidence.
+
+If a picture's file cannot be read, the tab gets a built-in icon: a robot
+for Claude or 0s and 1s for tmux, in the project's colour.
 
 ### The colour in the panel
 
@@ -135,9 +164,12 @@ just -g checkout-name-test
 - **`extension.js`** runs as a window starts. It works out the name from the
   first folder the window has open, and gives VS Code a title variable,
   `${checkoutName}`, through VS Code's `registerWindowTitleVariable`
-  command. It also registers the two terminal profiles, the two commands
-  that open them, and the rows of the Sessions panel.
-- **`terminals.js`** says what each kind of terminal opens with: the
+  command. It also opens the sessions' tabs, keeps one tab for each,
+  opens them again after a reload, and fills the Sessions panel.
+- **`sessions.js`** names the sessions a window can have open, `claude`,
+  `tmux` and `tmux-2` to `tmux-99`, says which recipe reaches each, and
+  reads the list of them back from the window's saved state.
+- **`terminals.js`** says what each session's terminal opens with: the
   picture on its tab, its icon and colour in the panel, and the command it
   runs. A terminal is given
   no name, because VS Code shows a name it was given in place of the title

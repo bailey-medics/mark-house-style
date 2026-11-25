@@ -8,7 +8,7 @@
 # changed, then commit what it wrote and install the extension again. With a
 # folder, the pictures go there instead, which is how the tests run it.
 #
-# Every picture comes out as the same small rounded square, so the tabs of
+# Every picture comes out as the same 64 pixel rounded square, so the tabs of
 # different projects share one outline. A banner icon with a solid
 # background, such as Turva's or Juttu's, is used whole. One with a
 # see-through background, such as Quill's feather, is set on white first: its
@@ -53,9 +53,9 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-SIZE = 256
-CORNER = 48
-INSET = 212
+SIZE = 64
+CORNER = 12
+INSET = 53
 
 
 def square(logo: Image.Image) -> Image.Image:
