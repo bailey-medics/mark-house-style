@@ -79,6 +79,19 @@ where it left off.
 A tab closed by hand stays closed: its session leaves the list. A tab
 closed by the reload itself does not.
 
+**A shell and Claude come back side by side**: the tmux shells in the left
+column of the editor area, and Claude in the right. The saved state keeps
+which tabs were open, not where each one was, and VS Code, left to place
+them, was seen to bring the two back on each other's side. So the sides
+are fixed, whatever order the tabs were first opened in and wherever they
+were dragged since. Three things follow:
+
+- **A window with one column gets a second**, for Claude.
+- **A window that also has files open** gets the shells among the files in
+  its left column.
+- **A window with only Claude, or only shells, is left alone**: there is
+  nothing to set side by side, so its tabs open where VS Code puts them.
+
 ### The icon on the tab
 
 A terminal's tab carries its project's banner icon, the picture its
@@ -185,8 +198,9 @@ just -g checkout-name-test
   command. It also opens the sessions' tabs, keeps one tab for each,
   opens them again after a reload, and fills the Sessions panel.
 - **`sessions.js`** names the sessions a window can have open, `claude`,
-  `tmux` and `tmux-2` to `tmux-99`, says which recipe reaches each, and
-  reads the list of them back from the window's saved state.
+  `tmux` and `tmux-2` to `tmux-99`, says which recipe reaches each, reads
+  the list of them back from the window's saved state, and says which side
+  each tab comes back on.
 - **`terminals.js`** says what each session's terminal opens with: the
   picture on its tab, its icon and colour in the panel, and the command it
   runs. A terminal is given

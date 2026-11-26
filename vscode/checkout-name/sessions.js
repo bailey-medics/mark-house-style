@@ -10,6 +10,15 @@
 // cannot survive a reload with its picture: VS Code restores a terminal
 // without its icon. So the tabs are not restored at all, and the extension
 // opens them again from the keys as the window starts.
+//
+// The keys say which tabs were open, not where each one was. So a window
+// with shells and Claude open gets them back in one fixed place: the shells
+// on the left and Claude on the right.
+
+/**
+ * The side of the editor area a reopened tab is sent to.
+ * @typedef {"left" | "right"} Side
+ */
 
 /** The key of the checkout's Claude session. */
 const CLAUDE = "claude";
@@ -87,4 +96,31 @@ function storedSessions(stored) {
     return [...new Set(stored.filter(isSessionKey))];
 }
 
-module.exports = { CLAUDE, FIRST_SHELL, isSessionKey, nextShellKey, sessionRecipe, storedSessions };
+/**
+ * The tabs to open again as a window starts, in the order to open them, each
+ * with the side it goes to. With shells and Claude both saved, the shells
+ * come first, on the left, and Claude last, on the right, whatever order
+ * they were first opened in. Given no side, VS Code opens each tab in the
+ * column that is active as the window starts, and the two were seen to
+ * come back on each other's side. A window with only shells, or only
+ * Claude, has nothing to set side by side, so its tabs get no side and
+ * open where VS Code puts them.
+ * @param {unknown} stored
+ * @returns {Array<{session: string, side: Side | undefined}>}
+ */
+function reopenedTabs(stored) {
+    const sessions = storedSessions(stored);
+    const shells = sessions.filter((session) => session !== CLAUDE);
+
+    if (shells.length === 0 || shells.length === sessions.length) {
+        return sessions.map((session) => ({ session, side: undefined }));
+    }
+
+    /** @type {Array<{session: string, side: Side | undefined}>} */
+    const tabs = shells.map((session) => ({ session, side: "left" }));
+    tabs.push({ session: CLAUDE, side: "right" });
+
+    return tabs;
+}
+
+module.exports = { CLAUDE, FIRST_SHELL, isSessionKey, nextShellKey, reopenedTabs, sessionRecipe, storedSessions };

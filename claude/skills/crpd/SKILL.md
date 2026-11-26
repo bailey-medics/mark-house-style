@@ -937,7 +937,7 @@ to start a stack anywhere but the tip of `origin/main`, and says to run
      pauses on punctuation and runs straight on without it.
    - **No tables, and no text inside an image.** A text reader stumbles on
      a table and cannot hear an image. An embedded screenshot needs a
-     sentence beside it saying what it shows.
+     short description on the line above it, saying what it shows.
 
    ### The sections
 
@@ -979,11 +979,15 @@ to start a stack anywhere but the tip of `origin/main`, and says to run
      story's own page in a running Storybook, so a person reviews the
      component as well as the page that uses it. Save each PNG in the
      scratchpad, beside the attempt files, and never in the repository.
-     Reference each one by its local path, as
+     **Every screenshot has a short description on the line above it**:
+     one plain sentence saying what it shows and what to look at, such as
+     "The hazard form in dark mode, with the save button disabled until a
+     field changes:". The image's alt text does not count: most readers
+     never see it. Reference each one by its local path, as
      `![The hazard form in dark mode](./hazard-form-dark.png)`, with a
-     sentence beside it saying what it shows. The path is uploaded when
-     the body is posted, below. Leave the section out when there is
-     nothing to see.
+     blank line between the description and the image. The path is
+     uploaded when the body is posted, below. Leave the section out when
+     there is nothing to see.
 
    ### Closing
 

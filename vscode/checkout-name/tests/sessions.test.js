@@ -6,7 +6,15 @@
 
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
-const { CLAUDE, FIRST_SHELL, isSessionKey, nextShellKey, sessionRecipe, storedSessions } = require("../sessions");
+const {
+    CLAUDE,
+    FIRST_SHELL,
+    isSessionKey,
+    nextShellKey,
+    reopenedTabs,
+    sessionRecipe,
+    storedSessions,
+} = require("../sessions");
 
 test("the Claude session and the first shell have keys of their own", () => {
     assert.equal(CLAUDE, "claude");
@@ -79,5 +87,48 @@ test("anything in the saved state that is not a session is dropped", () => {
 test("saved state that is not a list gives no sessions", () => {
     for (const stored of [undefined, null, "claude", 7, { 0: "claude" }]) {
         assert.deepEqual(storedSessions(stored), []);
+    }
+});
+
+test("a shell and Claude come back side by side, the shell on the left and Claude on the right", () => {
+    assert.deepEqual(reopenedTabs(["tmux", "claude"]), [
+        { session: "tmux", side: "left" },
+        { session: "claude", side: "right" },
+    ]);
+});
+
+test("the sides do not follow which tab was opened first", () => {
+    assert.deepEqual(reopenedTabs(["claude", "tmux"]), [
+        { session: "tmux", side: "left" },
+        { session: "claude", side: "right" },
+    ]);
+});
+
+test("every shell comes back on the left, in the order they were opened, and Claude is opened last", () => {
+    assert.deepEqual(reopenedTabs(["tmux-3", "claude", "tmux"]), [
+        { session: "tmux-3", side: "left" },
+        { session: "tmux", side: "left" },
+        { session: "claude", side: "right" },
+    ]);
+});
+
+test("a window with only Claude open gives its tab no side, so no column is made for it", () => {
+    assert.deepEqual(reopenedTabs(["claude"]), [{ session: "claude", side: undefined }]);
+});
+
+test("a window with only shells open gives their tabs no side", () => {
+    assert.deepEqual(reopenedTabs(["tmux", "tmux-2"]), [
+        { session: "tmux", side: undefined },
+        { session: "tmux-2", side: undefined },
+    ]);
+});
+
+test("what is not a session in the saved state gets no tab, and does not make a window side by side", () => {
+    assert.deepEqual(reopenedTabs(["claude", "anotherTmux", "claude", 3]), [{ session: "claude", side: undefined }]);
+});
+
+test("saved state with no session in it opens nothing again", () => {
+    for (const stored of [undefined, null, [], ["next"], "claude"]) {
+        assert.deepEqual(reopenedTabs(stored), []);
     }
 });

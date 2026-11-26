@@ -21,13 +21,14 @@
 // icon. So they are opened as transient, which VS Code does not restore, and
 // the window's saved state keeps which sessions were open, to be opened
 // again as it starts. tmux holds each session, so a tab comes back where it
-// left off.
+// left off. The saved state does not keep where a tab was, so shells and
+// Claude come back side by side: sessions.js says which goes where.
 
 const fs = require("node:fs");
 const path = require("node:path");
 const vscode = require("vscode");
 const { checkoutName } = require("./names");
-const { CLAUDE, FIRST_SHELL, nextShellKey, storedSessions } = require("./sessions");
+const { CLAUDE, FIRST_SHELL, nextShellKey, reopenedTabs } = require("./sessions");
 const { KINDS, pictureAddress, projectColour, terminalSpec } = require("./terminals");
 
 /** The variable's name in `window.title`, and the context key behind it. */
@@ -59,6 +60,13 @@ const FORGET_AFTER = 1500;
  * that never comes to life. So they are opened one at a time.
  */
 const START_WITHIN = 5000;
+
+/**
+ * The editor column for each side a reopened tab can be sent to. VS Code
+ * makes the second column when the window has only one.
+ * @type {Readonly<Record<import("./sessions").Side, import("vscode").ViewColumn>>}
+ */
+const COLUMNS = { left: vscode.ViewColumn.One, right: vscode.ViewColumn.Two };
 
 /**
  * Each kind's command. The ids match package.json.
@@ -144,12 +152,14 @@ function picture(image, extensionUri) {
 /**
  * The options a session's terminal opens with, for the window's checkout: a
  * tab in the editor area, with the project's banner icon, that VS Code does
- * not restore.
+ * not restore. Given a side, the tab opens in that side's column without
+ * taking the keyboard; given none, in the column that is active.
  * @param {string} session
  * @param {import("vscode").Uri} extensionUri
+ * @param {import("./sessions").Side} [side]
  * @returns {import("vscode").TerminalOptions}
  */
-function terminalOptions(session, extensionUri) {
+function terminalOptions(session, extensionUri, side) {
     const spec = terminalSpec(session, openFolder());
     const address = picture(spec.image, extensionUri);
 
@@ -160,7 +170,7 @@ function terminalOptions(session, extensionUri) {
         iconPath: address ?? new vscode.ThemeIcon(spec.icon),
         color: address ? undefined : new vscode.ThemeColor(spec.colour),
         isTransient: true,
-        location: vscode.TerminalLocation.Editor,
+        location: side === undefined ? vscode.TerminalLocation.Editor : { viewColumn: COLUMNS[side], preserveFocus: true },
     };
 }
 
@@ -175,17 +185,19 @@ function remember(context) {
 }
 
 /**
- * Shows a session's tab, opening it when the window has none for it.
+ * Shows a session's tab, opening it when the window has none for it. A side
+ * says where a new tab opens, and does not move a tab that is already open.
  * @param {string} session
  * @param {import("vscode").ExtensionContext} context
  * @param {boolean} takeFocus
+ * @param {import("./sessions").Side} [side]
  * @returns {import("vscode").Terminal}
  */
-function showSession(session, context, takeFocus) {
+function showSession(session, context, takeFocus, side) {
     let tab = openTabs.get(session);
 
     if (tab === undefined) {
-        tab = vscode.window.createTerminal(terminalOptions(session, context.extensionUri));
+        tab = vscode.window.createTerminal(terminalOptions(session, context.extensionUri, side));
         openTabs.set(session, tab);
         remember(context);
     }
@@ -214,13 +226,13 @@ async function started(tab) {
 /**
  * Opens again the sessions that were open when the window last shut, one at
  * a time, the last of them in front, without taking the keyboard from the
- * editor.
+ * editor. Shells and Claude come back side by side, as sessions.js sets out.
  * @param {import("vscode").ExtensionContext} context
  * @returns {Promise<void>}
  */
 async function reopen(context) {
-    for (const session of storedSessions(context.workspaceState.get(OPEN_SESSIONS))) {
-        await started(showSession(session, context, false));
+    for (const { session, side } of reopenedTabs(context.workspaceState.get(OPEN_SESSIONS))) {
+        await started(showSession(session, context, false, side));
     }
 }
 
