@@ -637,7 +637,8 @@ to start a stack anywhere but the tip of `origin/main`, and says to run
 
    **The body is an opening, a triage block, then three level-two
    sections**, with a fourth, `## Screenshots`, when the unit changes what
-   a person sees. This is Quill Medical's pull request #2263 written that
+   a person sees, and a fifth, `## New Storybook components`, when it
+   adds one. This is Quill Medical's pull request #2263 written that
    way:
 
    ```markdown
@@ -973,21 +974,35 @@ to start a stack anywhere but the tip of `origin/main`, and says to run
      "sixteen tests" tells the reader nothing on its own; say what the
      tests pin down.
 
-   - **`## Screenshots`** - last, and only when the unit changes what a
-     person sees, or the plan asks for them. **A new or changed Storybook
-     component always counts**: screenshot each of its stories, from the
-     story's own page in a running Storybook, so a person reviews the
-     component as well as the page that uses it. Save each PNG in the
+   - **`## Screenshots`** - after `## What has changed`, and only when the
+     unit changes what a person sees, or the plan asks for them. It holds
+     pages of the running app, and the stories of a changed Storybook
+     component, **in light mode only**. A light and dark pair of each page
+     doubles the pictures and hides the change between near-identical
+     views.
+
+   - **`## New Storybook components`** - last, after `## Screenshots`,
+     and only when the unit adds a Storybook component. Screenshot each
+     of the new component's stories, from the story's own page in a
+     running Storybook, **in light and dark mode both**, since nobody has
+     seen it in either before. Crop each to the story itself rather than
+     the whole frame. **Each component has its own `###` heading, its
+     name**, such as `### MultiStepForm`, with all of its stories beneath
+     it, light before dark, so one component's pictures are never mistaken
+     for another's. A person then reviews the component as well as the
+     page that uses it.
+
+   - **For both sections**: save each PNG in the
      scratchpad, beside the attempt files, and never in the repository.
      **Every screenshot has a short description on the line above it**:
      one plain sentence saying what it shows and what to look at, such as
-     "The hazard form in dark mode, with the save button disabled until a
-     field changes:". The image's alt text does not count: most readers
-     never see it. Reference each one by its local path, as
-     `![The hazard form in dark mode](./hazard-form-dark.png)`, with a
+     "The hazard form, with the save button disabled until a field
+     changes:". The image's alt text does not count: most readers never
+     see it. Reference each one by its local path, as
+     `![The hazard form](./hazard-form.png)`, with a
      blank line between the description and the image. The path is
-     uploaded when the body is posted, below. Leave the section out when
-     there is nothing to see.
+     uploaded when the body is posted, below. Leave either section out
+     when there is nothing to see.
 
    ### Closing
 
@@ -1049,7 +1064,7 @@ to start a stack anywhere but the tip of `origin/main`, and says to run
    `--body-file` rather than `--body`: the body holds backticks, quotes
    and newlines, and passing it inline leaves them at the shell's mercy.
 
-   **With a `## Screenshots` section, add one `--attach` for each image
+   **With either screenshot section, add one `--attach` for each image
    the body references**, in the same edit:
 
    ```bash
