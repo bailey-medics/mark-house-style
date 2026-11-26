@@ -117,3 +117,17 @@ EOF
     grep -qx "disable-model-invocation: true" "${house}/claude/skills/cp/SKILL.md"
     grep -q "^disallowed-tools:.*Bash(git push --force:\*)" "${house}/claude/skills/cp/SKILL.md"
 }
+
+@test "the r skill is linked, can only be run by hand and never commits or pushes" {
+    house="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
+    skill="${house}/claude/skills/r/SKILL.md"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${HOME}/.claude/skills/r")" = "${house}/claude/skills/r" ]
+    grep -qx "disable-model-invocation: true" "${skill}"
+    grep -q "^disallowed-tools:.*Bash(git commit:\*)" "${skill}"
+    grep -q "^disallowed-tools:.*Bash(git push:\*)" "${skill}"
+    grep -q "^disallowed-tools:.*Bash(just stu:\*)" "${skill}"
+}

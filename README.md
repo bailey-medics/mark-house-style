@@ -113,6 +113,14 @@ this one. It checks the repository's own `CLAUDE.md` or `AGENTS.md` says
 so, that `main` is not behind GitHub, that the diff holds no secrets or
 home details, and that the tests pass; anywhere else it points to `/crpd`.
 
+`/r` reviews the branch the worktree is on for the edge cases a diff review
+misses. It reads each file the branch touches in full, attacks it with a
+fixed list (doing it twice, late values, dates, keyboard, 320 pixels,
+checks that fail open), and looks for the same fault in sibling files. On
+its own it reports and changes nothing. `/r fix` also fixes what it
+confirms, failing test first, and leaves the fixes uncommitted. It never
+commits, pushes or touches a pull request.
+
 A personal skill hides a repository's own skill of the same name, so a
 repository keeps no copy of these. `install.sh` links each one into
 `~/.claude/skills/`, and takes out any link left pointing at a skill that
