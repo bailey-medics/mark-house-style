@@ -998,7 +998,10 @@ to start a stack anywhere but the tip of `origin/main`, and says to run
      one plain sentence saying what it shows and what to look at, such as
      "The hazard form, with the save button disabled until a field
      changes:". The image's alt text does not count: most readers never
-     see it. Reference each one by its local path, as
+     see it. **Name the mode only when its pair is there**: "in light
+     mode" belongs in a description only beside a dark mode picture of
+     the same thing, so a page shown once is just "The skip link:".
+     Reference each one by its local path, as
      `![The hazard form](./hazard-form.png)`, with a
      blank line between the description and the image. The path is
      uploaded when the body is posted, below. Leave either section out
