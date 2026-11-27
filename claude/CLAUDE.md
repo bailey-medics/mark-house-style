@@ -35,7 +35,7 @@ the word inside a sentence ("could you implement the guard?") all leave the
 conversation a discussion.
 
 - **A skill that exists to land work is the instruction too**, such as
-  `/crpd`, `/f` and `/cp`, or a repository's own equivalents. Running
+  `/crpd`, `/arpd`, `/f` and `/cp`, or a repository's own equivalents. Running
   one is the go-ahead to change code for that run.
 - **Plan documents are the exception.** A plan in the repository's plans
   folder may be written
@@ -152,7 +152,7 @@ TL;DR.
 - **A stacked branch carries exactly one commit: amend, never add.** That
   commit is the unit being reviewed, so a later change to the branch is
   folded into it, never added as a second one. Only do this inside a
-  `/crpd` or `/f` run, or when asked.
+  `/crpd`, `/arpd` or `/f` run, or when asked.
 
   - **Use `just stu` (`stack-update`), not `git commit`.** It stages
     everything, untracked files included, amends the branch's commit, then
@@ -223,4 +223,4 @@ TL;DR.
   commands.** Each knows what it needs. If none does the job, say so rather
   than improvising; the fix is usually a new recipe.
 
-<!-- cspell:words crpd upstack -->
+<!-- cspell:words arpd crpd upstack -->

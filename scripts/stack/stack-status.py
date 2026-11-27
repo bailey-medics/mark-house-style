@@ -1036,7 +1036,8 @@ def draw_no_stack(palette: Palette) -> None:
     print(file=sys.stderr)
     print(
         "  /crpd does a whole unit in one step: new branch, commit,\n"
-        "  rebase, push and a described draft pull request.",
+        "  rebase, push and a described draft pull request.\n"
+        "  /arpd folds more work into the branch checked out, the same way.",
         file=sys.stderr,
     )
     print(file=sys.stderr)

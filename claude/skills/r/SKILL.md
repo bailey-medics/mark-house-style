@@ -37,8 +37,8 @@ imports the global one, run them as written; anywhere else, run them as
 ## Nothing lands from here
 
 - **Never commit, amend, push, rebase, switch branch or touch a pull
-  request.** Landing a fix is a separate act: `/crpd`, or `just stu` on a
-  stacked branch, when the person asks.
+  request.** Landing a fix is a separate act: `/crpd`, `/arpd`, or
+  `just stu` on a stacked branch, when the person asks.
 - **`/r` alone edits no file.** Only `/r fix` edits, and only to fix a
   finding and test it.
 - **A finding that needs a person's decision is never fixed here.** That

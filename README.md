@@ -104,6 +104,14 @@ comes from that repository's "For the shared skills" section, in its
 `CLAUDE.md`, its `AGENTS.md`, or a rule here such as
 `projects/turva/rules/turva.md`.
 
+`/crpd` lands uncommitted work as a new stacked branch with its own pull
+request. `/arpd` folds it into the stacked branch already checked out
+instead: it amends that branch's one commit, rebases the branches above,
+pushes, brings the description up to date, then fixes any red CI in the
+stack. What the two share, such as the Never list and how a pull request
+is described, is written once in `claude/skills/stack-landing.md`, which
+both read first. It is a plain file, not a skill, so it is not linked.
+
 `/m` commits and pushes this repository to `main` in the background, from
 any session, after reading the diff for secrets and home details.
 

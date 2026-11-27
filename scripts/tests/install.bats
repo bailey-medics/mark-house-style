@@ -131,3 +131,29 @@ EOF
     grep -q "^disallowed-tools:.*Bash(git push:\*)" "${skill}"
     grep -q "^disallowed-tools:.*Bash(just stu:\*)" "${skill}"
 }
+
+@test "the arpd skill is linked, can only be run by hand and never merges or renames a branch" {
+    house="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
+    skill="${house}/claude/skills/arpd/SKILL.md"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ "$(readlink "${HOME}/.claude/skills/arpd")" = "${house}/claude/skills/arpd" ]
+    grep -qx "disable-model-invocation: true" "${skill}"
+    grep -q "^disallowed-tools:.*Bash(gh pr merge:\*)" "${skill}"
+    grep -q "^disallowed-tools:.*Bash(git commit:\*)" "${skill}"
+    grep -q "^disallowed-tools:.*Bash(git branch -m:\*)" "${skill}"
+}
+
+@test "the shared stack-landing rules are not linked as a skill, and both landing skills read them" {
+    house="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
+
+    run "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ -f "${house}/claude/skills/stack-landing.md" ]
+    [ ! -e "${HOME}/.claude/skills/stack-landing.md" ]
+    grep -q "skills/crpd/../stack-landing.md" "${house}/claude/skills/crpd/SKILL.md"
+    grep -q "skills/arpd/../stack-landing.md" "${house}/claude/skills/arpd/SKILL.md"
+}
