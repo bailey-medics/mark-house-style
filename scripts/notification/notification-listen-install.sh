@@ -11,15 +11,22 @@
 # TURVA_NOTIFY_BOX, if set, is written into the agent, for a box the Mac's
 # ssh knows by a name other than "devbox".
 #
-# Quill Medical has the same listener, reading the same queue on the box.
-# Two listeners would show every banner twice, so this stops if Quill's is
-# already installed: that one shows Turva's banners as it is.
+# Quill Medical had the same listener, reading the same queue on the box,
+# and two listeners would show every banner twice. Its scripts have since
+# moved here, so its installed copy can never be brought up to date. This
+# retires it first: it stops Quill's agent, then deletes its agent file and
+# its folder of scripts. If the agent will not stop, nothing is deleted or
+# installed.
+#
+# Off a Mac it fails, saying so, since a terminal in a VS Code window
+# connected to the box runs on the box and is easy to take for the Mac's.
 
 set -euo pipefail
 
 if [ "$(uname -s)" != "Darwin" ]; then
-    echo "The banner listener runs on the Mac; nothing to install here."
-    exit 0
+    echo "✗ This machine is not the Mac, so nothing was installed." >&2
+    echo "  Run \`just -g nli\` in a terminal on the Mac itself: a terminal in a VS Code window connected to the box runs on the box." >&2
+    exit 1
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,13 +35,49 @@ DEST="$HOME/Library/Application Support/turva-notify"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/turva-notify-listen.log"
 QUILL_LABEL="com.quill-medical.notify-listen"
+QUILL_DEST="$HOME/Library/Application Support/quill-notify"
+QUILL_PLIST="$HOME/Library/LaunchAgents/$QUILL_LABEL.plist"
 BOX="${TURVA_NOTIFY_BOX:-devbox}"
 
-if launchctl print "gui/$(id -u)/$QUILL_LABEL" >/dev/null 2>&1; then
-    echo "Quill Medical's banner listener is already running, and it reads the"
-    echo "same queue, so it shows Turva's banners too. Nothing to install."
-    exit 0
-fi
+quill_listener_loaded() {
+    launchctl print "gui/$(id -u)/$QUILL_LABEL" >/dev/null 2>&1
+}
+
+# Stop Quill Medical's listener and delete what it installed. bootout can
+# hand back before the agent has gone, so it is given a few seconds.
+retire_quill_listener() {
+    local found=0
+    local tries=0
+
+    if quill_listener_loaded; then
+        launchctl bootout "gui/$(id -u)/$QUILL_LABEL" >/dev/null 2>&1 || true
+
+        while quill_listener_loaded && [ "$tries" -lt 10 ]; do
+            sleep 0.5
+            tries=$((tries + 1))
+        done
+
+        if quill_listener_loaded; then
+            echo "✗ Quill Medical's old banner listener would not stop, so nothing was removed or installed." >&2
+            echo "  Stop it by hand: launchctl bootout gui/$(id -u)/$QUILL_LABEL" >&2
+            exit 1
+        fi
+
+        found=1
+    fi
+
+    if [ -e "$QUILL_PLIST" ] || [ -d "$QUILL_DEST" ]; then
+        rm -f "$QUILL_PLIST"
+        rm -rf "$QUILL_DEST"
+        found=1
+    fi
+
+    if [ "$found" = "1" ]; then
+        echo "Retired Quill Medical's old banner listener, with its agent file and $QUILL_DEST."
+    fi
+}
+
+retire_quill_listener
 
 mkdir -p "$DEST" "$(dirname "$PLIST")" "$(dirname "$LOG")"
 

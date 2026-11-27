@@ -47,7 +47,11 @@ request, and the Mac runs mark-house-style's listener and relay only.
 
 ## Phase 5: The Mac runs mark-house-style's listener only
 
-- [ ] Unload Quill's listener, `launchctl bootout gui/$(id -u)/com.quill-medical.notify-listen`, and delete its agent file and `~/Library/Application Support/quill-notify`. Then run `t nli`, which refuses while Quill's listener is loaded. The SSH route then uses the per-project icons and the Finnish voice too, and shares its record of what was shown with the relay, in `~/Library/Caches/turva-notifier`.
+- [x] Have `just -g nli` retire Quill's listener itself, where it used to refuse while that was loaded. It stops `com.quill-medical.notify-listen`, deletes its agent file and `~/Library/Application Support/quill-notify`, then installs this repository's listener; if Quill's will not stop, nothing is deleted or installed. Found on 27 November 2026: Quill's copy on the Mac dated from 15 November and left no note for a banner it showed, so that banner never cleared itself. `rfb` could not simply refresh that folder, because Quill's queue script keeps its own record of what was shown, and mixing the two would show banners twice. Five `bats` tests in `tests/notification-install.bats`; keeping the folder, ignoring a listener that will not stop, and always calling `bootout` each turn some red.
+
+- [x] Make `nli`, `nri` and `rfb` fail off the Mac, saying to run them in a terminal on the Mac itself, where they used to say "nothing to do here" and pass. On 27 November 2026 an `nri` run in a terminal on the box looked like a success, and the Mac kept relay 0.1.0, which cannot clear a banner. The relay, now 0.2.1, also opens its Output panel with the version that started. `nap` still passes quietly off a Mac.
+
+- [ ] Run `just -g nli` on the Mac, then `just -g nri`, and reload the VS Code windows. The SSH route then uses the per-project icons and the Finnish voice too, and shares its record of what was shown with the relay, in `~/Library/Caches/turva-notifier`.
 
 - [ ] Rebuild `quill-notifier.app` from mark-house-style's copy of the logo with `t nap quill`, so nothing on the Mac comes from Quill's builder, and run `t nri` so the relay has the current banner script.
 

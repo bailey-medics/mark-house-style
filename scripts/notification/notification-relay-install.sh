@@ -9,13 +9,17 @@
 # has installed, this repository's or Quill Medical's, or on an older copy.
 # Run this again after the relay or the banner scripts change.
 #
+# Off a Mac it fails, saying so, since a terminal in a VS Code window
+# connected to the box runs on the box and is easy to take for the Mac's.
+#
 # The Mac's bash is 3.2, so nothing newer than that is used here.
 
 set -euo pipefail
 
 if [ "$(uname -s)" != "Darwin" ]; then
-    echo "The banner relay runs in VS Code on the Mac; nothing to install here."
-    exit 0
+    echo "✗ This machine is not the Mac, so nothing was built or installed." >&2
+    echo "  Run \`just -g nri\` in a terminal on the Mac itself: a terminal in a VS Code window connected to the box runs on the box." >&2
+    exit 1
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -13,6 +13,9 @@
 # if needed. The scripts are copied into the relay's folder and the
 # listener's, where those are installed, so neither needs installing again
 # for a script change. macOS may ask to allow an app whose picture changed.
+#
+# Off a Mac it fails, saying so, since a terminal in a VS Code window
+# connected to the box runs on the box and is easy to take for the Mac's.
 set -euo pipefail
 
 SCRIPTS="notification-queue.py notification-show.sh notification-focus.sh notification-dismiss.sh level-completed.mp3"
@@ -72,8 +75,9 @@ main() {
     local before
 
     if [ "$(uname -s)" != "Darwin" ]; then
-        echo "Banners are shown on the Mac; nothing to refresh here."
-        exit 0
+        echo "✗ This machine is not the Mac, so nothing was pulled, rebuilt or refreshed." >&2
+        echo "  Run \`just -g rfb\` in a terminal on the Mac itself: a terminal in a VS Code window connected to the box runs on the box." >&2
+        exit 1
     fi
 
     here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

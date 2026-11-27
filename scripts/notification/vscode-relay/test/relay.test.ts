@@ -4,7 +4,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { boxFromAuthority, isBox, lastLines, lockLine, mayRelay, queueFromFolders, stateFile } from "../src/relay.ts";
+import {
+    boxFromAuthority,
+    isBox,
+    lastLines,
+    lockLine,
+    mayRelay,
+    queueFromFolders,
+    startedLine,
+    stateFile,
+} from "../src/relay.ts";
 
 test("an SSH connection gives the host as the box", () => {
     assert.equal(boxFromAuthority("ssh-remote+devbox"), "devbox");
@@ -65,4 +74,14 @@ test("the shown record is shared with Quill Medical's listener when it is instal
 
 test("otherwise the shown record is shared with this repository's listener", () => {
     assert.equal(stateFile("/Users/m", false), "/Users/m/Library/Caches/turva-notifier/last-shown");
+});
+
+test("the Output panel's first line names the version that started", () => {
+    assert.equal(startedLine("0.2.1"), "Banner relay 0.2.1 started.");
+});
+
+test("a version that is missing or not a plain version is called unknown", () => {
+    assert.equal(startedLine(undefined), "Banner relay started, version unknown.");
+    assert.equal(startedLine(21), "Banner relay started, version unknown.");
+    assert.equal(startedLine("0.2.1\nNo banner scripts"), "Banner relay started, version unknown.");
 });

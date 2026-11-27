@@ -88,3 +88,16 @@ export function stateFile(home: string, quillListenerInstalled: boolean): string
 
     return `${home}/Library/Caches/${folder}/last-shown`;
 }
+
+const VERSION_PATTERN = /^[0-9A-Za-z.+-]{1,40}$/;
+
+// The first line in the relay's Output panel, so a window still running an
+// older build shows itself at a glance. The version comes from the
+// extension's own package.json, which VS Code hands over untyped.
+export function startedLine(version: unknown): string {
+    if (typeof version !== "string" || !VERSION_PATTERN.test(version)) {
+        return "Banner relay started, version unknown.";
+    }
+
+    return `Banner relay ${version} started.`;
+}

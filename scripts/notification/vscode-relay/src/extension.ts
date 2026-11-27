@@ -18,6 +18,9 @@
 // been in front for five seconds, and a banner for its worktree has been up
 // as long, it runs notification-dismiss.sh to take that banner back. The
 // spoken name is never cut short, because it is said as the banner posts.
+//
+// Its Output panel opens with the version that started, so a window still
+// running an older build shows itself.
 
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -26,7 +29,16 @@ import { dirname, join } from "node:path";
 import * as vscode from "vscode";
 
 import { groupsForFolders, noteFile, shouldDismiss } from "./dismiss.ts";
-import { boxFromAuthority, isBox, lastLines, lockLine, mayRelay, queueFromFolders, stateFile } from "./relay.ts";
+import {
+    boxFromAuthority,
+    isBox,
+    lastLines,
+    lockLine,
+    mayRelay,
+    queueFromFolders,
+    startedLine,
+    stateFile,
+} from "./relay.ts";
 
 const LINES = 20;
 const STALE_MS = 15_000;
@@ -46,6 +58,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const output = vscode.window.createOutputChannel("Banner relay");
     context.subscriptions.push(output);
+    output.appendLine(startedLine(context.extension.packageJSON.version));
 
     startDismissing(context, output);
 

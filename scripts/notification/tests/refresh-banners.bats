@@ -145,10 +145,11 @@ commit_on_github() {
     cmp -s "${BATS_TEST_DIRNAME}/../notification-listen.sh" "${SUPPORT}/turva-notify/notification-listen.sh"
 }
 
-@test "off a Mac it does nothing" {
+@test "off a Mac it fails and says to run it on the Mac" {
     FAKE_SYSTEM=Linux run "$SCRIPT"
 
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"nothing to refresh"* ]]
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"not the Mac"* ]]
+    [[ "$output" == *"just -g rfb"* ]]
     [ ! -e "$CALLS" ]
 }

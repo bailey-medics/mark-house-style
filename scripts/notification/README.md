@@ -32,7 +32,9 @@ On the Mac, once:
 1. **Check that `ssh devbox` logs straight in**, with no password or question. Set `TURVA_NOTIFY_BOX` if the Mac knows the box by another name.
 2. **Run `just -g notify-listen-install`.** It copies the listener into `~/Library/Application Support/turva-notify` and starts it at every login. Run it again after changing these scripts.
 
-The queue is shared with Quill Medical on purpose, so one listener on the Mac shows both repositories' banners. If Quill Medical's listener is already installed, the install stops and says so, because two listeners would show every banner twice.
+The queue is shared with Quill Medical on purpose, so one listener on the Mac shows both repositories' banners. Quill Medical once had a listener of its own, and two listeners would show every banner twice. Its scripts have moved here, so that copy can no longer be brought up to date. If it is still on the Mac, the install retires it first: it stops it, then deletes its agent file and `~/Library/Application Support/quill-notify`. If it will not stop, nothing is deleted or installed.
+
+**Run `nli`, `nri` and `rfb` in a terminal on the Mac itself.** A terminal inside a VS Code window connected to the box runs on the box, which is easy to miss. There each of them fails and says so, rather than passing quietly having done nothing.
 
 ## When the Mac cannot reach the box by SSH
 
@@ -59,8 +61,9 @@ banner scripts the relay calls into `~/Library/Application Support/banner-relay`
 then builds the extension and installs it in VS Code, which must be 1.90 or
 newer. Reload the windows connected to
 the box to start it. Its settings, under "Banner relay" in VS Code, are
-needed only when it cannot work out the box or the queue itself. Run its
-tests with `just -g notify-relay-test` (`just -g nrt`).
+needed only when it cannot work out the box or the queue itself. Its
+Output panel, "Banner relay", opens with the version that started, so a
+window still running an older build shows itself. Run its tests with `just -g notify-relay-test` (`just -g nrt`).
 
 ## A banner clears itself once seen
 
