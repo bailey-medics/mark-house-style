@@ -7,20 +7,26 @@ session-start hook refreshes it. Change this file, never the copy.
 
 `AGENTS.md` is the authority on Turva: what it is, its safety invariants,
 its layout, its commands and what needs approval. Where it and these rules
-disagree, `AGENTS.md` wins, except where these rules are stricter.
+disagree, `AGENTS.md` wins, except where these rules are stricter, or
+name an exception, as the test rule and the overnight rule do.
 
 ## For the shared skills
 
 The shared skills, such as `/crpd` and `/f`, read this section for
 what is particular to Turva.
 
-- **Tests before every commit are the whole gates, not a targeted
-  subset**: `./s/lint` and `./s/test`, plus `./s/frontend` when the unit
-  touches `frontend/`. `AGENTS.md` says not to commit red. `./s/lint`
-  checks untracked files as well, so it sees the unit as it will be
-  committed. `./s/test` needs the dev stack: start it with `./s/up -d`
-  rather than skip the tests. While building, run only the tests that
-  cover the unit, so each try is quick.
+- **Tests before a commit are targeted, not the whole gates.** Run the
+  tests for what the unit changed and the code close to it: the test
+  files beside each changed file, and the tests of what uses it. For
+  example, `npx vitest run <paths>` for the frontend,
+  `./s/test safety_file -k <name>` or `./s/test -k <name>` for Python.
+  GitHub CI runs the full suites on every push and catches the rest, and
+  the pre-commit hooks still run on each commit. This overrides the full
+  `./s/lint` and `./s/test` run that `AGENTS.md` lists under "Before
+  Every Commit", for Mark's sessions: full local gates make building
+  slow, and CI is the gate that must be green before merge. The Django
+  tests still need the dev stack: start it with `./s/up -d` rather than
+  skip them.
 - **The commit message** adds a body when the why is not obvious from
   the subject, and says there whether `SAFETY.md` needed changing.
 - **The pull request's `## Risks` section** says whether `SAFETY.md`
