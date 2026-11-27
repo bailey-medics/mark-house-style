@@ -42,6 +42,13 @@ conversation a discussion.
   or edited during a discussion, since that is where the discussion's
   decisions are recorded. A skill that writes a plan, or writes answers
   into one, such as `/p` and `/g`, does so without the instruction.
+- **Pull request descriptions and screenshots are an exception too.**
+  Writing or editing a pull request's title and description, and taking
+  screenshots of the running app or Storybook to show in one, then
+  uploading them with `gh pr edit --attach`, need no instruction when the
+  person asks for them. They change nothing in the repository and nothing
+  in git history: the person reads them on GitHub, and can ask for them
+  changed again.
 - **Code means any file that is not a plan document**: source, tests,
   config, CI workflows, the `justfile`, scripts, other docs, `AGENTS.md`,
   this file, and git history - commits, branches and pushes.
