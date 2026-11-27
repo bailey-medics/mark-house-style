@@ -39,12 +39,13 @@ fi
 mkdir -p "$DEST" "$(dirname "$PLIST")" "$(dirname "$LOG")"
 
 for file in notification-listen.sh notification-queue.py \
-    notification-show.sh notification-focus.sh level-completed.mp3; do
+    notification-show.sh notification-focus.sh notification-dismiss.sh \
+    level-completed.mp3; do
     cp "$SCRIPT_DIR/$file" "$DEST/$file"
 done
 
 chmod +x "$DEST/notification-listen.sh" "$DEST/notification-show.sh" \
-    "$DEST/notification-focus.sh"
+    "$DEST/notification-focus.sh" "$DEST/notification-dismiss.sh"
 
 # launchd starts agents with almost no PATH; Homebrew's is added for a
 # python3 or ssh installed there.

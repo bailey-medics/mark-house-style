@@ -15,7 +15,7 @@
 # for a script change. macOS may ask to allow an app whose picture changed.
 set -euo pipefail
 
-SCRIPTS="notification-queue.py notification-show.sh notification-focus.sh level-completed.mp3"
+SCRIPTS="notification-queue.py notification-show.sh notification-focus.sh notification-dismiss.sh level-completed.mp3"
 
 # Copy the banner scripts into an installed copy, if that copy is there.
 refresh_copy() {

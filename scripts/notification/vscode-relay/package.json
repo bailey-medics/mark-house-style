@@ -1,8 +1,8 @@
 {
   "name": "banner-relay",
   "displayName": "Banner relay",
-  "description": "Shows the dev box's finished-response banners on the Mac, through VS Code's own connection to the box",
-  "version": "0.1.0",
+  "description": "Shows the dev box's finished-response banners on the Mac, through VS Code's own connection to the box, and clears a banner once its window has been in front",
+  "version": "0.2.0",
   "publisher": "mark-house-style",
   "private": true,
   "license": "GPL-3.0-only",

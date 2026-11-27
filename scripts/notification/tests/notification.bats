@@ -17,6 +17,7 @@ setup() {
     OTHER="${BATS_TEST_TMPDIR}/turva-4"
 
     export TURVA_NOTIFY_QUEUE="${BATS_TEST_TMPDIR}/queue/banners.jsonl"
+    export TURVA_NOTIFY_BANNERS="${BATS_TEST_TMPDIR}/banners"
 
     git init -q "$MAIN"
     git -C "$MAIN" -c user.name=t -c user.email=t@example.com \
@@ -327,6 +328,89 @@ STUB
     [[ "$args" == *$'-message\nDid the thing'* ]]
     [[ "$args" == *$'-group\ngrp'* ]]
     [[ "$args" == *"-execute"* ]]
+}
+
+@test "a posted banner leaves a note naming the app that posted it" {
+    stub_notifier
+    SHOW="${BATS_TEST_DIRNAME}/../notification-show.sh"
+
+    run "$SHOW" "turva-4" "Done" "turva-claude-turva-4" "Turva 4" "$OTHER"
+
+    [ "$status" -eq 0 ]
+    [ "$(cat "${TURVA_NOTIFY_BANNERS}/turva-claude-turva-4")" = "${TURVA_NOTIFY_APP}" ]
+}
+
+@test "a group that could not be a file name leaves no note" {
+    stub_notifier
+    SHOW="${BATS_TEST_DIRNAME}/../notification-show.sh"
+
+    run "$SHOW" "t" "Done" "../escape" "s" "$OTHER"
+
+    [ "$status" -eq 0 ]
+    [ ! -e "${BATS_TEST_TMPDIR}/escape" ]
+    [ -z "$(ls -A "${TURVA_NOTIFY_BANNERS}" 2>/dev/null)" ]
+}
+
+@test "a banner that failed to post leaves no note" {
+    stub_notifier
+    printf '#!/bin/bash\nexit 1\n' >"${TURVA_NOTIFY_APP}/Contents/MacOS/terminal-notifier"
+    SHOW="${BATS_TEST_DIRNAME}/../notification-show.sh"
+
+    run "$SHOW" "t" "Done" "turva-claude-turva-4" "s" "$OTHER"
+
+    [ "$status" -eq 0 ]
+    [ ! -e "${TURVA_NOTIFY_BANNERS}/turva-claude-turva-4" ]
+}
+
+@test "dismissing asks the app that posted the banner to remove it, and drops the note" {
+    stub_notifier
+    DISMISS="${BATS_TEST_DIRNAME}/../notification-dismiss.sh"
+    mkdir -p "${TURVA_NOTIFY_BANNERS}"
+    printf '%s\n' "${TURVA_NOTIFY_APP}" >"${TURVA_NOTIFY_BANNERS}/turva-claude-turva-4"
+
+    run "$DISMISS" "turva-claude-turva-4"
+
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/notifier-args")" = $'-remove\nturva-claude-turva-4' ]
+    [ ! -e "${TURVA_NOTIFY_BANNERS}/turva-claude-turva-4" ]
+}
+
+@test "dismissing with no note removes nothing" {
+    stub_notifier
+    DISMISS="${BATS_TEST_DIRNAME}/../notification-dismiss.sh"
+
+    run "$DISMISS" "turva-claude-turva-4"
+
+    [ "$status" -eq 0 ]
+    [ ! -e "${BATS_TEST_TMPDIR}/notifier-args" ]
+}
+
+@test "dismissing refuses a group that could reach outside the banners folder or be an option" {
+    stub_notifier
+    DISMISS="${BATS_TEST_DIRNAME}/../notification-dismiss.sh"
+    mkdir -p "${TURVA_NOTIFY_BANNERS}"
+    printf '%s\n' "${TURVA_NOTIFY_APP}" >"${BATS_TEST_TMPDIR}/outside"
+    printf '%s\n' "${TURVA_NOTIFY_APP}" >"${TURVA_NOTIFY_BANNERS}/-remove"
+
+    run "$DISMISS" "../outside"
+    run "$DISMISS" "-remove"
+
+    [ "$status" -eq 0 ]
+    [ ! -e "${BATS_TEST_TMPDIR}/notifier-args" ]
+    [ -e "${BATS_TEST_TMPDIR}/outside" ]
+}
+
+@test "dismissing ignores a note that does not name an app" {
+    stub_notifier
+    DISMISS="${BATS_TEST_DIRNAME}/../notification-dismiss.sh"
+    mkdir -p "${TURVA_NOTIFY_BANNERS}"
+    printf 'rm\n' >"${TURVA_NOTIFY_BANNERS}/turva-claude-turva-4"
+
+    run "$DISMISS" "turva-claude-turva-4"
+
+    [ "$status" -eq 0 ]
+    [ ! -e "${BATS_TEST_TMPDIR}/notifier-args" ]
+    [ ! -e "${TURVA_NOTIFY_BANNERS}/turva-claude-turva-4" ]
 }
 
 # The listener's stream, as the box's tail would send it: one JSON line per

@@ -74,6 +74,25 @@ fi
 
 NOTIFIER_BIN="$NOTIFIER_APP/Contents/MacOS/terminal-notifier"
 
+# A note that this group's banner is on screen, holding the app that posted
+# it, since only that app can take it back. The banner relay in VS Code
+# watches for the note, and once the worktree's window has been in front
+# for a few seconds it runs notification-dismiss.sh to clear the banner.
+# A group that could not be a file name in that folder gets no note.
+BANNERS_DIR="${TURVA_NOTIFY_BANNERS:-$HOME/Library/Caches/turva-notifier/banners}"
+
+remember_banner() {
+    local group="$1"
+    local app="$2"
+
+    case "$group" in
+        "" | -* | .* | *[!A-Za-z0-9._-]*) return 0 ;;
+    esac
+
+    mkdir -p "$BANNERS_DIR" 2>/dev/null || return 0
+    printf '%s\n' "$app" >"$BANNERS_DIR/$group" 2>/dev/null || true
+}
+
 # A banner and speech answer different questions: the banner says which
 # branch finished and survives on screen, speech says which worktree
 # without needing the screen at all. Both, unless turned off.
@@ -127,7 +146,9 @@ if [ "$BANNER" = "1" ]; then
             [ -n "$remote" ] && command="$command '$(q "$remote")'"
             set -- "$@" -execute "$command"
         fi
-        "$NOTIFIER_BIN" "$@" >/dev/null 2>&1 || true
+        if "$NOTIFIER_BIN" "$@" >/dev/null 2>&1; then
+            remember_banner "$group" "$NOTIFIER_APP"
+        fi
     elif command -v osascript >/dev/null 2>&1; then
         # Backslashes first, then quotes: reversing the order would
         # escape the backslashes this step introduces. A branch name

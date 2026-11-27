@@ -11,6 +11,7 @@ They are personal tooling, ported from Quill Medical, and do nothing until a Cla
 - **`notification-queue.py`** - writes a banner to the queue on Linux, and on the Mac reads and checks each banner before showing it.
 - **`notification-show.sh`** - shows one banner on a Mac, and speaks the worktree's name.
 - **`notification-focus.sh`** - runs when a banner is clicked, and brings the right editor window forward.
+- **`notification-dismiss.sh`** - takes one worktree's banner back, for the banner relay, once the banner has been seen.
 - **`notification-listen.sh`** - runs on the Mac, fetching banners from the Linux box over SSH.
 - **`notification-listen-install.sh`** - installs that listener on the Mac so it starts at login.
 
@@ -60,6 +61,28 @@ newer. Reload the windows connected to
 the box to start it. Its settings, under "Banner relay" in VS Code, are
 needed only when it cannot work out the box or the queue itself. Run its
 tests with `just -g notify-relay-test` (`just -g nrt`).
+
+## A banner clears itself once seen
+
+When a worktree's VS Code window has been in front for 5 seconds, and its
+banner has been up for 5 seconds, the banner goes, from the screen and from
+Notification Centre. So a banner for the session you are already in shows,
+says its name, and goes; one for another session stays until you switch to
+it. Questions and permission prompts clear the same way, since they share
+their worktree's banner.
+
+- **`notification-show.sh` leaves a note** for each banner it posts, in
+  `~/Library/Caches/turva-notifier/banners/<group>`, naming the notifier
+  app that posted it. macOS lets only that app remove the banner.
+- **The banner relay watches each window.** It runs in every VS Code window
+  on the Mac, connected to the box or not, and once a second checks for a
+  note for that window's worktree. When both waits are met, it runs
+  `notification-dismiss.sh <group>`, which asks the app to remove the
+  banner and drops the note.
+- **It needs the relay installed**, with `just -g nri`, and the windows
+  reloaded. Without the relay, banners behave as before.
+- **The plain banner, before any notifier is built, is never cleared**:
+  macOS gives no way to take it back.
 
 ## Icons
 

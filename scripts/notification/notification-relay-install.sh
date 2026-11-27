@@ -34,10 +34,12 @@ fi
 
 mkdir -p "$DEST"
 for file in notification-queue.py notification-show.sh notification-focus.sh \
+    notification-dismiss.sh \
     level-completed.mp3; do
     cp "$SCRIPT_DIR/$file" "$DEST/$file"
 done
-chmod +x "$DEST/notification-show.sh" "$DEST/notification-focus.sh"
+chmod +x "$DEST/notification-show.sh" "$DEST/notification-focus.sh" \
+    "$DEST/notification-dismiss.sh"
 
 (cd "$RELAY" && npm ci --no-audit --no-fund --loglevel=error && npm run package)
 "$CODE" --install-extension "$RELAY/banner-relay.vsix" --force
