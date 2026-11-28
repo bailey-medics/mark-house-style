@@ -1,17 +1,33 @@
 ---
 name: cp
-description: Commit and push the checkout straight to main, in a repository that takes direct commits
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git rev-parse:*), Bash(git fetch:*), Bash(git add:*), Bash(git commit:*), Bash(git push origin main:*), Bash(git push -q origin main:*), Bash(git ls-files:*), Bash(grep:*), Bash(just test:*), Bash(just --list:*)
+description: Commit and push a checkout straight to main, in a repository that takes direct commits
+argument-hint: "[repo]"
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git rev-parse:*), Bash(git fetch:*), Bash(git add:*), Bash(git commit:*), Bash(git push origin main:*), Bash(git push -q origin main:*), Bash(git ls-files:*), Bash(git -C:*), Bash(grep:*), Bash(just test:*), Bash(just --list:*)
 disallowed-tools: Bash(git push --force:*), Bash(git push -f:*), Bash(git push --force-with-lease:*), Bash(git reset:*), Bash(git rebase:*), Bash(git pull:*), Bash(git merge:*), Bash(git commit --amend:*), Bash(git stash:*), Bash(git switch:*), Bash(git checkout:*), Bash(gh pr merge:*), Edit, NotebookEdit
-disable-model-invocation: true
 ---
 
 # Commit and push to main
 
-Running `/cp` is the request to commit and push the checkout it was run
-from, straight to `main`. It is for the repositories whose own instructions
+Running `/cp` is the request to commit and push a checkout straight to
+`main`: the one it was run from, or the one named in its argument. It is for the repositories whose own instructions
 say they take direct commits to `main`, such as Arnie, Digest and
 mark-house-style. Anywhere else it refuses, and the right skill is `/crpd`.
+
+## Pick the repository
+
+The argument was: `$ARGUMENTS`
+
+- **No argument:** the checkout the session is in,
+  `top="$(git rev-parse --show-toplevel)"`.
+- **A path, or a folder name under `~/github`**, such as
+  `mark-house-style`: that checkout. Set `top` with
+  `git -C <path> rev-parse --show-toplevel`. If it is not a git checkout,
+  stop and say so.
+
+Run every git command below as `git -C "$top"`, and every `just` command
+as `(cd "$top" && just ...)`, so the session's own working directory is
+never touched. Say which repository was picked, in one line, before the
+checks.
 
 ## The authorisation ends with the run
 
@@ -20,14 +36,17 @@ its report is written, that is spent. A later change needs `/cp` again, or
 a request in the person's own words. "That works", "great" or "yes" after
 the run are not asking for another commit.
 
+**`/f main` may run it, once for each unit it lands.** The person typing
+`/f main` is the request for every unit of that run, and for nothing
+after the run ends. No other skill or run may start `/cp`.
+
 ## Check before committing
 
 Stop at the first check that fails, say why in one sentence, and commit
 nothing.
 
-1. **The repository takes direct commits.** Find the top of the checkout
-   with `git rev-parse --show-toplevel`, and look in its `CLAUDE.md` and
-   `AGENTS.md`:
+1. **The repository takes direct commits.** Look in the `CLAUDE.md` and
+   `AGENTS.md` at the top of the checkout picked above:
 
    ```bash
    grep -il "takes direct commits to \`main\`" "$top/CLAUDE.md" "$top/AGENTS.md"

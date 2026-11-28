@@ -1,7 +1,7 @@
 ---
 name: f
 description: Follow the plan document last mentioned in the chat, building it as a stack, one branch per reviewable unit
-argument-hint: "[path/to/plan.md, or nothing to use the last plan mentioned]"
+argument-hint: "[main] [path/to/plan.md, or nothing to use the last plan mentioned]"
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git add:*), Bash(git commit:*), Bash(git fetch:*), Bash(git push:*), Bash(git switch:*), Bash(just stack-log:*), Bash(just stack-log-long:*), Bash(just stack-files:*), Bash(just stack-update:*), Bash(just stack-sync:*), Bash(just stack-fresh:*), Bash(just stack-rebase:*), Bash(just stack-submit:*), Bash(just stack-move:*), Bash(just stack-help:*), Bash(gh stack view:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh pr edit:*), Bash(gh pr ready:*), Bash(just stack-check), Bash(./s/lint:*), Bash(./s/test:*), Bash(./s/frontend:*), Bash(./s/up:*), Bash(just -g stack-log:*), Bash(just -g stack-log-long:*), Bash(just -g stack-files:*), Bash(just -g stack-update:*), Bash(just -g stack-sync:*), Bash(just -g stack-fresh:*), Bash(just -g stack-rebase:*), Bash(just -g stack-submit:*), Bash(just -g stack-move:*), Bash(just -g stack-help:*), Bash(python3 ~/github/mark-house-style/scripts/stack/stack-status.py:*)
 disallowed-tools: Bash(gh pr merge:*), Bash(gh stack merge:*), Bash(git rebase:*), mcp__github__merge_pull_request, mcp__github__enable_pr_auto_merge
 disable-model-invocation: true
@@ -22,6 +22,11 @@ stacked branch and its own draft pull request. Built to run unattended for a
 long stretch, so that the next morning there is a chain of small pull
 requests for a human to read rather than one large one.
 
+**`/f main` lands each unit as one commit straight to `main` instead**,
+through `/cp`, with no branch and no pull request. It is for plans whose
+every repository takes direct commits to `main`. See "Straight to `main`"
+below: where it differs from the rest of this file, it wins for that run.
+
 ## First: pick the plan document, and say which
 
 **This comes before everything else in this file**, and before any tool
@@ -30,6 +35,10 @@ night spent building the wrong thing. They need to see which document was
 picked while they are still at the keyboard.
 
 The argument given to `/f` was: `$ARGUMENTS`
+
+**If the argument's first word is `main`, this is a main run.** Take
+that word off, and read what is left as the argument below. Say so in
+the announcement: "Straight to `main`, no pull requests."
 
 Pick the plan from the conversation alone, without searching the
 repository:
@@ -133,7 +142,9 @@ using the format stated in the latter mentioned agent.
   into `main` is the moment code becomes deployable, and that decision
   belongs to a human alone. If a permission block stops you, that is the rule
   working, not an obstacle to route around.
-- **Never push or commit to `main` directly.**
+- **Never push or commit to `main` directly**, except through `/cp` in a
+  run the human started as `/f main`. Never on your own judgement, and
+  never in a run started without it.
 - **Never run `git rebase` yourself.** `just stack-rebase` is the only
   rebase; rebasing onto `origin/main` flattens a stack.
 - **Never mention AI authorship anywhere** - no attribution footer, no
@@ -334,6 +345,42 @@ Then, for each unit in the plan:
 **At the end of the plan, wait for every check on the stack to finish**,
 with a Monitor or a background until-loop rather than polling by hand.
 Fix anything red the same way, then write the report.
+
+## Straight to `main`
+
+In a run started as `/f main`, these replace the stack steps. Everything
+else in this file holds: the plan is picked and announced the same way,
+units are sized the same way, tests are fixed the same way, and the run
+stops for the same reasons.
+
+- **Before building, skip the stack.** No `stack-log`, `stack-sync` or
+  `stack-fresh`. Instead, for each repository the plan names, check it
+  takes direct commits (`/cp`'s first check), is on `main`, and is level
+  with `origin/main` after a `git fetch`. If any fails, stop and say so
+  while the human is still there. A plan that needs a pull request
+  anywhere is not a main run. One allowance: a new repository with no
+  `CLAUDE.md` yet passes the first check when the plan's own step
+  writes one saying it takes direct commits to `main`. `/cp` still
+  checks the real file before it commits.
+- **Each unit names its repository.** A phase saying it lands in another
+  repository, such as "Lands in mark-house-style", is built in that
+  checkout under `~/github`. Otherwise the unit is in the plan's own
+  repository.
+- **Finish the unit with `/cp <repository>`**, in place of
+  `/crpd draft`. `/cp` runs its checks, the tests among them, then
+  commits and pushes. If it refuses, stop and report what it said:
+  never commit by hand around it.
+- **Tick the plan in the plan's own repository.** When the unit landed
+  there, the ticks are in its commit. When it landed somewhere else,
+  the ticks wait in the plan's checkout and go in with the next
+  commit there; any left at the end of the run are reported, not
+  committed.
+- **CI is checked on `main`.** Where the repository runs CI on `main`,
+  check the run for the commit just pushed, after the next unit as for a
+  stack. A real failure is fixed with a new unit through `/cp`, never by
+  amending or force pushing.
+- **The report lists each commit**, its repository, short hash and
+  subject, in place of the stack.
 
 ## Stopping
 
