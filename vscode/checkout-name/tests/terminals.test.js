@@ -10,12 +10,9 @@ const path = require("node:path");
 const { test } = require("node:test");
 const {
     KINDS,
-    OTHER_COLOUR,
     OTHER_IMAGE,
-    PROJECT_COLOURS,
     PROJECT_IMAGES,
     pictureAddress,
-    projectColour,
     projectImage,
     terminalSpec,
 } = require("../terminals");
@@ -33,30 +30,10 @@ const {
 /** @type {Manifest} */
 const manifest = JSON.parse(readFileSync(path.join(__dirname, "..", "package.json"), "utf8"));
 
-/** @type {ReadonlyArray<readonly [string, string]>} */
-const COLOURED = [
-    ["quillmedical", "terminal.ansiBlue"],
-    ["quillmedical-6", "terminal.ansiBlue"],
-    ["turva-2", "terminal.ansiMagenta"],
-    ["juttu-messaging-3", "terminal.ansiYellow"],
-    ["arnie", "terminal.ansiCyan"],
-    ["digest", "terminal.ansiGreen"],
-    ["mark-house-style", "terminal.ansiRed"],
-    ["quillmedical-owl", "terminal.ansiWhite"],
-    ["some-other-project", "terminal.ansiWhite"],
-];
-
-for (const [folder, colour] of COLOURED) {
-    test(`${folder} is coloured ${colour}`, () => {
-        assert.equal(projectColour(folder), colour);
-    });
-}
-
 test("a Claude terminal has the robot icon and runs the Claude session", () => {
     const spec = terminalSpec("claude", "quillmedical-2");
 
     assert.equal(spec.icon, "robot");
-    assert.equal(spec.colour, "terminal.ansiBlue");
     assert.deepEqual([spec.shellPath, ...spec.shellArgs], ["bash", "-lc", "just -g claude-session"]);
 });
 
@@ -64,30 +41,11 @@ test("a tmux terminal has the binary icon and runs a plain tmux shell", () => {
     const spec = terminalSpec("tmux", "turva");
 
     assert.equal(spec.icon, "file-binary");
-    assert.equal(spec.colour, "terminal.ansiMagenta");
     assert.deepEqual([spec.shellPath, ...spec.shellArgs], ["bash", "-lc", "just -g tmux-window"]);
 });
 
-test("a window with no folder open still gets a colour", () => {
-    assert.equal(terminalSpec("claude", "").colour, OTHER_COLOUR);
-});
-
-test("every colour is one of the eight VS Code paints a terminal tab's icon in", () => {
-    const painted = new Set(
-        ["Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White"].map(
-            (name) => `terminal.ansi${name}`,
-        ),
-    );
-
-    for (const colour of [...PROJECT_COLOURS.values(), OTHER_COLOUR]) {
-        assert.ok(painted.has(colour), `${colour} would leave the tab's icon plain`);
-    }
-});
-
-test("no two projects share a colour", () => {
-    const colours = [...PROJECT_COLOURS.values(), OTHER_COLOUR];
-
-    assert.equal(new Set(colours).size, colours.length);
+test("a terminal carries no project colour", () => {
+    assert.equal("colour" in terminalSpec("claude", "quillmedical"), false);
 });
 
 test("the extension declares no colours of its own", () => {
@@ -98,7 +56,6 @@ test("a later tmux shell has the binary icon and runs that shell by its number",
     const spec = terminalSpec("tmux-3", "quillmedical-6");
 
     assert.equal(spec.icon, "file-binary");
-    assert.equal(spec.colour, "terminal.ansiBlue");
     assert.deepEqual([spec.shellPath, ...spec.shellArgs], ["bash", "-lc", "just -g tmux-window 3"]);
 });
 

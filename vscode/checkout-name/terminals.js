@@ -4,8 +4,8 @@
 // What each terminal the extension opens is opened with: the picture on its
 // tab, and the command it runs. A terminal's tab carries its project's banner
 // icon. In the panel and on the buttons, the icon's shape says whether it is
-// Claude or tmux, and in the panel its colour says which project. Kept apart
-// from extension.js so it can be tested without VS Code.
+// Claude or tmux. Kept apart from extension.js so it can be tested without
+// VS Code.
 
 const { checkoutProject } = require("./names");
 const { CLAUDE, sessionRecipe } = require("./sessions");
@@ -17,14 +17,13 @@ const { CLAUDE, sessionRecipe } = require("./sessions");
 
 /**
  * What a session's terminal is opened with: the picture on its tab, the
- * built-in icon and colour that stand in if the picture cannot be read, and
+ * built-in icon that stands in if the picture cannot be read, and
  * the command it runs. It has no name: VS Code shows a name it was given in
  * place of the title tmux sends, and the tab is to read as tmux titles it,
  * such as "Quill-6" and a topic.
  * @typedef {object} TerminalSpec
  * @property {string} image
  * @property {string} icon
- * @property {string} colour
  * @property {string} shellPath
  * @property {string[]} shellArgs
  */
@@ -42,24 +41,6 @@ const KINDS = {
     tmux: { label: "Tmux shell", icon: SHELL_ICON },
     anotherTmux: { label: "Another tmux shell", icon: SHELL_ICON },
 };
-
-/**
- * Each project's colour id, by the folder checkoutProject gives, for its
- * rows in the panel. Each is one of VS Code's eight basic terminal colours,
- * the nearest to the project's banner icon, and the shade is the theme's.
- * @type {ReadonlyMap<string, string>}
- */
-const PROJECT_COLOURS = new Map([
-    ["quillmedical", "terminal.ansiBlue"],
-    ["turva", "terminal.ansiMagenta"],
-    ["juttu-messaging", "terminal.ansiYellow"],
-    ["arnie", "terminal.ansiCyan"],
-    ["digest", "terminal.ansiGreen"],
-    ["mark-house-style", "terminal.ansiRed"],
-]);
-
-/** The colour for Owl and for any folder that is no known project's. */
-const OTHER_COLOUR = "terminal.ansiWhite";
 
 /**
  * Each project's banner icon, by the folder checkoutProject gives: a file
@@ -80,15 +61,6 @@ const PROJECT_IMAGES = new Map([
 
 /** The picture for Owl and for any folder that is no known project's. */
 const OTHER_IMAGE = "general.png";
-
-/**
- * The colour id for a checkout, from its folder's name.
- * @param {string} folder
- * @returns {string}
- */
-function projectColour(folder) {
-    return PROJECT_COLOURS.get(checkoutProject(folder)) ?? OTHER_COLOUR;
-}
 
 /**
  * The file name of a checkout's banner icon, from its folder's name.
@@ -125,7 +97,6 @@ function terminalSpec(session, folder) {
     return {
         image: projectImage(folder),
         icon: session === CLAUDE ? CLAUDE_ICON : SHELL_ICON,
-        colour: projectColour(folder),
         shellPath: "bash",
         shellArgs: ["-lc", `just -g ${recipe}`],
     };
@@ -133,12 +104,9 @@ function terminalSpec(session, folder) {
 
 module.exports = {
     KINDS,
-    OTHER_COLOUR,
     OTHER_IMAGE,
-    PROJECT_COLOURS,
     PROJECT_IMAGES,
     pictureAddress,
-    projectColour,
     projectImage,
     terminalSpec,
 };

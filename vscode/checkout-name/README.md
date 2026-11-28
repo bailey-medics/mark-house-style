@@ -62,8 +62,8 @@ to one by its id in `keybindings.json`: `checkoutName.openClaude`,
 `checkoutName.openTmux` or `checkoutName.openAnotherTmux`.
 
 A terminal has to be opened in one of these ways to carry its icon. VS Code
-sets a terminal's icon and colour only as the terminal opens, and has no
-way to change them afterwards. So `just cc` or `just tw` typed into a plain
+sets a terminal's icon only as the terminal opens, and has no
+way to change it afterwards. So `just cc` or `just tw` typed into a plain
 terminal still works, but keeps that terminal's own icon.
 
 ### After a reload
@@ -132,22 +132,7 @@ quit. The pictures are small for the same reason: each one travels in its
 address. `plans/2026-11-25-terminal-tab-icons-plan.md` has the evidence.
 
 If a picture's file cannot be read, the tab gets a built-in icon: a robot
-for Claude or 0s and 1s for tmux, in the project's colour.
-
-### The colour in the panel
-
-In the Sessions panel, each row's icon is in the terminal colour nearest
-the project's banner icon:
-
-| Project | Colour |
-| --- | --- |
-| Quill | blue |
-| Turva | magenta |
-| Juttu | yellow |
-| Arnie | cyan |
-| Digest | green |
-| Mark House Style | red |
-| Owl and others | white |
+for Claude or 0s and 1s for tmux.
 
 ## Installing
 
@@ -202,7 +187,7 @@ just -g checkout-name-test
   the list of them back from the window's saved state, and says which side
   each tab comes back on.
 - **`terminals.js`** says what each session's terminal opens with: the
-  picture on its tab, its icon and colour in the panel, and the command it
+  picture on its tab, its icon in the panel, and the command it
   runs. A terminal is given
   no name, because VS Code shows a name it was given in place of the title
   tmux sends.

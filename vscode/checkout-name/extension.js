@@ -29,7 +29,7 @@ const path = require("node:path");
 const vscode = require("vscode");
 const { checkoutName } = require("./names");
 const { CLAUDE, FIRST_SHELL, nextShellKey, reopenedTabs } = require("./sessions");
-const { KINDS, pictureAddress, projectColour, terminalSpec } = require("./terminals");
+const { KINDS, pictureAddress, terminalSpec } = require("./terminals");
 
 /** The variable's name in `window.title`, and the context key behind it. */
 const VARIABLE = "checkoutName";
@@ -168,7 +168,6 @@ function terminalOptions(session, extensionUri, side) {
         shellArgs: spec.shellArgs,
         cwd: firstFolder()?.uri,
         iconPath: address ?? new vscode.ThemeIcon(spec.icon),
-        color: address ? undefined : new vscode.ThemeColor(spec.colour),
         isTransient: true,
         location: side === undefined ? vscode.TerminalLocation.Editor : { viewColumn: COLUMNS[side], preserveFocus: true },
     };
@@ -286,8 +285,8 @@ function forget(closed, context) {
 }
 
 /**
- * One row of the panel: a kind of terminal, with its icon in the project's
- * colour. Clicking the row opens the terminal.
+ * One row of the panel: a kind of terminal, with its icon. Clicking the row
+ * opens the terminal.
  * @param {typeof KIND_COMMANDS[number]} entry
  * @returns {import("vscode").TreeItem}
  */
@@ -295,7 +294,7 @@ function sessionRow({ kind, command }) {
     const { label, icon } = KINDS[kind];
     const row = new vscode.TreeItem(label);
 
-    row.iconPath = new vscode.ThemeIcon(icon, new vscode.ThemeColor(projectColour(openFolder())));
+    row.iconPath = new vscode.ThemeIcon(icon);
     row.command = { command, title: label };
 
     return row;
