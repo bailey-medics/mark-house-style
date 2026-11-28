@@ -120,7 +120,8 @@ The folder a banner came from picks its icon:
 - **`juttu-messaging` and `juttu-messaging-<anything>`** - Juttu.
 - **Any other folder with a picture in `icons/` named after it** - that
   picture, a worktree's number aside: `arnie` and `arnie-2` get Arnie's
-  bulb, `digest` a bold D and `mark-house-style` a bold MHS.
+  bulb, `digest` a bold D, `kaiku` a teal TV and `mark-house-style` a bold
+  MHS.
 - **Every other folder** - the general notifier, a bell, as is a project
   whose app has not been built yet.
 - **Before any notifier is built** - the plain banner, macOS's own. It
@@ -128,7 +129,8 @@ The folder a banner came from picks its icon:
   forward, such as Finder, rather than the folder's window. Run
   `just -g rfb` once to build the notifiers.
 
-`arnie.png`, `digest.png`, `mark-house-style.png` and `general.png` are drawn
+`arnie.png`, `digest.png`, `kaiku.png`, `mark-house-style.png` and
+`general.png` are drawn
 at 1024 by 1024, solid to the edges so they are used whole; Arnie's matches
 its phone icon.
 

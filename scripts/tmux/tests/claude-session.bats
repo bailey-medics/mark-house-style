@@ -163,7 +163,7 @@ run_in() {
 
     run_in "${BATS_TEST_TMPDIR}/elsewhere"
     [ "$status" -eq 1 ]
-    [[ "$output" == *"is not a Quill Medical, Turva, Juttu, Arnie or Digest checkout"* ]]
+    [[ "$output" == *"is not a Quill Medical, Turva, Juttu, Arnie, Digest or Kaiku checkout"* ]]
 }
 
 @test "a folder outside git is refused" {
@@ -291,6 +291,15 @@ run_in() {
     [ "$status" -eq 0 ]
     grep -qx "tmux send-keys -t %7 claude --continue --ide --remote-control arnie || claude --ide --remote-control arnie Enter" "$CALLS"
     grep -qx "tmux attach -t =arnie" "$CALLS"
+}
+
+@test "Kaiku's checkout is kaiku, and Claude carries on its conversation" {
+    git init -q "${BATS_TEST_TMPDIR}/kaiku"
+
+    SESSION_EXISTS=1 run_in "${BATS_TEST_TMPDIR}/kaiku"
+    [ "$status" -eq 0 ]
+    grep -qx "tmux send-keys -t %7 claude --continue --ide --remote-control kaiku || claude --ide --remote-control kaiku Enter" "$CALLS"
+    grep -qx "tmux attach -t =kaiku" "$CALLS"
 }
 
 @test "Digest's Claude starts a fresh conversation when it has exited" {

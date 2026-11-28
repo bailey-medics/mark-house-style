@@ -148,6 +148,7 @@ const PICTURED = [
     ["juttu-messaging-3", "juttu.png"],
     ["arnie", "arnie.png"],
     ["digest", "digest.png"],
+    ["kaiku", "kaiku.png"],
     ["mark-house-style", "mark-house-style.png"],
     ["quillmedical-owl", "general.png"],
     ["some-other-project", "general.png"],

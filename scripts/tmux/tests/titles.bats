@@ -78,6 +78,11 @@ title_for() {
     [ "$output" = "Digest Nightly run" ]
 }
 
+@test "Kaiku's tab is its name and the topic" {
+    run title_for kaiku "Set-up"
+    [ "$output" = "Kaiku Set-up" ]
+}
+
 @test "with no topic, a Quill, Turva or Juttu tab shows ---" {
     tmux -L "${SOCKET}" new-session -d -s q6
     tmux -L "${SOCKET}" select-pane -t q6 -T "✳ quill-6"
@@ -101,7 +106,7 @@ title_for() {
     [ "$output" = "Owl Fixing the tests" ]
 }
 
-@test "with no topic, an idle Owl, Arnie or Digest is the label alone" {
+@test "with no topic, an idle Owl, Arnie, Digest or Kaiku is the label alone" {
     run title_for owl
     [ "$output" = "Owl" ]
 
@@ -110,6 +115,9 @@ title_for() {
 
     run title_for digest
     [ "$output" = "Digest" ]
+
+    run title_for kaiku
+    [ "$output" = "Kaiku" ]
 }
 
 @test "a checkout's first shell is its label and Tmux, with no number" {
@@ -162,7 +170,7 @@ title_for() {
     [ "$output" = "Turva-12 Tmux" ]
 }
 
-@test "Owl's, Arnie's and Digest's shells read the same way" {
+@test "Owl's, Arnie's, Digest's and Kaiku's shells read the same way" {
     run title_for owl-tmux
     [ "$output" = "Owl Tmux" ]
 
@@ -177,6 +185,12 @@ title_for() {
 
     run title_for digest-tmux
     [ "$output" = "Digest Tmux" ]
+
+    run title_for kaiku-tmux
+    [ "$output" = "Kaiku Tmux" ]
+
+    run title_for kaiku-tmux-3
+    [ "$output" = "Kaiku Tmux-3" ]
 }
 
 @test "a shell's tab ignores what runs in it" {

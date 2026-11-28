@@ -7,7 +7,8 @@
 # Each checkout has one such session, named by checkout-names.sh after the
 # checkout: quill-tmux and quill-6-tmux for Quill Medical, owl-tmux for
 # Owl's quillmedical-owl, turva-tmux, turva-2-tmux and juttu-3-tmux for
-# Turva and Juttu, and arnie-tmux and digest-tmux for Arnie and Digest.
+# Turva and Juttu, and arnie-tmux, digest-tmux and kaiku-tmux for Arnie,
+# Digest and Kaiku.
 # This:
 #
 #   - starts the session, with a login shell in the checkout, when there
@@ -75,7 +76,7 @@ if ! command -v tmux > /dev/null; then
 fi
 
 if ! top="$(git rev-parse --show-toplevel 2> /dev/null)"; then
-    echo "✗ Run this from a Quill Medical, Turva, Juttu, Arnie or Digest checkout." >&2
+    echo "✗ Run this from a Quill Medical, Turva, Juttu, Arnie, Digest or Kaiku checkout." >&2
     exit 1
 fi
 

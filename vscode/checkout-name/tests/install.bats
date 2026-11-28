@@ -195,7 +195,7 @@ only_tools() {
 
     [ "$status" -eq 0 ]
     run unzip -Z1 "${KEPT}"
-    for icon in quill turva juttu arnie digest mark-house-style general; do
+    for icon in quill turva juttu arnie digest kaiku mark-house-style general; do
         [[ "$output" == *"extension/icons/${icon}.png"* ]]
     done
 }

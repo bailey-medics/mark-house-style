@@ -23,6 +23,7 @@ const SHORT_NAMES = new Map([
     ["juttu-messaging", "Juttu"],
     ["arnie", "Arnie"],
     ["digest", "Digest"],
+    ["kaiku", "Kaiku"],
     ["mark-house-style", "Mark House Style"],
 ]);
 

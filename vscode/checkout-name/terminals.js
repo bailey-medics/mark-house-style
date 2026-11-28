@@ -56,6 +56,7 @@ const PROJECT_IMAGES = new Map([
     ["juttu-messaging", "juttu.png"],
     ["arnie", "arnie.png"],
     ["digest", "digest.png"],
+    ["kaiku", "kaiku.png"],
     ["mark-house-style", "mark-house-style.png"],
 ]);
 

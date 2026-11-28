@@ -154,7 +154,7 @@ case "$name" in
     turva) spoken="Turva" ;;
     juttu) spoken="Juttu" ;;
     turva-[0-9]*) spoken="Turva ${name##*-}" ;;
-    arnie | arnie-[0-9]* | digest | digest-[0-9]* | mark-house-style) spoken="$label" ;;
+    arnie | arnie-[0-9]* | digest | digest-[0-9]* | kaiku | kaiku-[0-9]* | mark-house-style) spoken="$label" ;;
     juttu-[0-9]*) spoken="Juttu ${name##*-}" ;;
     *-[0-9]*) spoken="${name%-*} ${name##*-}" ;;
     *) spoken="$name" ;;

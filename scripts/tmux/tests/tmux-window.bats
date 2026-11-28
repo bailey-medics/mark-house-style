@@ -255,14 +255,14 @@ run_in() {
 
     run_in "${BATS_TEST_TMPDIR}/elsewhere"
     [ "$status" -eq 1 ]
-    [[ "$output" == *"is not a Quill Medical, Turva, Juttu, Arnie or Digest checkout"* ]]
+    [[ "$output" == *"is not a Quill Medical, Turva, Juttu, Arnie, Digest or Kaiku checkout"* ]]
     [ ! -e "$CALLS" ] || [ "$(grep -c -e new-session -e attach "$CALLS")" -eq 0 ]
 }
 
 @test "outside a git repository it is refused" {
     run_in "$BATS_TEST_TMPDIR"
     [ "$status" -eq 1 ]
-    [[ "$output" == *"Run this from a Quill Medical, Turva, Juttu, Arnie or Digest checkout"* ]]
+    [[ "$output" == *"Run this from a Quill Medical, Turva, Juttu, Arnie, Digest or Kaiku checkout"* ]]
 }
 
 @test "Turva's main checkout has no number" {
@@ -306,4 +306,14 @@ run_in() {
 
     grep -q "^tmux new-session -d -s arnie-tmux " "$CALLS"
     grep -q "^tmux new-session -d -s digest-tmux-2 " "$CALLS"
+}
+
+@test "Kaiku's shells are kaiku-tmux, then kaiku-tmux and its number" {
+    git init -q "${BATS_TEST_TMPDIR}/kaiku"
+
+    run_in "${BATS_TEST_TMPDIR}/kaiku"
+    run_in "${BATS_TEST_TMPDIR}/kaiku" 2
+
+    grep -q "^tmux new-session -d -s kaiku-tmux " "$CALLS"
+    grep -q "^tmux new-session -d -s kaiku-tmux-2 " "$CALLS"
 }

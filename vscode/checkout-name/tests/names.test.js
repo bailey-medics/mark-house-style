@@ -20,6 +20,8 @@ const SHOWN = [
     ["juttu-messaging-3", "Juttu-3"],
     ["arnie", "Arnie"],
     ["digest", "Digest"],
+    ["kaiku", "Kaiku"],
+    ["kaiku-2", "Kaiku-2"],
     ["mark-house-style", "Mark House Style"],
 ];
 

@@ -30,8 +30,9 @@ the main checkout, and Owl's session is `owl`. Their shells are
 `quill-tmux` for the main checkout, `quill-6-tmux` for a worktree and
 `owl-tmux` for Owl.
 
-Arnie and Digest have one checkout each, so their sessions are `arnie` and
-`digest`, and their shells `arnie-tmux` and `digest-tmux`. Each has its own
+Arnie, Digest and Kaiku have one checkout each, so their sessions are
+`arnie`, `digest` and `kaiku`, and their shells `arnie-tmux`, `digest-tmux`
+and `kaiku-tmux`. Arnie and Digest each have their own
 `scripts/<session>-session`, which starts its session at boot, so
 `just cc` starts a missing session with it too. Digest's starter gives
 the session `DIGEST_SESSION=true`, which its nightly runner needs, and
@@ -53,8 +54,8 @@ tests.
 titles. A Claude tab reads the project, the worktree number and the
 conversation's topic: "Quill-6 Passport sign-off page", "Turva-2 Hazard
 log", "Juttu-3 Inbox". The main checkout has no number, so it reads
-"Quill", "Turva" or "Juttu". Owl's reads "Owl", Arnie's "Arnie" and
-Digest's "Digest".
+"Quill", "Turva" or "Juttu". Owl's reads "Owl", Arnie's "Arnie",
+Digest's "Digest" and Kaiku's "Kaiku".
 
 A shell reads the same label, then "Tmux", and its number when it is not
 the checkout's first: "Quill-6 Tmux" for `just tw`, "Quill-6 Tmux-2" for
@@ -65,8 +66,8 @@ shows its own name.
 
 The topic is the `@topic` session option, which the tab-topic hook
 (`claude/hooks/tab-topic.sh`) keeps. Until it is set, a Quill, Turva or
-Juttu tab reads "---" in its place, such as "Quill-6 ---". Owl, Arnie and
-Digest never get a topic from the hook, so Claude Code's own pane title
+Juttu tab reads "---" in its place, such as "Quill-6 ---". Owl, Arnie,
+Digest and Kaiku never get a topic from the hook, so Claude Code's own pane title
 stands in for theirs.
 
 `install.sh` loads the file with one line at the end of `~/.tmux.conf`,

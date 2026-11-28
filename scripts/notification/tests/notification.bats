@@ -161,10 +161,10 @@ make_quill() {
     printf "%s\n" "$output" | grep -qx "title=Quill Owl"
 }
 
-@test "Arnie, Digest and Mark House Style are titled and spoken by their proper names" {
+@test "Arnie, Digest, Kaiku and Mark House Style are titled and spoken by their proper names" {
     local folder expected
 
-    for pair in "arnie:Arnie" "arnie-2:Arnie 2" "digest:Digest" "digest-3:Digest 3" "mark-house-style:Mark House Style"; do
+    for pair in "arnie:Arnie" "arnie-2:Arnie 2" "digest:Digest" "digest-3:Digest 3" "kaiku:Kaiku" "kaiku-2:Kaiku 2" "mark-house-style:Mark House Style"; do
         folder="${BATS_TEST_TMPDIR}/${pair%%:*}"
         expected="${pair#*:}"
         mkdir -p "$folder"
@@ -665,7 +665,7 @@ stub_branded_apps() {
     export TURVA_NOTIFY_SPEAK=0
     unset TURVA_NOTIFY_APP
 
-    for name in quill turva juttu arnie digest mark-house-style general; do
+    for name in quill turva juttu arnie digest kaiku mark-house-style general; do
         mkdir -p "${HOME}/Applications/${name}-notifier.app/Contents/MacOS"
         cat >"${HOME}/Applications/${name}-notifier.app/Contents/MacOS/terminal-notifier" <<EOF
 #!/bin/bash
@@ -736,6 +736,10 @@ icon_for() {
     rm -f "${BATS_TEST_TMPDIR}/apps-used"
     run icon_for digest-3
     [ "$output" = "digest" ]
+
+    rm -f "${BATS_TEST_TMPDIR}/apps-used"
+    run icon_for kaiku
+    [ "$output" = "kaiku" ]
 }
 
 @test "any other folder gets the general notifier, so a click still focuses" {

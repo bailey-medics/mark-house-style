@@ -16,6 +16,7 @@
 #   juttu-messaging-3   juttu-3         juttu-3-tmux    juttu-3
 #   arnie               arnie           arnie-tmux      arnie
 #   digest              digest          digest-tmux     digest
+#   kaiku               kaiku           kaiku-tmux      kaiku
 #
 # REMOTE_NAME is the name Claude's remote control shows on claude.ai. Quill
 # Medical's keeps the folder name it has always had. Juttu's folder is
@@ -64,7 +65,7 @@ checkout_names() {
             CLAUDE_SESSION="juttu-${folder#juttu-messaging-}"
             SHELL_SESSION="${CLAUDE_SESSION}-tmux"
             ;;
-        arnie | digest)
+        arnie | digest | kaiku)
             CLAUDE_SESSION="${folder}"
             SHELL_SESSION="${folder}-tmux"
             ;;
@@ -86,4 +87,4 @@ checkout_names() {
     return 0
 }
 
-readonly CHECKOUT_REFUSAL="is not a Quill Medical, Turva, Juttu, Arnie or Digest checkout. Sessions are named after quillmedical, turva or juttu-messaging, or any of them with -<number>, and arnie or digest."
+readonly CHECKOUT_REFUSAL="is not a Quill Medical, Turva, Juttu, Arnie, Digest or Kaiku checkout. Sessions are named after quillmedical, turva or juttu-messaging, or any of them with -<number>, and arnie, digest or kaiku."
